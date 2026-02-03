@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 
 export default function Dashboard({ messengers, dispatch_locations, beetrack_data }) {
-    const { data, setData, submit, processing, errors } = useForm({
+    const { data, setData, submit, processing, errors, reset } = useForm({
         file: null,
         location_id: '',
         messenger_id: '',
@@ -22,9 +22,8 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
         formData.append('messenger_id', data.messenger_id);
         formData.append('last_route', data.last_route ? '1' : '0');
         formData.append('output_name', data.output_name);
-        // formData.append('_token', ...); // Removed manual token append, will rely on X-XSRF-TOKEN cookie or meta if fixed.
-        // Actually, simplest fix for raw fetch in Laravel is passing the CSRF token.
-        // Let's get it safely.
+
+        // Manual CSRF token just to be safe with fetch
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         if (token) formData.append('_token', token);
 
@@ -44,6 +43,11 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
+
+                // Clear form after success
+                reset();
+                // Also clear the file input manually if needed (though reset handles internal state, the input value might linger if uncontrolled)
+                document.querySelector('input[type="file"]').value = '';
             })
             .catch(err => alert('Error: ' + err.message));
     };
