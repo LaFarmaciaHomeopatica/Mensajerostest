@@ -21,6 +21,9 @@ Route::post('/lunch', [LunchController::class, 'store'])->name('lunch.store');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [UnifiedController::class, 'index'])->name('dashboard');
+
+    Route::get('/reports/lunch', [LunchController::class, 'report'])->name('reports.lunch');
+    Route::resource('messengers', \App\Http\Controllers\MessengerController::class);
     Route::post('/update-location/{messenger}', [UnifiedController::class, 'updateLocation'])->name('messenger.update-location');
     Route::post('/dispatch', [DispatchController::class, 'store'])->name('dispatch.store');
 });

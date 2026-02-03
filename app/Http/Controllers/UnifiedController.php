@@ -17,7 +17,7 @@ class UnifiedController extends Controller
         $beetrackData = $beetrack->getDispatchStatus();
 
         // 2. Get Messengers with active Lunch Logs
-        $messengers = Messenger::with([
+        $messengers = Messenger::where('is_active', true)->with([
             'lunchLogs' => function ($q) {
                 $q->where('status', 'active')->latest();
             }

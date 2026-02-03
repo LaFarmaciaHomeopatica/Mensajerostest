@@ -27,6 +27,10 @@ class LunchController extends Controller
             return response()->json(['error' => 'Placa no encontrada'], 404);
         }
 
+        if (!$messenger->is_active) {
+            return response()->json(['error' => 'Mensajero inactivo. Contacte a su líder.'], 403);
+        }
+
         $activeLunch = $messenger->lunchLogs()
             ->where('status', 'active')
             ->latest()
@@ -53,6 +57,22 @@ class LunchController extends Controller
         }
 
         return response()->json($response);
+    }
+
+    public function report(Request $request)
+    {
+        $query = LunchLog::with('messenger')->orderBy('created_at', 'desc');
+
+        if ($request->has('date') && $request->date) {
+            $query->whereDate('start_time', $request->date);
+        }
+
+        $logs = $query->paginate(20)->withQueryString();
+
+        return Inertia::render('Reports/Lunch', [
+            'logs' => $logs,
+            'filters' => $request->only(['date'])
+        ]);
     }
 
     public function store(Request $request)

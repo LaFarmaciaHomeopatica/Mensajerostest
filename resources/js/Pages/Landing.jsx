@@ -147,11 +147,10 @@ export default function Landing() {
                 {viewState === 'options' && (
                     <div className="space-y-4">
                         <button
-                            onClick={handleLunchSubmit}
-                            disabled={processing}
+                            onClick={() => setViewState('lunch_confirm')}
                             className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-5 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center text-lg"
                         >
-                            {processing ? 'Registrando...' : '🍽️ Registrar Almuerzo'}
+                            🍽️ Registrar Almuerzo
                         </button>
 
                         <button
@@ -167,6 +166,33 @@ export default function Landing() {
                         >
                             Cancelar / Buscar otra placa
                         </button>
+                    </div>
+                )}
+
+                {viewState === 'lunch_confirm' && (
+                    <div className="space-y-6 text-center">
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+                            ¿Confirmas el inicio de tu almuerzo?
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400">
+                            Mensajero: <span className="font-bold">{messenger?.name}</span>
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <button
+                                onClick={() => setViewState('options')}
+                                className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition-all"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleLunchSubmit}
+                                disabled={processing}
+                                className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all"
+                            >
+                                {processing ? 'Registrando...' : 'Sí, confirmar'}
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

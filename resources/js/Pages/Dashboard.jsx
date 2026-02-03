@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
+import LeaderLayout from '@/Layouts/LeaderLayout';
 
 export default function Dashboard({ messengers, dispatch_locations, beetrack_data }) {
     const { data, setData, submit, processing, errors, reset } = useForm({
@@ -46,7 +47,6 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
 
                 // Clear form after success
                 reset();
-                // Also clear the file input manually if needed (though reset handles internal state, the input value might linger if uncontrolled)
                 document.querySelector('input[type="file"]').value = '';
             })
             .catch(err => alert('Error: ' + err.message));
@@ -105,11 +105,10 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans text-sm selection:bg-indigo-100 dark:selection:bg-indigo-900">
+        <LeaderLayout title="Control Center">
             <Head title="Control Center" />
-
             {/* Glassmorphism Header */}
-            <div className="sticky top-0 z-20 backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-b border-indigo-100 dark:border-indigo-900/50 shadow-sm transition-all duration-300">
+            <div className="sticky top-14 z-20 backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-b border-indigo-100 dark:border-indigo-900/50 shadow-sm transition-all duration-300">
                 <div className="max-w-[1800px] mx-auto p-4">
                     <form onSubmit={handleDispatchSubmit} className="flex flex-wrap items-end gap-4">
 
@@ -204,7 +203,7 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
             </div>
 
             {/* Main Content */}
-            <div className="max-w-[1800px] mx-auto p-4 flex flex-col md:flex-row gap-6 h-[calc(100vh-100px)]">
+            <div className="max-w-[1800px] mx-auto p-4 flex flex-col md:flex-row gap-6 h-[calc(100vh-160px)]">
 
                 {/* Column: 116 (Principal) */}
                 <div
@@ -270,7 +269,7 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                 </div>
 
             </div>
-        </div>
+        </LeaderLayout>
     );
 }
 
