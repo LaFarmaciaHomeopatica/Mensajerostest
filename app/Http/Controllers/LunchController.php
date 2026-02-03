@@ -13,9 +13,46 @@ class LunchController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Landing', [
-            'messengers' => Messenger::all(['id', 'name']),
+        return Inertia::render('Landing');
+    }
+
+    public function checkPlate(Request $request)
+    {
+        $request->validate(['plate' => 'required|string']);
+
+        // Search loosely (case insensitive and partial perhaps, but specific for now)
+        $messenger = Messenger::where('vehicle', $request->plate)->first();
+
+        if (!$messenger) {
+            return response()->json(['error' => 'Placa no encontrada'], 404);
+        }
+
+        $activeLunch = $messenger->lunchLogs()
+            ->where('status', 'active')
+            ->latest()
+            ->first();
+
+        \Log::info('Check Plate Debug', [
+            'plate' => $request->plate,
+            'messenger_id' => $messenger->id,
+            'active_lunch_found' => (bool) $activeLunch,
+            'active_lunch_data' => $activeLunch
         ]);
+
+        $response = [
+            'id' => $messenger->id,
+            'name' => $messenger->name,
+            'vehicle' => $messenger->vehicle
+        ];
+
+        if ($activeLunch) {
+            $response['active_lunch'] = [
+                'start' => $activeLunch->start_time->format('H:i'),
+                'end' => $activeLunch->end_time->format('H:i'),
+            ];
+        }
+
+        return response()->json($response);
     }
 
     public function store(Request $request)
@@ -42,7 +79,7 @@ class LunchController extends Controller
         ]);
 
         return back()->with('success', [
-            'message' => 'Disfruta tu almuerzo!',
+            'message' => '¡A disfrutar! 🍔',
             'return_time' => $endTime->format('H:i'),
             'messenger_name' => $messenger->name,
         ]);

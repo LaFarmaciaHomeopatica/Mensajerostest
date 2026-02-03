@@ -13,15 +13,10 @@ Route::get('/', [AuthController::class, 'loginView'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::get('/fix-auth', function () {
-    $u = App\Models\User::updateOrCreate(
-        ['email' => 'despachoslfh@lafarmacia.com'],
-        ['name' => 'Despachos LFH', 'password' => 'asd123']
-    );
-    return "User: {$u->email} | CREATED/UPDATED with password 'asd123'. Hash starts with: " . substr($u->password, 0, 10);
-});
+
 
 Route::get('/messenger', [LunchController::class, 'index'])->name('landing');
+Route::post('/messenger/check-plate', [LunchController::class, 'checkPlate'])->name('messenger.check-plate');
 Route::post('/lunch', [LunchController::class, 'store'])->name('lunch.store');
 
 Route::middleware(['auth'])->group(function () {

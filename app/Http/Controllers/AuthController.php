@@ -20,15 +20,15 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        \Log::info('Login Attempt', ['email' => $credentials['email']]);
-
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             \Log::info('Login Success');
-            return redirect()->intended('dashboard');
-        }
+            if (Auth::user()->role === 'lider') {
+                return redirect()->intended('dashboard');
+            }
 
-        \Log::warning('Login Failed', ['email' => $credentials['email']]);
+            return redirect()->intended('messenger');
+        }
 
         return back()->withErrors([
             'email' => 'Las credenciales proporcionadas no coinciden con nuestros registros.',
