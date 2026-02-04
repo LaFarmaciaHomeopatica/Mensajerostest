@@ -67,10 +67,13 @@ class BeetrackService
                             ])->get($detailUrl);
 
                             if ($detailResp->successful()) {
-                                $rutaDetalle = $detailResp->json()['response'] ?? [];
+                                $wrapper = $detailResp->json()['response'] ?? [];
+                                // API structure: response -> route -> dispatches (or sometimes direct dispatches depending on endpoint version)
+                                $rutaDetalle = $wrapper['route'] ?? $wrapper;
                                 $despachos = $rutaDetalle['dispatches'] ?? [];
+
                                 $total = count($despachos);
-                                $gestionadas = collect($despachos)->filter(fn($d) => in_array($d['status'] ?? '', ['completed', 'failed', 'partial']))->count();
+                                $gestionadas = collect($despachos)->filter(fn($d) => in_array($d['status'] ?? '', ['completed', 'failed', 'partial', 'delivered']))->count();
                             }
                         } catch (\Exception $e) {
                             Log::warning("Beetrack Detail Error for Route {$idRuta}: " . $e->getMessage());
