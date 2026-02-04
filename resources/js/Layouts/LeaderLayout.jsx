@@ -4,11 +4,12 @@ import { Link, usePage, router } from '@inertiajs/react';
 export default function LeaderLayout({ children, title }) {
     const { auth } = usePage().props;
 
-    const navs = [
-        { label: 'Control Center', route: 'dashboard', active: route().current('dashboard') },
+    const menuItems = [
+        { label: 'Dashboard', route: 'dashboard', active: route().current('dashboard') },
         { label: 'Mensajeros', route: 'messengers.index', active: route().current('messengers.*') },
         { label: 'Horarios', route: 'shifts.index', active: route().current('shifts.*') },
         { label: 'Reporte Almuerzos', route: 'reports.lunch', active: route().current('reports.lunch') },
+        { label: 'Reporte Preoperacional', route: 'reports.preoperational', active: route().current('reports.preoperational') },
     ];
 
     const logout = (e) => {
@@ -28,7 +29,7 @@ export default function LeaderLayout({ children, title }) {
                         </Link>
 
                         <div className="hidden md:flex items-center gap-1">
-                            {navs.map((nav) => (
+                            {menuItems.map((nav) => (
                                 <Link
                                     key={nav.route}
                                     href={route(nav.route)}

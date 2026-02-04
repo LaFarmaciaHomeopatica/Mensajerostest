@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 
 export default function Landing() {
@@ -10,6 +10,23 @@ export default function Landing() {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     const [activeLunch, setActiveLunch] = useState(null);
+    const [preoperationalAnswers, setPreoperationalAnswers] = useState({});
+
+    // Preoperational checklist questions
+    const preoperationalQuestions = [
+        { id: 'luces', label: 'Luces (delanteras, traseras, direccionales)', category: 'Vehículo' },
+        { id: 'frenos', label: 'Frenos (funcionamiento correcto)', category: 'Vehículo' },
+        { id: 'llantas', label: 'Llantas (estado y presión)', category: 'Vehículo' },
+        { id: 'espejos', label: 'Espejos retrovisores', category: 'Vehículo' },
+        { id: 'cinturon', label: 'Cinturón de seguridad', category: 'Seguridad' },
+        { id: 'casco', label: 'Casco (en buen estado)', category: 'Seguridad' },
+        { id: 'chaleco', label: 'Chaleco reflectivo', category: 'Seguridad' },
+        { id: 'soat', label: 'SOAT vigente', category: 'Documentos' },
+        { id: 'licencia', label: 'Licencia de conducción', category: 'Documentos' },
+        { id: 'tarjeta_propiedad', label: 'Tarjeta de propiedad', category: 'Documentos' },
+        { id: 'kit_carreteras', label: 'Kit de carreteras (botiquín, extintor)', category: 'Seguridad' },
+        { id: 'limpieza', label: 'Limpieza general del vehículo', category: 'Vehículo' },
+    ];
 
     // Lunch Form
     const { data, setData, post, processing, reset: resetForm } = useForm({
@@ -68,7 +85,42 @@ export default function Landing() {
     };
 
     const handlePreopClick = () => {
-        alert("Reporte Preoperacional - Próximamente");
+        setViewState('preoperational');
+    };
+
+    const handlePreoperationalSubmit = () => {
+        // Check if all questions are answered
+        const allAnswered = preoperationalQuestions.every(q => preoperationalAnswers[q.id] !== undefined);
+
+        if (!allAnswered) {
+            alert('Por favor responde todas las preguntas antes de enviar.');
+            return;
+        }
+
+        // Submit using router.post directly
+        router.post(route('preoperational.store'), {
+            messenger_id: messenger.id,
+            answers: preoperationalAnswers,
+            observations: null,
+        }, {
+            onSuccess: () => {
+                setViewState('preop_success');
+                setPreoperationalAnswers({});
+            },
+            onError: (errors) => {
+                if (errors.preop_duplicate) {
+                    setViewState('preop_duplicate_error');
+                }
+            },
+            preserveState: true,
+        });
+    };
+
+    const handlePreoperationalAnswer = (questionId, value) => {
+        setPreoperationalAnswers(prev => ({
+            ...prev,
+            [questionId]: value
+        }));
     };
 
     const resetAll = () => {
@@ -175,6 +227,140 @@ export default function Landing() {
                     >
                         Volver al Menú
                     </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (viewState === 'preop_success' && messenger) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+                <Head title="Reporte Enviado" />
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-center border-l-4 border-green-500">
+                    <h1 className="text-3xl font-bold mb-4 text-green-600 dark:text-green-400">✅ ¡Reporte Enviado!</h1>
+                    <p className="text-xl mb-4">
+                        Gracias <strong>{messenger.name}</strong>, tu reporte preoperacional ha sido registrado.
+                    </p>
+                    <p className="text-lg mb-6 text-gray-500">¡Buen viaje y conduce con seguridad!</p>
+                    <button
+                        onClick={() => setViewState('options')}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-semibold hover:opacity-90 transition-all mb-4"
+                    >
+                        Volver al Menú
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (viewState === 'preop_duplicate_error' && messenger) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+                <Head title="Reporte Ya Enviado" />
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-center border-l-4 border-orange-500">
+                    <h1 className="text-2xl font-bold mb-4 text-orange-600 dark:text-orange-400">⚠️ Reporte Ya Enviado</h1>
+                    <p className="text-xl mb-4">
+                        Hola <strong>{messenger.name}</strong>, ya has enviado tu reporte preoperacional hoy.
+                    </p>
+                    <p className="text-lg mb-6 text-gray-500">Solo puedes enviar un reporte por día.</p>
+                    <button
+                        onClick={() => setViewState('options')}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-semibold hover:opacity-90 transition-all"
+                    >
+                        Volver al Menú
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (viewState === 'preoperational' && messenger) {
+        // Group questions by category
+        const groupedQuestions = preoperationalQuestions.reduce((acc, question) => {
+            if (!acc[question.category]) {
+                acc[question.category] = [];
+            }
+            acc[question.category].push(question);
+            return acc;
+        }, {});
+
+        const allAnswered = preoperationalQuestions.every(q => preoperationalAnswers[q.id] !== undefined);
+        const answeredCount = Object.keys(preoperationalAnswers).length;
+
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300 p-4">
+                <Head title="Reporte Preoperacional" />
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl max-w-2xl w-full">
+                    <div className="mb-6">
+                        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+                            📋 Reporte Preoperacional
+                        </h1>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Hola <strong>{messenger.name}</strong>, verifica el estado de tu vehículo antes de iniciar.
+                        </p>
+                        <div className="mt-2 text-sm text-indigo-600 dark:text-indigo-400 font-semibold">
+                            Progreso: {answeredCount} / {preoperationalQuestions.length}
+                        </div>
+                    </div>
+
+                    <div className="space-y-6 max-h-96 overflow-y-auto pr-2">
+                        {Object.entries(groupedQuestions).map(([category, questions]) => (
+                            <div key={category}>
+                                <h3 className="text-lg font-bold text-indigo-600 dark:text-indigo-400 mb-3 border-b pb-2">
+                                    {category}
+                                </h3>
+                                <div className="space-y-3">
+                                    {questions.map((question) => (
+                                        <div key={question.id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                            <p className="text-sm font-medium mb-3">{question.label}</p>
+                                            <div className="flex gap-3">
+                                                <button
+                                                    onClick={() => handlePreoperationalAnswer(question.id, true)}
+                                                    className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${preoperationalAnswers[question.id] === true
+                                                        ? 'bg-green-600 text-white'
+                                                        : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-green-100 dark:hover:bg-green-900'
+                                                        }`}
+                                                >
+                                                    ✓ Sí
+                                                </button>
+                                                <button
+                                                    onClick={() => handlePreoperationalAnswer(question.id, false)}
+                                                    className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${preoperationalAnswers[question.id] === false
+                                                        ? 'bg-red-600 text-white'
+                                                        : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-red-900'
+                                                        }`}
+                                                >
+                                                    ✗ No
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="mt-6 flex gap-3">
+                        <button
+                            onClick={() => {
+                                setViewState('options');
+                                setPreoperationalAnswers({});
+                            }}
+                            className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-full font-semibold transition-all"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={handlePreoperationalSubmit}
+                            disabled={!allAnswered}
+                            className={`flex-1 px-6 py-3 rounded-full font-semibold transition-all ${allAnswered
+                                ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                : 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed'
+                                }`}
+                        >
+                            Enviar Reporte
+                        </button>
+                    </div>
                 </div>
             </div>
         );
