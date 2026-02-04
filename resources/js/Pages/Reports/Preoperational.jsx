@@ -1,32 +1,27 @@
 import React, { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import LeaderLayout from '@/Layouts/LeaderLayout';
 import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 
-export default function PreoperationalReports({ reports, messengers, filters }) {
+export default function PreoperationalReports({ reports, messengers, questions, filters }) {
     const [selectedDate, setSelectedDate] = useState(filters.date || '');
     const [selectedMessenger, setSelectedMessenger] = useState(filters.messenger_id || '');
     const [selectedReport, setSelectedReport] = useState(null);
     const [showExportModal, setShowExportModal] = useState(false);
     const [exportDates, setExportDates] = useState({ start: '', end: '' });
 
-    // Question labels mapping
-    const questionLabels = {
-        luces: 'Luces (delanteras, traseras, direccionales)',
-        frenos: 'Frenos (funcionamiento correcto)',
-        llantas: 'Llantas (estado y presión)',
-        espejos: 'Espejos retrovisores',
-        cinturon: 'Cinturón de seguridad',
-        casco: 'Casco (en buen estado)',
-        chaleco: 'Chaleco reflectivo',
-        soat: 'SOAT vigente',
-        licencia: 'Licencia de conducción',
-        tarjeta_propiedad: 'Tarjeta de propiedad',
-        kit_carreteras: 'Kit de carreteras (botiquín, extintor)',
-        limpieza: 'Limpieza general del vehículo',
-    };
+    // Create a label and type mapping from the dynamic questions
+    const questionData = questions.reduce((acc, q) => {
+        acc[q.key] = { label: q.label, type: q.type };
+        return acc;
+    }, {});
+
+    const questionLabels = questions.reduce((acc, q) => {
+        acc[q.key] = q.label;
+        return acc;
+    }, {});
 
     const handleFilter = () => {
         router.get(route('reports.preoperational'), {
@@ -82,12 +77,20 @@ export default function PreoperationalReports({ reports, messengers, filters }) 
                             {/* Header and Export Button */}
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-2xl font-bold">📋 Reportes Preoperacionales</h2>
-                                <button
-                                    onClick={() => setShowExportModal(true)}
-                                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold uppercase tracking-wider hover:bg-indigo-700 transition-all shadow-md active:transform active:scale-95 flex items-center gap-2"
-                                >
-                                    📥 Exportar Excel
-                                </button>
+                                <div className="flex gap-3">
+                                    <Link
+                                        href={route('preoperational-questions.index')}
+                                        className="px-6 py-2 bg-amber-600 text-white rounded-lg font-semibold uppercase tracking-wider hover:bg-amber-700 transition-all shadow-md active:transform active:scale-95 flex items-center gap-2"
+                                    >
+                                        ⚙️ Config Preguntas
+                                    </Link>
+                                    <button
+                                        onClick={() => setShowExportModal(true)}
+                                        className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-semibold uppercase tracking-wider hover:bg-indigo-700 transition-all shadow-md active:transform active:scale-95 flex items-center gap-2"
+                                    >
+                                        📥 Exportar Reporte
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Filters */}
@@ -300,35 +303,51 @@ export default function PreoperationalReports({ reports, messengers, filters }) 
                         </div>
 
                         <div className="p-6 space-y-4">
-                            {Object.entries(selectedReport.answers).map(([key, value]) => (
-                                <div
-                                    key={key}
-                                    className={`flex items-center justify-between p-4 rounded-lg border-2 ${value
-                                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                                        : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                                        }`}
-                                >
-                                    <div className="flex-1">
-                                        <p className="font-medium text-gray-900 dark:text-gray-100">
-                                            {questionLabels[key] || key}
-                                        </p>
+                            {Object.entries(selectedReport.answers).map(([key, value]) => {
+                                const qInfo = questionData[key];
+                                const isText = qInfo?.type === 'text';
+
+                                return (
+                                    <div
+                                        key={key}
+                                        className={`flex flex-col p-4 rounded-lg border-2 ${isText
+                                            ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800'
+                                            : value
+                                                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                                                : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                                            }`}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex-1">
+                                                <p className="font-bold text-gray-900 dark:text-gray-100">
+                                                    {qInfo?.label || key}
+                                                </p>
+                                            </div>
+                                            {!isText && (
+                                                <div className="flex items-center gap-2">
+                                                    <span
+                                                        className={`text-2xl font-bold ${value ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                                                            }`}
+                                                    >
+                                                        {value ? '✓' : '✗'}
+                                                    </span>
+                                                    <span
+                                                        className={`text-sm font-semibold ${value ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
+                                                            }`}
+                                                    >
+                                                        {value ? 'Sí' : 'No'}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {isText && (
+                                            <div className="mt-2 text-sm text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-black/20 p-2 rounded italic">
+                                                {value || '-'}
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <span
-                                            className={`text-2xl font-bold ${value ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                                                }`}
-                                        >
-                                            {value ? '✓' : '✗'}
-                                        </span>
-                                        <span
-                                            className={`text-sm font-semibold ${value ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
-                                                }`}
-                                        >
-                                            {value ? 'Sí' : 'No'}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
 
                             {selectedReport.observations && (
                                 <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">

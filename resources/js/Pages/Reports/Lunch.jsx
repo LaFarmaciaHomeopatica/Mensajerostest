@@ -1,14 +1,35 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import LeaderLayout from '@/Layouts/LeaderLayout';
+import Modal from '@/Components/Modal';
+import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
 
 export default function LunchReport({ logs, filters }) {
     const [date, setDate] = useState(filters.date || '');
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [exportDates, setExportDates] = useState({ start: '', end: '' });
 
     const handleDateChange = (e) => {
         const newDate = e.target.value;
         setDate(newDate);
         router.get(route('reports.lunch'), { date: newDate }, { preserveState: true, replace: true });
+    };
+
+    const handleExport = (e) => {
+        e.preventDefault();
+        if (!exportDates.start || !exportDates.end) {
+            alert('Por favor selecciona ambas fechas para exportar.');
+            return;
+        }
+
+        const params = new URLSearchParams({
+            start_date: exportDates.start,
+            end_date: exportDates.end
+        }).toString();
+
+        window.location.href = route('reports.lunch.export') + '?' + params;
+        setShowExportModal(false);
     };
 
     return (
@@ -19,25 +40,33 @@ export default function LunchReport({ logs, filters }) {
                 <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Reporte de Almuerzos</h1>
 
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-gray-500 dark:text-gray-400">Filtrar por fecha:</span>
-                        <input
-                            type="date"
-                            value={date}
-                            onChange={handleDateChange}
-                            className="rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                        {date && (
-                            <button
-                                onClick={() => {
-                                    setDate('');
-                                    router.get(route('reports.lunch'), {}, { preserveState: true, replace: true });
-                                }}
-                                className="text-xs text-red-500 hover:text-red-700 font-bold underline"
-                            >
-                                Limpiar
-                            </button>
-                        )}
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setShowExportModal(true)}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold uppercase text-xs tracking-wider hover:bg-indigo-700 transition-all shadow-sm active:transform active:scale-95 flex items-center gap-2"
+                        >
+                            📥 Exportar Reporte
+                        </button>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-gray-500 dark:text-gray-400">Filtrar:</span>
+                            <input
+                                type="date"
+                                value={date}
+                                onChange={handleDateChange}
+                                className="rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                            {date && (
+                                <button
+                                    onClick={() => {
+                                        setDate('');
+                                        router.get(route('reports.lunch'), {}, { preserveState: true, replace: true });
+                                    }}
+                                    className="text-xs text-red-500 hover:text-red-700 font-bold underline"
+                                >
+                                    Limpiar
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -110,6 +139,56 @@ export default function LunchReport({ logs, filters }) {
                     ))}
                 </div>
             </div>
+
+            {/* Export Modal */}
+            <Modal show={showExportModal} onClose={() => setShowExportModal(false)}>
+                <div className="p-6">
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
+                        📥 Exportar Reporte de Almuerzos
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                        Selecciona el rango de fechas para generar el archivo Excel.
+                    </p>
+
+                    <form onSubmit={handleExport}>
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                                    Fecha Inicio
+                                </label>
+                                <input
+                                    type="date"
+                                    required
+                                    value={exportDates.start}
+                                    onChange={(e) => setExportDates({ ...exportDates, start: e.target.value })}
+                                    className="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                                    Fecha Fin
+                                </label>
+                                <input
+                                    type="date"
+                                    required
+                                    value={exportDates.end}
+                                    onChange={(e) => setExportDates({ ...exportDates, end: e.target.value })}
+                                    className="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3">
+                            <SecondaryButton onClick={() => setShowExportModal(false)}>
+                                Cancelar
+                            </SecondaryButton>
+                            <PrimaryButton type="submit">
+                                Generar Excel
+                            </PrimaryButton>
+                        </div>
+                    </form>
+                </div>
+            </Modal>
         </LeaderLayout>
     );
 }

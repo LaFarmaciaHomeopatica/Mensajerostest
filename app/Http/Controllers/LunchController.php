@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 
 use App\Models\LunchLog;
 use App\Models\Messenger;
+use App\Exports\LunchReportsExport;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Services\BeetrackService;
 use Inertia\Inertia;
 
@@ -13,7 +15,10 @@ class LunchController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Landing');
+        $questions = \App\Models\PreoperationalQuestion::where('active', true)->orderBy('order')->get();
+        return Inertia::render('Landing', [
+            'preoperationalQuestions' => $questions
+        ]);
     }
 
     public function checkPlate(Request $request)
@@ -104,6 +109,24 @@ class LunchController extends Controller
             'logs' => $logs,
             'filters' => $request->only(['date'])
         ]);
+    }
+
+    public function export(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $fileName = 'reporte_almuerzos_' . now()->format('Y-m-d_His') . '.xlsx';
+
+        return Excel::download(
+            new LunchReportsExport(
+                $request->start_date,
+                $request->end_date
+            ),
+            $fileName
+        );
     }
 
     public function store(Request $request)

@@ -23,17 +23,25 @@ Route::post('/preoperational', [\App\Http\Controllers\PreoperationalController::
 Route::post('/shift', [\App\Http\Controllers\ShiftController::class, 'store'])->name('shift.store');
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', [UnifiedController::class, 'index'])->name('dashboard');
+    // Rutas exclusivas de Líder
+    Route::middleware(['role:lider'])->group(function () {
+        Route::get('/dashboard', [UnifiedController::class, 'index'])->name('dashboard');
+        Route::get('/reports/lunch', [LunchController::class, 'report'])->name('reports.lunch');
+        Route::get('/reports/lunch/export', [LunchController::class, 'export'])->name('reports.lunch.export');
+        Route::resource('messengers', \App\Http\Controllers\MessengerController::class);
+        Route::post('/update-location/{messenger}', [UnifiedController::class, 'updateLocation'])->name('messenger.update-location');
+        Route::post('/dispatch', [DispatchController::class, 'store'])->name('dispatch.store');
+        Route::get('/messenger-status', [UnifiedController::class, 'getMessengerStatus'])->name('messenger.status');
+        Route::get('/shifts/template', [\App\Http\Controllers\ShiftController::class, 'exportTemplate'])->name('shifts.template');
+        Route::get('/shifts/export', [\App\Http\Controllers\ShiftController::class, 'export'])->name('shifts.export');
+        Route::post('/shifts/import', [\App\Http\Controllers\ShiftController::class, 'import'])->name('shifts.import');
+        Route::resource('shifts', \App\Http\Controllers\ShiftController::class)->only(['index', 'store', 'destroy']);
+    });
 
-    Route::get('/reports/lunch', [LunchController::class, 'report'])->name('reports.lunch');
-    Route::get('/reports/preoperational', [\App\Http\Controllers\PreoperationalController::class, 'index'])->name('reports.preoperational');
-    Route::get('/reports/preoperational/export', [\App\Http\Controllers\PreoperationalController::class, 'export'])->name('reports.preoperational.export');
-    Route::resource('messengers', \App\Http\Controllers\MessengerController::class);
-    Route::post('/update-location/{messenger}', [UnifiedController::class, 'updateLocation'])->name('messenger.update-location');
-    Route::post('/dispatch', [DispatchController::class, 'store'])->name('dispatch.store');
-    Route::get('/messenger-status', [UnifiedController::class, 'getMessengerStatus'])->name('messenger.status');
-    Route::get('/shifts/template', [\App\Http\Controllers\ShiftController::class, 'exportTemplate'])->name('shifts.template');
-    Route::get('/shifts/export', [\App\Http\Controllers\ShiftController::class, 'export'])->name('shifts.export');
-    Route::post('/shifts/import', [\App\Http\Controllers\ShiftController::class, 'import'])->name('shifts.import');
-    Route::resource('shifts', \App\Http\Controllers\ShiftController::class)->only(['index', 'store', 'destroy']);
+    // Rutas compartidas (Líder y Regente)
+    Route::middleware(['role:lider,regente'])->group(function () {
+        Route::get('/reports/preoperational', [\App\Http\Controllers\PreoperationalController::class, 'index'])->name('reports.preoperational');
+        Route::get('/reports/preoperational/export', [\App\Http\Controllers\PreoperationalController::class, 'export'])->name('reports.preoperational.export');
+        Route::resource('preoperational-questions', \App\Http\Controllers\PreoperationalQuestionController::class);
+    });
 });

@@ -27,6 +27,10 @@ class AuthController extends Controller
                 return redirect()->intended('dashboard');
             }
 
+            if (Auth::user()->role === 'regente') {
+                return redirect()->intended(route('reports.preoperational'));
+            }
+
             return redirect()->intended('messenger');
         }
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Head, useForm, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 
-export default function Landing() {
+export default function Landing({ preoperationalQuestions = [] }) {
     const { flash, errors } = usePage().props;
     const [viewState, setViewState] = useState('search'); // search, options, active_lunch
     const [messenger, setMessenger] = useState(null);
@@ -12,21 +12,15 @@ export default function Landing() {
     const [activeLunch, setActiveLunch] = useState(null);
     const [preoperationalAnswers, setPreoperationalAnswers] = useState({});
 
-    // Preoperational checklist questions
-    const preoperationalQuestions = [
-        { id: 'luces', label: 'Luces (delanteras, traseras, direccionales)', category: 'Vehículo' },
-        { id: 'frenos', label: 'Frenos (funcionamiento correcto)', category: 'Vehículo' },
-        { id: 'llantas', label: 'Llantas (estado y presión)', category: 'Vehículo' },
-        { id: 'espejos', label: 'Espejos retrovisores', category: 'Vehículo' },
-        { id: 'cinturon', label: 'Cinturón de seguridad', category: 'Seguridad' },
-        { id: 'casco', label: 'Casco (en buen estado)', category: 'Seguridad' },
-        { id: 'chaleco', label: 'Chaleco reflectivo', category: 'Seguridad' },
-        { id: 'soat', label: 'SOAT vigente', category: 'Documentos' },
-        { id: 'licencia', label: 'Licencia de conducción', category: 'Documentos' },
-        { id: 'tarjeta_propiedad', label: 'Tarjeta de propiedad', category: 'Documentos' },
-        { id: 'kit_carreteras', label: 'Kit de carreteras (botiquín, extintor)', category: 'Seguridad' },
-        { id: 'limpieza', label: 'Limpieza general del vehículo', category: 'Vehículo' },
-    ];
+    // Group questions by category for rendering
+    const groupedQuestions = preoperationalQuestions.reduce((acc, q) => {
+        if (!acc[q.category]) acc[q.category] = [];
+        acc[q.category].push(q);
+        return acc;
+    }, {});
+
+    const answeredCount = Object.keys(preoperationalAnswers).length;
+    const allAnswered = preoperationalQuestions.length > 0 && answeredCount === preoperationalQuestions.length;
 
     // Lunch Form
     const { data, setData, post, processing, reset: resetForm } = useForm({
@@ -90,7 +84,13 @@ export default function Landing() {
 
     const handlePreoperationalSubmit = () => {
         // Check if all questions are answered
-        const allAnswered = preoperationalQuestions.every(q => preoperationalAnswers[q.id] !== undefined);
+        const allAnswered = preoperationalQuestions.every(q => {
+            const answer = preoperationalAnswers[q.key];
+            if (q.type === 'text') {
+                return answer && answer.trim().length > 0;
+            }
+            return answer !== undefined;
+        });
 
         if (!allAnswered) {
             alert('Por favor responde todas las preguntas antes de enviar.');
@@ -116,11 +116,11 @@ export default function Landing() {
         });
     };
 
-    const handlePreoperationalAnswer = (questionId, value) => {
-        setPreoperationalAnswers(prev => ({
-            ...prev,
-            [questionId]: value
-        }));
+    const handlePreoperationalAnswer = (key, value) => {
+        setPreoperationalAnswers({
+            ...preoperationalAnswers,
+            [key]: value
+        });
     };
 
     const resetAll = () => {
@@ -314,24 +314,36 @@ export default function Landing() {
                                         <div key={question.id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                                             <p className="text-sm font-medium mb-3">{question.label}</p>
                                             <div className="flex gap-3">
-                                                <button
-                                                    onClick={() => handlePreoperationalAnswer(question.id, true)}
-                                                    className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${preoperationalAnswers[question.id] === true
-                                                        ? 'bg-green-600 text-white'
-                                                        : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-green-100 dark:hover:bg-green-900'
-                                                        }`}
-                                                >
-                                                    ✓ Sí
-                                                </button>
-                                                <button
-                                                    onClick={() => handlePreoperationalAnswer(question.id, false)}
-                                                    className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${preoperationalAnswers[question.id] === false
-                                                        ? 'bg-red-600 text-white'
-                                                        : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-red-900'
-                                                        }`}
-                                                >
-                                                    ✗ No
-                                                </button>
+                                                {question.type === 'text' ? (
+                                                    <textarea
+                                                        value={preoperationalAnswers[question.key] || ''}
+                                                        onChange={(e) => handlePreoperationalAnswer(question.key, e.target.value)}
+                                                        className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                                        rows="3"
+                                                        placeholder="Escribe tu respuesta aquí..."
+                                                    />
+                                                ) : (
+                                                    <>
+                                                        <button
+                                                            onClick={() => handlePreoperationalAnswer(question.key, true)}
+                                                            className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${preoperationalAnswers[question.key] === true
+                                                                ? 'bg-green-600 text-white'
+                                                                : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-green-100 dark:hover:bg-green-900'
+                                                                }`}
+                                                        >
+                                                            ✓ Sí
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handlePreoperationalAnswer(question.key, false)}
+                                                            className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${preoperationalAnswers[question.key] === false
+                                                                ? 'bg-red-600 text-white'
+                                                                : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-red-900'
+                                                                }`}
+                                                        >
+                                                            ✗ No
+                                                        </button>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                     ))}

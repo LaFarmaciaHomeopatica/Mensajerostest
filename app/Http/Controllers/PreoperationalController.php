@@ -50,10 +50,12 @@ class PreoperationalController extends Controller
         });
 
         $messengers = Messenger::orderBy('name')->get();
+        $questions = \App\Models\PreoperationalQuestion::orderBy('order')->get();
 
         return Inertia::render('Reports/Preoperational', [
             'reports' => $reports,
             'messengers' => $messengers,
+            'questions' => $questions,
             'filters' => $request->only(['date', 'messenger_id'])
         ]);
     }

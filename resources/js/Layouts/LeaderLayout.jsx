@@ -5,12 +5,12 @@ export default function LeaderLayout({ children, title }) {
     const { auth } = usePage().props;
 
     const menuItems = [
-        { label: 'Dashboard', route: 'dashboard', active: route().current('dashboard') },
-        { label: 'Mensajeros', route: 'messengers.index', active: route().current('messengers.*') },
-        { label: 'Horarios', route: 'shifts.index', active: route().current('shifts.*') },
-        { label: 'Reporte Almuerzos', route: 'reports.lunch', active: route().current('reports.lunch') },
-        { label: 'Reporte Preoperacional', route: 'reports.preoperational', active: route().current('reports.preoperational') },
-    ];
+        { label: 'Dashboard', route: 'dashboard', active: route().current('dashboard'), roles: ['lider'] },
+        { label: 'Mensajeros', route: 'messengers.index', active: route().current('messengers.*'), roles: ['lider'] },
+        { label: 'Horarios', route: 'shifts.index', active: route().current('shifts.*'), roles: ['lider'] },
+        { label: 'Reporte Almuerzos', route: 'reports.lunch', active: route().current('reports.lunch'), roles: ['lider'] },
+        { label: 'Reportes Preoperacionales', route: 'reports.preoperational', active: route().current('reports.preoperational'), roles: ['lider', 'regente'] },
+    ].filter(item => item.roles.includes(auth.user.role));
 
     const logout = (e) => {
         e.preventDefault();
