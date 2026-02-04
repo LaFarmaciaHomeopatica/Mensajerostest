@@ -70,6 +70,10 @@ class PreoperationalController extends Controller
 
         $messenger = Messenger::findOrFail($request->messenger_id);
 
+        if (!$messenger->is_active) {
+            return back()->withErrors(['messenger_inactive' => 'Tu usuario está inactivo.']);
+        }
+
         // Check if already submitted today
         $existingReport = PreoperationalReport::where('messenger_id', $messenger->id)
             ->whereDate('created_at', today())

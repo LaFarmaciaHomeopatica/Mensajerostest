@@ -19,8 +19,7 @@ export default function Landing({ preoperationalQuestions = [] }) {
         return acc;
     }, {});
 
-    const answeredCount = Object.keys(preoperationalAnswers).length;
-    const allAnswered = preoperationalQuestions.length > 0 && answeredCount === preoperationalQuestions.length;
+
 
     // Lunch Form
     const { data, setData, post, processing, reset: resetForm } = useForm({
@@ -106,6 +105,7 @@ export default function Landing({ preoperationalQuestions = [] }) {
             onSuccess: () => {
                 setViewState('preop_success');
                 setPreoperationalAnswers({});
+                setMessenger(prev => ({ ...prev, preoperational_submitted: true }));
             },
             onError: (errors) => {
                 if (errors.preop_duplicate) {
@@ -284,7 +284,13 @@ export default function Landing({ preoperationalQuestions = [] }) {
             return acc;
         }, {});
 
-        const allAnswered = preoperationalQuestions.every(q => preoperationalAnswers[q.id] !== undefined);
+        const allAnswered = preoperationalQuestions.every(q => {
+            const answer = preoperationalAnswers[q.key];
+            if (q.type === 'text') {
+                return answer && typeof answer === 'string' && answer.trim().length > 0;
+            }
+            return answer !== undefined;
+        });
         const answeredCount = Object.keys(preoperationalAnswers).length;
 
         return (
@@ -303,7 +309,7 @@ export default function Landing({ preoperationalQuestions = [] }) {
                         </div>
                     </div>
 
-                    <div className="space-y-6 max-h-96 overflow-y-auto pr-2">
+                    <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                         {Object.entries(groupedQuestions).map(([category, questions]) => (
                             <div key={category}>
                                 <h3 className="text-lg font-bold text-indigo-600 dark:text-indigo-400 mb-3 border-b pb-2">
@@ -326,7 +332,7 @@ export default function Landing({ preoperationalQuestions = [] }) {
                                                     <>
                                                         <button
                                                             onClick={() => handlePreoperationalAnswer(question.key, true)}
-                                                            className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${preoperationalAnswers[question.key] === true
+                                                            className={`flex-1 py-4 px-4 rounded-xl font-bold text-lg transition-all active:scale-95 ${preoperationalAnswers[question.key] === true
                                                                 ? 'bg-green-600 text-white'
                                                                 : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-green-100 dark:hover:bg-green-900'
                                                                 }`}
@@ -335,7 +341,7 @@ export default function Landing({ preoperationalQuestions = [] }) {
                                                         </button>
                                                         <button
                                                             onClick={() => handlePreoperationalAnswer(question.key, false)}
-                                                            className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${preoperationalAnswers[question.key] === false
+                                                            className={`flex-1 py-4 px-4 rounded-xl font-bold text-lg transition-all active:scale-95 ${preoperationalAnswers[question.key] === false
                                                                 ? 'bg-red-600 text-white'
                                                                 : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-red-900'
                                                                 }`}
@@ -454,6 +460,15 @@ export default function Landing({ preoperationalQuestions = [] }) {
                             </div>
                         )}
 
+                        {messenger?.preoperational_submitted && !messenger?.shift_finished && (
+                            <div className="bg-green-50 dark:bg-green-900/40 border-l-4 border-green-500 text-green-700 dark:text-green-300 p-4 rounded-md mb-4 shadow-sm">
+                                <p className="font-bold flex items-center gap-2">
+                                    <span>✅</span> Reporte Preoperacional Completado
+                                </p>
+                                <p className="text-sm">Ya has registrado el estado de tu vehículo por hoy.</p>
+                            </div>
+                        )}
+
                         <button
                             onClick={() => setViewState('shifts_view')}
                             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-5 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-between text-lg group"
@@ -467,17 +482,17 @@ export default function Landing({ preoperationalQuestions = [] }) {
 
                         <button
                             onClick={handlePreopClick}
-                            className={`w-full font-bold py-5 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-between text-lg group ${messenger?.shift_finished
+                            className={`w-full font-bold py-5 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-between text-lg group ${messenger?.shift_finished || messenger?.preoperational_submitted
                                 ? 'bg-gray-300 cursor-not-allowed text-gray-500 shadow-none'
                                 : 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-xl'
                                 }`}
-                            disabled={messenger?.shift_finished}
+                            disabled={messenger?.shift_finished || messenger?.preoperational_submitted}
                         >
                             <span className="flex items-center gap-3">
                                 <span className="text-2xl">📋</span>
                                 <span>Reporte Preoperacional</span>
                             </span>
-                            {!messenger?.shift_finished && <span className="text-blue-200 group-hover:text-white">→</span>}
+                            {(!messenger?.shift_finished && !messenger?.preoperational_submitted) && <span className="text-blue-200 group-hover:text-white">→</span>}
                         </button>
 
                         <button
@@ -526,7 +541,7 @@ export default function Landing({ preoperationalQuestions = [] }) {
                             Mis Próximos Turnos
                         </h3>
 
-                        <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
                             {messenger?.shifts && messenger.shifts.length > 0 ? (
                                 messenger.shifts.map((shift, index) => (
                                     <div
@@ -640,9 +655,6 @@ export default function Landing({ preoperationalQuestions = [] }) {
                         </div>
                     </div>
                 )}
-            </div>
-            <div className="mt-8 text-gray-400 text-sm">
-                &copy; {new Date().getFullYear()} Logística
             </div>
         </div>
     );

@@ -59,19 +59,19 @@ export default function QuestionsIndex({ questions }) {
         <LeaderLayout>
             <Head title="Configuración de Preguntas" />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div className="py-6 sm:py-12">
+                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 italic">
+                            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
+                                <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
                                     ⚙️ Configuración del Preoperacional
                                 </h2>
                                 <button
                                     onClick={() => openModal()}
-                                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold uppercase tracking-wider hover:bg-indigo-700 transition-all shadow-md active:transform active:scale-95 flex items-center gap-2"
+                                    className="w-full lg:w-auto px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 flex items-center justify-center gap-2"
                                 >
-                                    ➕ Nueva Pregunta
+                                    <span>➕</span> Nueva Pregunta
                                 </button>
                             </div>
 

@@ -70,23 +70,23 @@ export default function PreoperationalReports({ reports, messengers, questions, 
         <LeaderLayout>
             <Head title="Reportes Preoperacionales" />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div className="py-6 sm:py-12">
+                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             {/* Header and Export Button */}
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-2xl font-bold">📋 Reportes Preoperacionales</h2>
-                                <div className="flex gap-3">
+                            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
+                                <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">📋 Reportes Preoperacionales</h2>
+                                <div className="flex flex-col sm:flex-row items-stretch gap-3 w-full lg:w-auto">
                                     <Link
                                         href={route('preoperational-questions.index')}
-                                        className="px-6 py-2 bg-amber-600 text-white rounded-lg font-semibold uppercase tracking-wider hover:bg-amber-700 transition-all shadow-md active:transform active:scale-95 flex items-center gap-2"
+                                        className="px-5 py-2.5 bg-amber-600 text-white rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-200 dark:shadow-none active:scale-95 flex items-center justify-center gap-2"
                                     >
                                         ⚙️ Config Preguntas
                                     </Link>
                                     <button
                                         onClick={() => setShowExportModal(true)}
-                                        className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-semibold uppercase tracking-wider hover:bg-indigo-700 transition-all shadow-md active:transform active:scale-95 flex items-center gap-2"
+                                        className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 flex items-center justify-center gap-2"
                                     >
                                         📥 Exportar Reporte
                                     </button>
@@ -94,24 +94,24 @@ export default function PreoperationalReports({ reports, messengers, questions, 
                             </div>
 
                             {/* Filters */}
-                            <div className="mb-6 flex gap-4 items-end">
+                            <div className="mb-8 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col md:flex-row gap-4 items-stretch md:items-end">
                                 <div className="flex-1">
-                                    <label className="block text-sm font-medium mb-2">Fecha</label>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Fecha</label>
                                     <input
                                         type="date"
                                         value={selectedDate}
                                         onChange={(e) => setSelectedDate(e.target.value)}
-                                        className="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                                        className="w-full rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500"
                                     />
                                 </div>
                                 <div className="flex-1">
-                                    <label className="block text-sm font-medium mb-2">Mensajero</label>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Mensajero</label>
                                     <select
                                         value={selectedMessenger}
                                         onChange={(e) => setSelectedMessenger(e.target.value)}
-                                        className="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                                        className="w-full rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500"
                                     >
-                                        <option value="">Todos</option>
+                                        <option value="">Todos los mensajeros</option>
                                         {messengers.map((messenger) => (
                                             <option key={messenger.id} value={messenger.id}>
                                                 {messenger.name}
@@ -122,13 +122,13 @@ export default function PreoperationalReports({ reports, messengers, questions, 
                                 <div className="flex gap-2">
                                     <button
                                         onClick={handleFilter}
-                                        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                                        className="flex-1 md:flex-none px-6 py-2 bg-slate-800 text-white rounded-xl font-bold text-xs uppercase hover:bg-slate-700 transition-all active:scale-95 shadow-md shadow-slate-200 dark:shadow-none"
                                     >
                                         Filtrar
                                     </button>
                                     <button
                                         onClick={handleClearFilters}
-                                        className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                                        className="flex-1 md:flex-none px-6 py-2 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs uppercase hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95"
                                     >
                                         Limpiar
                                     </button>

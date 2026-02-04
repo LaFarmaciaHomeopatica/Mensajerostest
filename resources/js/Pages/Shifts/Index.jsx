@@ -87,19 +87,19 @@ export default function ShiftsIndex({ auth, messengers, weekStart, weekEnd }) {
         >
             <Head title="Horarios" />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div className="py-6 sm:py-12">
+                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
                     {/* Navigation */}
-                    <div className="flex justify-between items-center mb-6">
-                        <div className="flex items-center gap-2">
+                    <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center mb-8 gap-6">
+                        <div className="flex flex-col sm:flex-row items-stretch gap-3">
                             <a
                                 href={route('shifts.template')}
-                                className="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-25 transition ease-in-out duration-150"
+                                className="inline-flex items-center justify-center px-4 py-2.5 bg-white dark:bg-gray-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-[10px] text-slate-600 dark:text-slate-300 uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all font-sans"
                             >
-                                Descargar Plantilla
+                                📄 Plantilla
                             </a>
-                            <label className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150 cursor-pointer">
-                                Cargar Turnos
+                            <label className="inline-flex items-center justify-center px-4 py-2.5 bg-indigo-600 border border-transparent rounded-xl font-bold text-[10px] text-white uppercase tracking-widest hover:bg-indigo-500 shadow-lg shadow-indigo-200 dark:shadow-none transition-all cursor-pointer">
+                                📤 Cargar Turnos
                                 <input
                                     type="file"
                                     className="hidden"
@@ -108,26 +108,29 @@ export default function ShiftsIndex({ auth, messengers, weekStart, weekEnd }) {
                                 />
                             </label>
 
-                            <SecondaryButton onClick={() => setShowExportModal(true)}>
-                                Exportar Reporte
-                            </SecondaryButton>
+                            <button
+                                onClick={() => setShowExportModal(true)}
+                                className="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 border border-transparent rounded-xl font-bold text-[10px] text-white uppercase tracking-widest hover:bg-emerald-500 shadow-lg shadow-emerald-200 dark:shadow-none transition-all"
+                            >
+                                📊 Exportar
+                            </button>
                         </div>
 
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-between sm:justify-center gap-4 bg-slate-100 dark:bg-slate-900/50 p-2 rounded-2xl">
                             <Link
                                 href={`/shifts?date=${start.subtract(1, 'week').format('YYYY-MM-DD')}`}
-                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                                className="p-2 sm:px-4 bg-white dark:bg-slate-800 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition"
                             >
-                                &lt;
+                                <span className="font-black text-indigo-600">←</span>
                             </Link>
-                            <span className="text-lg font-bold dark:text-gray-200 uppercase">
-                                {start.format('MMMM D')} - {dayjs(weekEnd).format('MMMM D, YYYY')}
+                            <span className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight text-center px-2">
+                                {start.format('D MMM')} - {dayjs(weekEnd).format('D MMM')}
                             </span>
                             <Link
                                 href={`/shifts?date=${start.add(1, 'week').format('YYYY-MM-DD')}`}
-                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                                className="p-2 sm:px-4 bg-white dark:bg-slate-800 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition"
                             >
-                                &gt;
+                                <span className="font-black text-indigo-600">→</span>
                             </Link>
                         </div>
                     </div>

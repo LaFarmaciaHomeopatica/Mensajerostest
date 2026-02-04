@@ -20,7 +20,6 @@ Route::post('/messenger/check-plate', [LunchController::class, 'checkPlate'])->n
 Route::post('/lunch', [LunchController::class, 'store'])->name('lunch.store');
 Route::post('/shift-completion', [\App\Http\Controllers\ShiftCompletionController::class, 'store'])->name('shift-completion.store');
 Route::post('/preoperational', [\App\Http\Controllers\PreoperationalController::class, 'store'])->name('preoperational.store');
-Route::post('/shift', [\App\Http\Controllers\ShiftController::class, 'store'])->name('shift.store');
 
 Route::middleware(['auth'])->group(function () {
     // Rutas exclusivas de Líder
@@ -36,6 +35,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/shifts/export', [\App\Http\Controllers\ShiftController::class, 'export'])->name('shifts.export');
         Route::post('/shifts/import', [\App\Http\Controllers\ShiftController::class, 'import'])->name('shifts.import');
         Route::resource('shifts', \App\Http\Controllers\ShiftController::class)->only(['index', 'store', 'destroy']);
+        Route::resource('users', \App\Http\Controllers\UserController::class)->except(['create', 'edit', 'show']);
     });
 
     // Rutas compartidas (Líder y Regente)

@@ -16,6 +16,10 @@ class ShiftCompletionController extends Controller
 
         $messenger = Messenger::findOrFail($request->messenger_id);
 
+        if (!$messenger->is_active) {
+            return back()->withErrors(['messenger_inactive' => 'Tu usuario está inactivo.']);
+        }
+
         // Check if already completed today
         $existing = ShiftCompletion::where('messenger_id', $messenger->id)
             ->whereDate('finished_at', today())

@@ -105,37 +105,38 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
         <LeaderLayout title="Control Center">
             <Head title="Control Center" />
             {/* Glassmorphism Header */}
-            <div className="sticky top-14 z-20 backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-b border-indigo-100 dark:border-indigo-900/50 shadow-sm transition-all duration-300">
-                <div className="max-w-[1800px] mx-auto p-4">
-                    <form onSubmit={handleDispatchSubmit} className="flex flex-wrap items-end gap-4">
+            <div className="sticky top-16 z-20 backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-b border-indigo-100 dark:border-indigo-900/50 shadow-sm transition-all duration-300">
+                <div className="max-w-[1800px] mx-auto p-3 sm:p-4">
+                    <form onSubmit={handleDispatchSubmit} className="flex flex-col lg:flex-row items-stretch lg:items-end gap-3 lg:gap-4">
 
                         {/* Brand / Filter */}
-                        <div className="flex-grow md:flex-grow-0 min-w-[200px] flex gap-2">
+                        <div className="flex-grow lg:flex-grow-0 lg:flex-[1.5] min-w-[280px]">
+                            <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Buscar en lista</label>
                             <div className="relative w-full group">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg className="h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                    <svg className="h-3 w-3 text-slate-400 group-focus-within:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                 </div>
                                 <input
                                     type="text"
                                     value={filter}
                                     onChange={(e) => setFilter(e.target.value)}
-                                    placeholder="Filtrar mensajero..."
-                                    className="pl-9 w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 hover:bg-white dark:hover:bg-slate-700 transition-all duration-200"
+                                    placeholder="Nombre, placa o estado..."
+                                    className="pl-9 w-full bg-slate-50/50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs py-2 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200"
                                 />
                             </div>
                         </div>
 
                         {/* File Input - Custom Styling */}
-                        <div className="flex-grow relative group cursor-pointer">
+                        <div className="w-full lg:w-[350px] relative group cursor-pointer">
                             <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider group-hover:text-indigo-500 transition-colors">Archivo de Ruta</label>
                             <input
                                 type="file"
                                 onChange={(e) => setData('file', e.target.files[0])}
                                 accept=".xlsx, .xls"
-                                className="block w-full text-xs text-slate-500
-                                  file:mr-2 file:py-1.5 file:px-3
-                                  file:rounded-full file:border-0
-                                  file:text-xs file:font-semibold
+                                className="block w-full text-xs text-slate-500 bg-slate-50/50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 py-[5px] px-2
+                                  file:mr-2 file:py-1 file:px-3
+                                  file:rounded-lg file:border-0
+                                  file:text-[10px] file:font-semibold
                                   file:bg-indigo-50 file:text-indigo-700
                                   hover:file:bg-indigo-100
                                   cursor-pointer"
@@ -144,12 +145,12 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                         </div>
 
                         {/* Location & Messenger */}
-                        <div className="w-[180px]">
+                        <div className="w-full lg:w-[220px]">
                             <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Bodega Destino</label>
                             <select
                                 value={data.location_id}
                                 onChange={(e) => setData('location_id', e.target.value)}
-                                className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-xs py-1.5 focus:ring-indigo-500 focus:border-indigo-500"
+                                className="w-full bg-slate-50/50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl text-xs py-2 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                                 required
                             >
                                 <option value="">Seleccionar...</option>
@@ -175,7 +176,7 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                             </label>
                         </div>
 
-                        <div className="flex-grow min-w-[250px]">
+                        <div className="flex-grow lg:flex-1 min-w-[180px]">
                             <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Nombre Archivo Salida</label>
                             <div className="flex gap-2">
                                 <input
@@ -200,7 +201,7 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
             </div>
 
             {/* Main Content */}
-            <div className="max-w-[1800px] mx-auto p-4 flex flex-col md:flex-row gap-6 h-[calc(100vh-160px)]">
+            <div className="max-w-[1800px] mx-auto p-3 sm:p-4 flex flex-col lg:flex-row gap-4 lg:gap-6 min-h-screen lg:h-[calc(100vh-160px)]">
 
                 {/* Column: 116 (Principal) */}
                 <div

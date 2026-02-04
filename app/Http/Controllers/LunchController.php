@@ -40,6 +40,10 @@ class LunchController extends Controller
             ->whereDate('finished_at', today())
             ->exists();
 
+        $preopSubmitted = \App\Models\PreoperationalReport::where('messenger_id', $messenger->id)
+            ->whereDate('created_at', today())
+            ->exists();
+
         $activeLunch = $messenger->lunchLogs()
             ->where('status', 'active')
             ->whereDate('start_time', today())
@@ -52,6 +56,7 @@ class LunchController extends Controller
             'name' => $messenger->name,
             'vehicle' => $messenger->vehicle,
             'shift_finished' => $shiftFinished,
+            'preoperational_submitted' => $preopSubmitted,
         ];
 
         if ($activeLunch) {
@@ -136,6 +141,10 @@ class LunchController extends Controller
         ]);
 
         $messenger = Messenger::findOrFail($request->messenger_id);
+
+        if (!$messenger->is_active) {
+            return back()->withErrors(['messenger_inactive' => 'Tu usuario está inactivo.']);
+        }
 
         // Check if already registered lunch today
         $existingLunch = LunchLog::where('messenger_id', $messenger->id)

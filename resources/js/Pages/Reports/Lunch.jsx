@@ -36,24 +36,24 @@ export default function LunchReport({ logs, filters }) {
         <LeaderLayout title="Reporte de Almuerzos">
             <Head title="Reporte Almuerzos" />
 
-            <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-                <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Reporte de Almuerzos</h1>
+            <div className="max-w-7xl mx-auto p-3 sm:p-6 lg:p-8">
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
+                    <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Reporte de Almuerzos</h1>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                         <button
                             onClick={() => setShowExportModal(true)}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold uppercase text-xs tracking-wider hover:bg-indigo-700 transition-all shadow-sm active:transform active:scale-95 flex items-center gap-2"
+                            className="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 flex items-center justify-center gap-2"
                         >
-                            📥 Exportar Reporte
+                            <span>📥</span> Exportar Reporte
                         </button>
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-gray-500 dark:text-gray-400">Filtrar:</span>
+                        <div className="flex items-center gap-2 bg-white dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-2">Filtrar:</span>
                             <input
                                 type="date"
                                 value={date}
                                 onChange={handleDateChange}
-                                className="rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                className="border-none bg-transparent dark:text-white text-xs focus:ring-0 py-1"
                             />
                             {date && (
                                 <button
@@ -61,9 +61,9 @@ export default function LunchReport({ logs, filters }) {
                                         setDate('');
                                         router.get(route('reports.lunch'), {}, { preserveState: true, replace: true });
                                     }}
-                                    className="text-xs text-red-500 hover:text-red-700 font-bold underline"
+                                    className="p-1 px-2 text-[10px] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-bold uppercase"
                                 >
-                                    Limpiar
+                                    ✕
                                 </button>
                             )}
                         </div>
