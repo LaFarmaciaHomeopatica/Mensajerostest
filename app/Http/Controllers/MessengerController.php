@@ -8,10 +8,21 @@ use Inertia\Inertia;
 
 class MessengerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $query = Messenger::query();
+
+        if ($request->has('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('vehicle', 'like', "%{$search}%");
+            });
+        }
+
         return Inertia::render('Messengers/Index', [
-            'messengers' => Messenger::all()
+            'messengers' => $query->orderBy('name')->paginate(10)->withQueryString(),
+            'filters' => $request->only(['search'])
         ]);
     }
 
