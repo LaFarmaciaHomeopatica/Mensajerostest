@@ -16,6 +16,18 @@ export default function Landing() {
         messenger_id: '',
     });
 
+    const handleLunchSubmit = () => {
+        post(route('lunch.store'), {
+            onSuccess: () => setViewState('success'),
+        });
+    };
+
+    const handleShiftSubmit = () => {
+        post(route('shift.store'), {
+            onSuccess: () => setViewState('success_shift'),
+        });
+    };
+
     const checkPlate = async (e) => {
         e.preventDefault();
         setError(null);
@@ -27,7 +39,9 @@ export default function Landing() {
             setMessenger(mData);
             setData('messenger_id', mData.id);
 
-            if (mData.active_lunch) {
+            if (mData.shift_finished) {
+                setViewState('shift_finished');
+            } else if (mData.active_lunch) {
                 setActiveLunch(mData.active_lunch);
                 setViewState('active_lunch');
             } else {
@@ -39,12 +53,6 @@ export default function Landing() {
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleLunchSubmit = () => {
-        post(route('lunch.store'), {
-            onSuccess: () => setViewState('success'),
-        });
     };
 
     const handlePreopClick = () => {
@@ -78,6 +86,48 @@ export default function Landing() {
                         className="bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 px-6 py-3 rounded-full font-semibold hover:opacity-90 transition-all"
                     >
                         Volver
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (viewState === 'shift_finished' && messenger) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+                <Head title="Turno Finalizado" />
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-center border-l-4 border-gray-500">
+                    <h1 className="text-2xl font-bold mb-4 text-gray-600 dark:text-gray-400">Turno Finalizado 🏁</h1>
+                    <p className="text-xl mb-4">
+                        Hola <strong>{messenger.name}</strong>, ya registraste el fin de tu turno por hoy.
+                    </p>
+                    <p className="text-lg mb-6 text-gray-500">¡Nos vemos mañana!</p>
+                    <button
+                        onClick={resetAll}
+                        className="bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 px-6 py-3 rounded-full font-semibold hover:opacity-90 transition-all"
+                    >
+                        Volver
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (flash.success && viewState === 'success_shift') {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+                <Head title="Buen descanso" />
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-center border-l-4 border-indigo-500">
+                    <h1 className="text-3xl font-bold mb-4 text-indigo-600 dark:text-indigo-400">¡Buen descanso! 🌙</h1>
+                    <p className="text-xl mb-4">
+                        Has finalizado tu turno correctamente.
+                    </p>
+                    <p className="text-lg mb-6">Gracias por tu trabajo hoy.</p>
+                    <button
+                        onClick={() => { resetAll(); window.location.reload(); }}
+                        className="bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 px-6 py-3 rounded-full font-semibold hover:opacity-90 transition-all"
+                    >
+                        Volver al inicio
                     </button>
                 </div>
             </div>
@@ -144,28 +194,77 @@ export default function Landing() {
                     </form>
                 )}
 
+                {/* Button inside options view */}
                 {viewState === 'options' && (
                     <div className="space-y-4">
                         <button
-                            onClick={() => setViewState('lunch_confirm')}
-                            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-5 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center text-lg"
+                            onClick={handlePreopClick}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-between text-lg group"
                         >
-                            🍽️ Registrar Almuerzo
+                            <span className="flex items-center gap-3">
+                                <span className="text-2xl">📋</span>
+                                <span>Reporte Preoperacional</span>
+                            </span>
+                            <span className="text-blue-200 group-hover:text-white">→</span>
                         </button>
 
                         <button
-                            onClick={handlePreopClick}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center text-lg"
+                            onClick={() => setViewState('lunch_confirm')}
+                            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-5 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-between text-lg group"
                         >
-                            📋 Reporte Preoperacional
+                            <span className="flex items-center gap-3">
+                                <span className="text-2xl">🍽️</span>
+                                <span>Registrar Almuerzo</span>
+                            </span>
+                            <span className="text-green-200 group-hover:text-white">→</span>
+                        </button>
+
+                        <button
+                            onClick={() => setViewState('shift_confirm')}
+                            className="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-5 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-between text-lg group"
+                        >
+                            <span className="flex items-center gap-3">
+                                <span className="text-2xl">🏁</span>
+                                <span>Reportar Fin Turno</span>
+                            </span>
+                            <span className="text-gray-400 group-hover:text-white">→</span>
                         </button>
 
                         <button
                             onClick={resetAll}
-                            className="w-full text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 py-2 mt-4"
+                            className="w-full text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 py-3 mt-4 text-sm font-medium border border-transparent hover:border-gray-200 rounded-lg transition-all"
                         >
                             Cancelar / Buscar otra placa
                         </button>
+                    </div>
+                )}
+
+                {/* Shift Confirmation View */}
+                {viewState === 'shift_confirm' && (
+                    <div className="space-y-6 text-center">
+                        <div className="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4 mb-4 text-left text-sm">
+                            <p className="font-bold">Advertencia:</p>
+                            <p>Al reportar el fin de turno, ya no podrás recibir más despachos ni registrar almuerzos por hoy.</p>
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+                            ¿Confirmas que terminaste turno?
+                        </h3>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <button
+                                onClick={() => setViewState('options')}
+                                className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition-all"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleShiftSubmit}
+                                disabled={processing}
+                                className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all"
+                            >
+                                {processing ? 'Finalizando...' : 'Sí, Finalizar'}
+                            </button>
+                        </div>
                     </div>
                 )}
 

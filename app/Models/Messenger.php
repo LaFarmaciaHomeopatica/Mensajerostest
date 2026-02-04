@@ -12,4 +12,14 @@ class Messenger extends Model
     {
         return $this->hasMany(LunchLog::class);
     }
+
+    public function shiftCompletions()
+    {
+        return $this->hasMany(ShiftCompletion::class);
+    }
+
+    public function shifts()
+    {
+        return $this->hasMany(Shift::class);
+    }
 }

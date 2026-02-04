@@ -31,6 +31,19 @@ class LunchController extends Controller
             return response()->json(['error' => 'Mensajero inactivo. Contacte a su líder.'], 403);
         }
 
+        $shiftFinished = $messenger->shiftCompletions()
+            ->whereDate('finished_at', today())
+            ->exists();
+
+        if ($shiftFinished) {
+            return response()->json([
+                'id' => $messenger->id,
+                'name' => $messenger->name,
+                'vehicle' => $messenger->vehicle,
+                'shift_finished' => true
+            ]);
+        }
+
         $activeLunch = $messenger->lunchLogs()
             ->where('status', 'active')
             ->latest()

@@ -13,6 +13,28 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
 
     const [filter, setFilter] = useState('');
     const [draggingId, setDraggingId] = useState(null);
+    const [localMessengers, setLocalMessengers] = useState(messengers);
+    const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleTimeString());
+
+    // --- Polling for Real-time Updates ---
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetch(route('messenger.status'))
+                .then(res => res.json())
+                .then(data => {
+                    setLocalMessengers(data.messengers);
+                    setLastUpdated(new Date().toLocaleTimeString());
+                })
+                .catch(err => console.error('Polling error:', err));
+        }, 30000); // 30 seconds
+
+        return () => clearInterval(interval);
+    }, []);
+
+    // Update local state when props change (initial load or manual refresh)
+    useEffect(() => {
+        setLocalMessengers(messengers);
+    }, [messengers]);
 
     // --- Dispatch Form Handler ---
     const handleDispatchSubmit = (e) => {
@@ -81,8 +103,8 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
 
     // --- Filtering & Sorting ---
     const getFilteredMessengers = (loc) => {
-        if (!messengers) return [];
-        return messengers
+        if (!localMessengers) return [];
+        return localMessengers
             .filter(m => m.location === loc)
             .filter(m => {
                 const search = filter.toUpperCase();
