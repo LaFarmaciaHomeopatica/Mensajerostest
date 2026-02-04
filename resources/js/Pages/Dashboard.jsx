@@ -12,7 +12,6 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
     });
 
     const [filter, setFilter] = useState('');
-    const [draggingId, setDraggingId] = useState(null);
     const [localMessengers, setLocalMessengers] = useState(messengers);
     const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleTimeString());
 
@@ -75,31 +74,7 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
     };
 
     // --- Drag and Drop Logic ---
-    const handleDragStart = (e, messengerId) => {
-        e.dataTransfer.setData("messengerId", messengerId);
-        setDraggingId(messengerId);
-    };
 
-    const handleDragEnd = () => {
-        setDraggingId(null);
-    };
-
-    const handleDrop = (e, targetLocation) => {
-        e.preventDefault();
-        const messengerId = e.dataTransfer.getData("messengerId");
-        setDraggingId(null);
-
-        router.post(route('messenger.update-location', messengerId), {
-            location: targetLocation
-        }, {
-            preserveScroll: true,
-            preserveState: true,
-        });
-    };
-
-    const handleDragOver = (e) => {
-        e.preventDefault();
-    };
 
     // --- Filtering & Sorting ---
     const getFilteredMessengers = (loc) => {
@@ -230,8 +205,6 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                 {/* Column: 116 (Principal) */}
                 <div
                     className="flex-[2] flex flex-col bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 overflow-hidden border border-slate-100 dark:border-slate-700 transition-colors duration-300"
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, 'principal')}
                 >
                     <div className="p-4 bg-gradient-to-r from-blue-50 to-white dark:from-slate-800 dark:to-slate-800 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                         <div className="flex items-center gap-2">
@@ -248,11 +221,8 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                                 <MessengerCard
                                     key={m.id}
                                     m={m}
-                                    onDragStart={handleDragStart}
-                                    onDragEnd={handleDragEnd}
                                     onClick={selectMessenger}
                                     isSelected={data.messenger_id === m.id}
-                                    isDragging={draggingId === m.id}
                                 />
                             ))}
                         </div>
@@ -262,8 +232,6 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                 {/* Column: Teusaquillo */}
                 <div
                     className="flex-1 flex flex-col bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 overflow-hidden border border-slate-100 dark:border-slate-700 transition-colors duration-300"
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, 'teusaquillo')}
                 >
                     <div className="p-4 bg-gradient-to-r from-teal-50 to-white dark:from-slate-800 dark:to-slate-800 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                         <div className="flex items-center gap-2">
@@ -279,11 +247,8 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                                 <MessengerCard
                                     key={m.id}
                                     m={m}
-                                    onDragStart={handleDragStart}
-                                    onDragEnd={handleDragEnd}
                                     onClick={selectMessenger}
                                     isSelected={data.messenger_id === m.id}
-                                    isDragging={draggingId === m.id}
                                 />
                             ))}
                         </div>
@@ -295,7 +260,7 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
     );
 }
 
-function MessengerCard({ m, onDragStart, onDragEnd, onClick, isSelected, isDragging }) {
+function MessengerCard({ m, onClick, isSelected }) {
     // Status Config
     const config = {
         'status-en-ruta': { color: 'red', icon: 'Motorcycle', bg: 'bg-white', border: 'border-l-4 border-l-red-500' },
@@ -306,15 +271,12 @@ function MessengerCard({ m, onDragStart, onDragEnd, onClick, isSelected, isDragg
 
     return (
         <div
-            draggable
-            onDragStart={(e) => onDragStart(e, m.id)}
-            onDragEnd={onDragEnd}
             onClick={() => onClick(m)}
             className={`
                 relative p-4 rounded-xl shadow-sm cursor-pointer transition-all duration-300 ease-out
                 ${config.bg} dark:bg-slate-800
                 ${config.border} border-y border-r border-slate-100 dark:border-slate-700
-                ${isDragging ? 'opacity-50 scale-95 rotate-2' : 'opacity-100 scale-100 hover:shadow-lg hover:-translate-y-1'}
+                hover:shadow-lg hover:-translate-y-1
                 ${isSelected ? 'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-900' : ''}
                 group
             `}

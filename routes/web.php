@@ -28,5 +28,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/update-location/{messenger}', [UnifiedController::class, 'updateLocation'])->name('messenger.update-location');
     Route::post('/dispatch', [DispatchController::class, 'store'])->name('dispatch.store');
     Route::get('/messenger-status', [UnifiedController::class, 'getMessengerStatus'])->name('messenger.status');
+    Route::get('/shifts/template', [\App\Http\Controllers\ShiftController::class, 'exportTemplate'])->name('shifts.template');
+    Route::post('/shifts/import', [\App\Http\Controllers\ShiftController::class, 'import'])->name('shifts.import');
     Route::resource('shifts', \App\Http\Controllers\ShiftController::class)->only(['index', 'store', 'destroy']);
 });

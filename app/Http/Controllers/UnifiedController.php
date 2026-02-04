@@ -16,26 +16,33 @@ class UnifiedController extends Controller
         // 1. Get Beetrack Live Data
         $beetrackData = $beetrack->getDispatchStatus();
 
-        // 2. Get Messengers with active Lunch Logs
+        // 2. Get Messengers with active Lunch Logs AND Shifts for today
         $messengers = Messenger::where('is_active', true)
-            ->whereDoesntHave('shiftCompletions', function ($q) {
-                $q->whereDate('finished_at', today());
-            })
             ->with([
+                'shifts' => function ($q) {
+                    $q->whereDate('date', today());
+                },
                 'lunchLogs' => function ($q) {
                     $q->where('status', 'active')->latest();
+                },
+                'shiftCompletions' => function ($q) {
+                    $q->whereDate('finished_at', today());
                 }
-            ])->get();
+            ])->get()
+            // Filter: Must have a shift today AND status is not 'absent'
+            ->filter(function ($messenger) {
+                $shift = $messenger->shifts->first();
+                return $shift && $shift->status !== 'absent';
+            });
 
         $now = now();
 
         // 3. Transform Messenger Data
         $messengersData = $messengers->map(function ($m) use ($now, $beetrackData) {
+            $shift = $m->shifts->first();
+
             // Lunch Status
-            $log = $m->lunchLogs()
-                ->whereDate('start_time', today())
-                ->orderBy('start_time', 'desc')
-                ->first();
+            $log = $m->lunchLogs->first();
 
             $status = 'Disponible'; // Default
             $class = 'status-libre';
@@ -79,20 +86,29 @@ class UnifiedController extends Controller
 
             // Check if finished
             $finished = null;
-            if (isset($beetrackData['libres'])) {
-                $finished = collect($beetrackData['libres'])->first(function ($item) use ($m, $normalize) {
-                    $beetrackName = $normalize($item['nombre']);
-                    $localName = $normalize($m->name);
+            // Check internal ShiftCompletion first (more reliable for "Finished Shift" button)
+            $completion = $m->shiftCompletions->first();
+            if ($completion) {
+                $finished = [
+                    'hora_cierre' => $completion->finished_at->format('h:i A')
+                ];
+                $status = 'Finalizado';
+                $class = 'pendiente'; // Using 'pendiente' gray style for finished
+            }
+            // Fallback to Beetrack "libres" if needed, or keep separate? 
+            // User requirement: "Finalizo su turno o esta todavia disponible"
+            // Let's stick to our internal completion or Beetrack free, but internal is explicit action.
 
-                    return str_contains($beetrackName, $localName) || str_contains($localName, $beetrackName);
-                });
+            if (!$finished && isset($beetrackData['libres'])) {
+                // Optional: Check Beetrack "libres" if not explicitly finished in our system?
+                // For now, rely on our system or Beetrack as valid sources.
             }
 
             return [
                 'id' => $m->id,
                 'name' => $m->name,
                 'vehicle' => $m->vehicle,
-                'location' => $m->location ?? 'principal', // Default to principal
+                'location' => $shift->location ?? 'principal', // Use shift location
                 'status' => $status,
                 'class_name' => $class,
                 'lunch_range' => $range,
@@ -100,7 +116,7 @@ class UnifiedController extends Controller
                 'finished_info' => $finished,
                 'priority' => ($status === 'En Ruta') ? 2 : 1, // Order: Available first
             ];
-        });
+        })->values(); // Reset keys after filter
 
         return Inertia::render('Dashboard', [
             'messengers' => $messengersData,
@@ -109,16 +125,7 @@ class UnifiedController extends Controller
         ]);
     }
 
-    public function updateLocation(Request $request, Messenger $messenger)
-    {
-        $request->validate([
-            'location' => 'required|string|in:principal,teusaquillo',
-        ]);
 
-        $messenger->update(['location' => $request->location]);
-
-        return back();
-    }
 
     public function getMessengerStatus(BeetrackService $beetrack)
     {
@@ -127,24 +134,30 @@ class UnifiedController extends Controller
 
         // 2. Get Messengers
         $messengers = Messenger::where('is_active', true)
-            ->whereDoesntHave('shiftCompletions', function ($q) {
-                $q->whereDate('finished_at', today());
-            })
             ->with([
+                'shifts' => function ($q) {
+                    $q->whereDate('date', today());
+                },
                 'lunchLogs' => function ($q) {
                     $q->where('status', 'active')->latest();
+                },
+                'shiftCompletions' => function ($q) {
+                    $q->whereDate('finished_at', today());
                 }
-            ])->get();
+            ])->get()
+            ->filter(function ($messenger) {
+                $shift = $messenger->shifts->first();
+                return $shift && $shift->status !== 'absent';
+            });
 
         $now = now();
 
         // 3. Transform Data
         $messengersData = $messengers->map(function ($m) use ($now, $beetrackData) {
+            $shift = $m->shifts->first();
+
             // Lunch Status
-            $log = $m->lunchLogs()
-                ->whereDate('start_time', today())
-                ->orderBy('start_time', 'desc')
-                ->first();
+            $log = $m->lunchLogs->first();
 
             $status = 'Disponible';
             $class = 'status-libre';
@@ -186,19 +199,20 @@ class UnifiedController extends Controller
 
             // Finished Status
             $finished = null;
-            if (isset($beetrackData['libres'])) {
-                $finished = collect($beetrackData['libres'])->first(function ($item) use ($m, $normalize) {
-                    $beetrackName = $normalize($item['nombre']);
-                    $localName = $normalize($m->name);
-                    return str_contains($beetrackName, $localName) || str_contains($localName, $beetrackName);
-                });
+            $completion = $m->shiftCompletions->first();
+            if ($completion) {
+                $finished = [
+                    'hora_cierre' => $completion->finished_at->format('h:i A')
+                ];
+                $status = 'Finalizado';
+                $class = 'pendiente';
             }
 
             return [
                 'id' => $m->id,
                 'name' => $m->name,
                 'vehicle' => $m->vehicle,
-                'location' => $m->location ?? 'principal',
+                'location' => $shift->location ?? 'principal',
                 'status' => $status,
                 'class_name' => $class,
                 'lunch_range' => $range,
@@ -206,7 +220,7 @@ class UnifiedController extends Controller
                 'finished_info' => $finished,
                 'priority' => ($status === 'En Ruta') ? 2 : 1,
             ];
-        });
+        })->values();
 
         return response()->json([
             'messengers' => $messengersData,

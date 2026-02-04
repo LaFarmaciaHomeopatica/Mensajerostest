@@ -7,6 +7,9 @@ use App\Models\Shift;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use App\Imports\ShiftsImport;
+use App\Exports\ShiftsTemplateExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ShiftController extends Controller
 {
@@ -68,5 +71,24 @@ class ShiftController extends Controller
         $shift->delete();
 
         return redirect()->back()->with('success', 'Turno eliminado correctamente.');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        try {
+            Excel::import(new ShiftsImport, $request->file('file'));
+            return redirect()->back()->with('success', 'Horarios importados correctamente.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['file' => 'Error al importar: ' . $e->getMessage()]);
+        }
+    }
+
+    public function exportTemplate()
+    {
+        return Excel::download(new ShiftsTemplateExport, 'plantilla_horarios.xlsx');
     }
 }

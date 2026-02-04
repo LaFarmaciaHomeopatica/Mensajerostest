@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import LeaderLayout from '@/Layouts/LeaderLayout';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/react'; // Correct router import from adapter
+import SecondaryButton from '@/Components/SecondaryButton';
+import PrimaryButton from '@/Components/PrimaryButton';
 import ShiftModal from '@/Components/ShiftModal';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
@@ -46,6 +48,25 @@ export default function ShiftsIndex({ auth, messengers, weekStart, weekEnd }) {
         }
     };
 
+    const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        router.post(route('shifts.import'), formData, {
+            forceFormData: true,
+            onSuccess: () => {
+                alert('Horarios importados correctamente');
+                e.target.value = ''; // Reset input
+            },
+            onError: (errors) => {
+                alert(errors.file || 'Error al importar');
+            }
+        });
+    };
+
     return (
         <LeaderLayout
             user={auth.user}
@@ -57,21 +78,41 @@ export default function ShiftsIndex({ auth, messengers, weekStart, weekEnd }) {
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     {/* Navigation */}
                     <div className="flex justify-between items-center mb-6">
-                        <Link
-                            href={`/shifts?date=${start.subtract(1, 'week').format('YYYY-MM-DD')}`}
-                            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
-                        >
-                            &lt; Semana Anterior
-                        </Link>
-                        <span className="text-lg font-bold dark:text-gray-200 uppercase">
-                            {start.format('MMMM D')} - {dayjs(weekEnd).format('MMMM D, YYYY')}
-                        </span>
-                        <Link
-                            href={`/shifts?date=${start.add(1, 'week').format('YYYY-MM-DD')}`}
-                            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
-                        >
-                            Semana Siguiente &gt;
-                        </Link>
+                        <div className="flex items-center gap-2">
+                            <a
+                                href={route('shifts.template')}
+                                className="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-25 transition ease-in-out duration-150"
+                            >
+                                Descargar Plantilla
+                            </a>
+                            <label className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150 cursor-pointer">
+                                Cargar Excel
+                                <input
+                                    type="file"
+                                    className="hidden"
+                                    accept=".xlsx, .xls"
+                                    onChange={handleFileUpload}
+                                />
+                            </label>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <Link
+                                href={`/shifts?date=${start.subtract(1, 'week').format('YYYY-MM-DD')}`}
+                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                            >
+                                &lt;
+                            </Link>
+                            <span className="text-lg font-bold dark:text-gray-200 uppercase">
+                                {start.format('MMMM D')} - {dayjs(weekEnd).format('MMMM D, YYYY')}
+                            </span>
+                            <Link
+                                href={`/shifts?date=${start.add(1, 'week').format('YYYY-MM-DD')}`}
+                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                            >
+                                &gt;
+                            </Link>
+                        </div>
                     </div>
 
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg overflow-x-auto">
