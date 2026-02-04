@@ -35,31 +35,18 @@ class LunchController extends Controller
             ->whereDate('finished_at', today())
             ->exists();
 
-        if ($shiftFinished) {
-            return response()->json([
-                'id' => $messenger->id,
-                'name' => $messenger->name,
-                'vehicle' => $messenger->vehicle,
-                'shift_finished' => true
-            ]);
-        }
-
         $activeLunch = $messenger->lunchLogs()
             ->where('status', 'active')
+            ->whereDate('start_time', today())
             ->latest()
             ->first();
 
-        \Log::info('Check Plate Debug', [
-            'plate' => $request->plate,
-            'messenger_id' => $messenger->id,
-            'active_lunch_found' => (bool) $activeLunch,
-            'active_lunch_data' => $activeLunch
-        ]);
-
+        // Initialize response with basic info
         $response = [
             'id' => $messenger->id,
             'name' => $messenger->name,
-            'vehicle' => $messenger->vehicle
+            'vehicle' => $messenger->vehicle,
+            'shift_finished' => $shiftFinished,
         ];
 
         if ($activeLunch) {
@@ -68,6 +55,37 @@ class LunchController extends Controller
                 'end' => $activeLunch->end_time->format('H:i'),
             ];
         }
+
+        // Fetch shifts for the entire current week
+        $startOfWeek = now()->startOfWeek();
+        $endOfWeek = now()->endOfWeek();
+
+        $dbShifts = $messenger->shifts()
+            ->whereDate('date', '>=', $startOfWeek)
+            ->whereDate('date', '<=', $endOfWeek)
+            ->get()
+            ->keyBy('date');
+
+        $shifts = collect();
+        $currentDate = $startOfWeek->copy();
+
+        while ($currentDate <= $endOfWeek) {
+            $dateStr = $currentDate->format('Y-m-d');
+            $shift = $dbShifts->get($dateStr);
+
+            $shifts->push([
+                'date' => $currentDate->locale('es')->isoFormat('dddd D [de] MMMM'),
+                'start_time' => $shift ? ($shift->start_time ? substr($shift->start_time, 0, 5) : null) : null,
+                'end_time' => $shift ? ($shift->end_time ? substr($shift->end_time, 0, 5) : null) : null,
+                'status' => $shift ? $shift->status : 'no_shift',
+                'location' => $shift ? ucfirst($shift->location) : 'Sin Programación',
+                'is_today' => $dateStr === today()->format('Y-m-d'),
+            ]);
+
+            $currentDate->addDay();
+        }
+
+        $response['shifts'] = $shifts;
 
         return response()->json($response);
     }
@@ -96,13 +114,20 @@ class LunchController extends Controller
 
         $messenger = Messenger::findOrFail($request->messenger_id);
 
+        // Check if already registered lunch today
+        $existingLunch = LunchLog::where('messenger_id', $messenger->id)
+            ->whereDate('start_time', today())
+            ->first();
+
+        if ($existingLunch) {
+            return back()->withErrors([
+                'lunch_duplicate' => 'Ya has registrado tu almuerzo hoy.',
+                'lunch_end_time' => $existingLunch->end_time->format('H:i')
+            ]);
+        }
+
         $startTime = now();
         $endTime = $startTime->copy()->addMinutes($messenger->lunch_duration);
-
-        // Check if already active? For simplicity, we just create a new log.
-        // Or we could check:
-        // $active = LunchLog::where('messenger_id', $messenger->id)->where('status', 'active')->first();
-        // if ($active) return back()->withErrors(...);
 
         LunchLog::create([
             'messenger_id' => $messenger->id,

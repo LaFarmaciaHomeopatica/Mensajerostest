@@ -18,6 +18,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/messenger', [LunchController::class, 'index'])->name('landing');
 Route::post('/messenger/check-plate', [LunchController::class, 'checkPlate'])->name('messenger.check-plate');
 Route::post('/lunch', [LunchController::class, 'store'])->name('lunch.store');
+Route::post('/shift-completion', [\App\Http\Controllers\ShiftCompletionController::class, 'store'])->name('shift-completion.store');
 Route::post('/shift', [\App\Http\Controllers\ShiftController::class, 'store'])->name('shift.store');
 
 Route::middleware(['auth'])->group(function () {
@@ -29,6 +30,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/dispatch', [DispatchController::class, 'store'])->name('dispatch.store');
     Route::get('/messenger-status', [UnifiedController::class, 'getMessengerStatus'])->name('messenger.status');
     Route::get('/shifts/template', [\App\Http\Controllers\ShiftController::class, 'exportTemplate'])->name('shifts.template');
+    Route::get('/shifts/export', [\App\Http\Controllers\ShiftController::class, 'export'])->name('shifts.export');
     Route::post('/shifts/import', [\App\Http\Controllers\ShiftController::class, 'import'])->name('shifts.import');
     Route::resource('shifts', \App\Http\Controllers\ShiftController::class)->only(['index', 'store', 'destroy']);
 });

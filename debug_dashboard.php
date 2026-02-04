@@ -18,7 +18,7 @@ $log .= "Shifts Count Today: " . $shiftsToday->count() . "\n";
 
 foreach ($shiftsToday as $shift) {
     $messenger = $shift->messenger;
-    $log .= " - Shift: Messenger ID {$shift->messenger_id} ({$messenger->name}), Active: {$messenger->is_active}, Status: {$shift->status}, Location: {$shift->location}\n";
+    $log .= " - Shift: Messenger ID {$shift->messenger_id} ({$messenger->name}), Vehicle: {$messenger->vehicle}, Active: {$messenger->is_active}, Status: {$shift->status}, Location: {$shift->location}\n";
 }
 
 $activeMessengers = Messenger::where('is_active', true)->count();

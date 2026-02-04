@@ -9,6 +9,7 @@ use Inertia\Inertia;
 use Carbon\Carbon;
 use App\Imports\ShiftsImport;
 use App\Exports\ShiftsTemplateExport;
+use App\Exports\ShiftsExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ShiftController extends Controller
@@ -90,5 +91,18 @@ class ShiftController extends Controller
     public function exportTemplate()
     {
         return Excel::download(new ShiftsTemplateExport, 'plantilla_horarios.xlsx');
+    }
+
+    public function export(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        return Excel::download(
+            new ShiftsExport($request->start_date, $request->end_date),
+            "horarios_{$request->start_date}_a_{$request->end_date}.xlsx"
+        );
     }
 }
