@@ -7,6 +7,7 @@ export default function LeaderLayout({ children, title }) {
     const navs = [
         { label: 'Control Center', route: 'dashboard', active: route().current('dashboard') },
         { label: 'Mensajeros', route: 'messengers.index', active: route().current('messengers.*') },
+        { label: 'Horarios', route: 'shifts.index', active: route().current('shifts.*') },
         { label: 'Reporte Almuerzos', route: 'reports.lunch', active: route().current('reports.lunch') },
     ];
 

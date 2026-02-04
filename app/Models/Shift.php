@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Shift extends Model
 {
-    protected $fillable = ['messenger_id', 'date', 'start_time', 'end_time'];
+    protected $fillable = ['messenger_id', 'date', 'start_time', 'end_time', 'status', 'location'];
 
     protected $casts = [
-        'date' => 'date',
+        // 'date' => 'date', // Disabled to avoid updateOrCreate issues
     ];
 
     public function messenger()
