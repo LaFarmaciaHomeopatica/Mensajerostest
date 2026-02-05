@@ -15,13 +15,15 @@ class PreoperationalReportsExport implements FromCollection, WithHeadings, WithM
     protected $startDate;
     protected $endDate;
     protected $messengerId;
+    protected $location;
     protected $questions;
 
-    public function __construct($startDate, $endDate, $messengerId = null)
+    public function __construct($startDate, $endDate, $messengerId = null, $location = null)
     {
         $this->startDate = $startDate;
         $this->endDate = $endDate;
         $this->messengerId = $messengerId;
+        $this->location = $location;
         // Fetch all questions to ensure we have headers even for inactive ones if they have data
         // For simplicity and consistency with the current active list:
         $this->questions = \App\Models\PreoperationalQuestion::orderBy('order')->get();
@@ -38,6 +40,17 @@ class PreoperationalReportsExport implements FromCollection, WithHeadings, WithM
 
         if ($this->messengerId) {
             $query->where('messenger_id', $this->messengerId);
+        }
+
+        if ($this->location && $this->location !== '') {
+            $location = $this->location;
+            $query->whereExists(function ($q) use ($location) {
+                $q->select(\Illuminate\Support\Facades\DB::raw(1))
+                    ->from('shifts')
+                    ->whereColumn('shifts.messenger_id', 'preoperational_reports.messenger_id')
+                    ->whereRaw('DATE(shifts.date) = DATE(preoperational_reports.created_at)')
+                    ->where('shifts.location', $location);
+            });
         }
 
         return $query->get();
@@ -63,6 +76,7 @@ class PreoperationalReportsExport implements FromCollection, WithHeadings, WithM
             $report->created_at->format('Y-m-d H:i:s'),
             $report->messenger->name ?? 'N/A',
             $report->messenger->vehicle ?? 'N/A',
+            $shift ? ($shift->location ?? 'principal') : 'N/A',
             $shift ? $shift->start_time : 'Sin turno',
             $compliance,
         ];
@@ -88,6 +102,7 @@ class PreoperationalReportsExport implements FromCollection, WithHeadings, WithM
             'Fecha/Hora',
             'Mensajero',
             'Placa',
+            'Sede/Ubicación',
             'Hora Ingreso',
             'Cumplimiento',
         ];

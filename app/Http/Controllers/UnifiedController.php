@@ -61,20 +61,25 @@ class UnifiedController extends Controller
                 $range = $start->format('h:i A') . ' - ' . $end->format('h:i A');
             }
 
-            // Helper to normalize strings for comparison
+            // Helper to normalize strings (more aggressive for plates)
             $normalize = function ($str) {
-                return strtoupper(trim(str_replace(['á', 'é', 'í', 'ó', 'ú', 'ñ'], ['A', 'E', 'I', 'O', 'U', 'N'], mb_strtolower($str, 'UTF-8'))));
+                if (!$str)
+                    return '';
+                return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $str));
             };
 
             // Beetrack Status Overwrite (Priority 2)
             $beetrackInfo = null;
             if (isset($beetrackData['activos'])) {
                 $active = collect($beetrackData['activos'])->first(function ($item) use ($m, $normalize) {
-                    $beetrackName = $normalize($item['nombre']);
-                    $localName = $normalize($m->name);
+                    $beetrackPlate = $normalize($item['unidad'] ?? '');
+                    $localPlate = $normalize($m->vehicle);
 
-                    // Match by name or if name is part of the other
-                    return str_contains($beetrackName, $localName) || str_contains($localName, $beetrackName);
+                    if ($localPlate && $beetrackPlate && $beetrackPlate === $localPlate) {
+                        // Optional: \Log::info("UnifiedController Index: Match! {$m->name}");
+                        return true;
+                    }
+                    return false;
                 });
 
                 if ($active) {
@@ -104,9 +109,16 @@ class UnifiedController extends Controller
                 // For now, rely on our system or Beetrack as valid sources.
             }
 
+            // Find any match (active or free) to override name
+            $btMatch = null;
+            if (isset($beetrackData['activos']) || isset($beetrackData['libres'])) {
+                $allBt = collect($beetrackData['activos'] ?? [])->concat($beetrackData['libres'] ?? []);
+                $btMatch = $allBt->first(fn($item) => $normalize($item['unidad'] ?? '') === $normalize($m->vehicle));
+            }
+
             return [
                 'id' => $m->id,
-                'name' => $m->name,
+                'name' => $btMatch ? ($btMatch['nombre'] ?? $m->name) : $m->name,
                 'vehicle' => $m->vehicle,
                 'location' => $shift->location ?? 'principal', // Use shift location
                 'status' => $status,
@@ -177,24 +189,32 @@ class UnifiedController extends Controller
             }
 
             // Normalization Helper
-            $normalize = function ($str) {
-                return strtoupper(trim(str_replace(['á', 'é', 'í', 'ó', 'ú', 'ñ'], ['A', 'E', 'I', 'O', 'U', 'N'], mb_strtolower($str, 'UTF-8'))));
-            };
-
             // Beetrack Status
             $beetrackInfo = null;
+            $active = null;
             if (isset($beetrackData['activos'])) {
-                $active = collect($beetrackData['activos'])->first(function ($item) use ($m, $normalize) {
-                    $beetrackName = $normalize($item['nombre']);
-                    $localName = $normalize($m->name);
-                    return str_contains($beetrackName, $localName) || str_contains($localName, $beetrackName);
-                });
+                // Normalization Helper (more aggressive)
+                $normalize = function ($str) {
+                    if (!$str)
+                        return '';
+                    return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $str));
+                };
 
-                if ($active) {
-                    $status = 'En Ruta';
-                    $class = 'status-en-ruta';
-                    $beetrackInfo = $active;
-                }
+                $active = collect($beetrackData['activos'])->first(function ($item) use ($m, $normalize) {
+                    $beetrackPlate = $normalize($item['unidad']);
+                    $localPlate = $normalize($m->vehicle);
+
+                    if ($localPlate && $beetrackPlate && $beetrackPlate === $localPlate) {
+                        \Log::info("UnifiedController: MATCH FOUND! Messenger: {$m->name}, Plate: {$localPlate}");
+                        return true;
+                    }
+                    return false;
+                });
+            }
+            if ($active) {
+                $status = 'En Ruta';
+                $class = 'status-en-ruta';
+                $beetrackInfo = $active;
             }
 
             // Finished Status
@@ -208,9 +228,16 @@ class UnifiedController extends Controller
                 $class = 'pendiente';
             }
 
+            // Find any match (active or free) to override name
+            $btMatch = null;
+            if (isset($beetrackData['activos']) || isset($beetrackData['libres'])) {
+                $allBt = collect($beetrackData['activos'] ?? [])->concat($beetrackData['libres'] ?? []);
+                $btMatch = $allBt->first(fn($item) => $normalize($item['unidad'] ?? '') === $normalize($m->vehicle));
+            }
+
             return [
                 'id' => $m->id,
-                'name' => $m->name,
+                'name' => $btMatch ? ($btMatch['nombre'] ?? $m->name) : $m->name,
                 'vehicle' => $m->vehicle,
                 'location' => $shift->location ?? 'principal',
                 'status' => $status,

@@ -1,16 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import LeaderLayout from '@/Layouts/LeaderLayout';
 import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import MessengerSearchSelect from '@/Components/MessengerSearchSelect';
 
-export default function PreoperationalReports({ reports, messengers, questions, filters }) {
+export default function PreoperationalReports({ reports, messengers, questions, filters, locations }) {
     const [selectedDate, setSelectedDate] = useState(filters.date || '');
     const [selectedMessenger, setSelectedMessenger] = useState(filters.messenger_id || '');
+    const [selectedLocation, setSelectedLocation] = useState(filters.location || '');
     const [selectedReport, setSelectedReport] = useState(null);
     const [showExportModal, setShowExportModal] = useState(false);
-    const [exportDates, setExportDates] = useState({ start: '', end: '' });
+    const [showColumnModal, setShowColumnModal] = useState(false);
+    const [exportDates, setExportDates] = useState({ start: '', end: '', messenger_id: '', location: '' });
+
+    // Column Management logic
+    const allColumns = [
+        { id: 'created_at', label: 'Fecha/Hora', sortable: true },
+        { id: 'messenger_name', label: 'Mensajero', sortable: true },
+        { id: 'vehicle', label: 'Placa', sortable: true },
+        { id: 'location', label: 'Sede', sortable: false },
+        { id: 'start_time', label: 'Hora Ingreso', sortable: false },
+        { id: 'compliance', label: 'Cumplimiento', sortable: false },
+        { id: 'answers', label: 'Respuestas', sortable: false },
+    ];
+
+    const [visibleColumns, setVisibleColumns] = useState(() => {
+        try {
+            const saved = localStorage.getItem('preop_columns');
+            if (!saved) return allColumns.map(c => c.id);
+            const parsed = JSON.parse(saved);
+            return Array.isArray(parsed) ? parsed : allColumns.map(c => c.id);
+        } catch (e) {
+            console.error("Error parsing columns from localStorage", e);
+            return allColumns.map(c => c.id);
+        }
+    });
+
+    useEffect(() => {
+        localStorage.setItem('preop_columns', JSON.stringify(visibleColumns));
+    }, [visibleColumns]);
+
+    const toggleColumn = (id) => {
+        setVisibleColumns(prev =>
+            prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+        );
+    };
+
+    const isVisible = (id) => visibleColumns.includes(id);
+
+    // Sorting logic
+    const sortField = filters.sort_by || 'created_at';
+    const sortOrder = filters.sort_order || 'desc';
+
+    const handleSort = (field) => {
+        const newOrder = field === sortField && sortOrder === 'asc' ? 'desc' : 'asc';
+        router.get(route('reports.preoperational'), {
+            ...filters,
+            sort_by: field,
+            sort_order: newOrder
+        }, {
+            preserveState: true,
+            replace: true
+        });
+    };
 
     // Create a label and type mapping from the dynamic questions
     const questionData = questions.reduce((acc, q) => {
@@ -27,34 +81,36 @@ export default function PreoperationalReports({ reports, messengers, questions, 
         router.get(route('reports.preoperational'), {
             date: selectedDate,
             messenger_id: selectedMessenger,
+            location: selectedLocation,
+            sort_by: sortField,
+            sort_order: sortOrder
         }, {
             preserveState: true,
+            replace: true
         });
     };
 
-    const handleClearFilters = () => {
+    const handleReset = () => {
         setSelectedDate('');
         setSelectedMessenger('');
+        setSelectedLocation('');
+        setExportDates({ start: '', end: '', messenger_id: '', location: '' });
         router.get(route('reports.preoperational'));
     };
 
     const handleExport = (e) => {
         e.preventDefault();
         if (!exportDates.start || !exportDates.end) {
-            alert('Por favor selecciona ambas fechas para exportar.');
+            alert('Selecciona ambas fechas');
             return;
         }
-
-        const params = {
+        const url = route('reports.preoperational.export', {
             start_date: exportDates.start,
             end_date: exportDates.end,
-        };
-
-        if (selectedMessenger) {
-            params.messenger_id = selectedMessenger;
-        }
-
-        window.location.href = route('reports.preoperational.export', params);
+            messenger_id: exportDates.messenger_id,
+            location: exportDates.location
+        });
+        window.location.href = url;
         setShowExportModal(false);
     };
 
@@ -68,69 +124,98 @@ export default function PreoperationalReports({ reports, messengers, questions, 
 
     return (
         <LeaderLayout>
-            <Head title="Reportes Preoperacionales" />
+            <Head title="Reportes" />
 
             <div className="py-6 sm:py-12">
                 <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             {/* Header and Export Button */}
-                            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
-                                <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">📋 Reportes Preoperacionales</h2>
-                                <div className="flex flex-col sm:flex-row items-stretch gap-3 w-full lg:w-auto">
-                                    <Link
-                                        href={route('preoperational-questions.index')}
-                                        className="px-5 py-2.5 bg-amber-600 text-white rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-200 dark:shadow-none active:scale-95 flex items-center justify-center gap-2"
-                                    >
-                                        ⚙️ Config Preguntas
-                                    </Link>
-                                    <button
-                                        onClick={() => setShowExportModal(true)}
-                                        className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 flex items-center justify-center gap-2"
-                                    >
-                                        📥 Exportar Reporte
-                                    </button>
-                                </div>
+                            <div className="flex justify-between items-center mb-8">
+                                <h1 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-3">
+                                    <span className="bg-indigo-600/10 p-2 rounded-xl text-xl">📋</span>
+                                    Reportes Preoperacionales
+                                </h1>
+                                <Link
+                                    href={route('preoperational-questions.index')}
+                                    className="px-4 py-2 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 font-bold uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 group"
+                                >
+                                    <span className="group-hover:rotate-90 transition-transform duration-500">⚙️</span>
+                                    Config Preguntas
+                                </Link>
                             </div>
 
                             {/* Filters */}
                             <div className="mb-8 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col md:flex-row gap-4 items-stretch md:items-end">
-                                <div className="flex-1">
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Fecha</label>
+                                <div className="flex-1 min-w-[120px]">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">FECHA</label>
                                     <input
                                         type="date"
                                         value={selectedDate}
                                         onChange={(e) => setSelectedDate(e.target.value)}
-                                        className="w-full rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                        className="w-full h-[38px] rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm px-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm"
                                     />
                                 </div>
-                                <div className="flex-1">
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Mensajero</label>
+                                <div className="flex-1 min-w-[180px]">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">SEDE</label>
                                     <select
-                                        value={selectedMessenger}
-                                        onChange={(e) => setSelectedMessenger(e.target.value)}
-                                        className="w-full rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                        value={selectedLocation}
+                                        onChange={(e) => setSelectedLocation(e.target.value)}
+                                        className="w-full h-[38px] rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm px-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
                                     >
-                                        <option value="">Todos los mensajeros</option>
-                                        {messengers.map((messenger) => (
-                                            <option key={messenger.id} value={messenger.id}>
-                                                {messenger.name}
+                                        <option value="">Todas las sedes</option>
+                                        <option value="principal">Principal</option>
+                                        {locations?.filter(loc => loc.name.toLowerCase() !== 'principal').map((loc) => (
+                                            <option key={loc.id} value={loc.name}>
+                                                {loc.name.charAt(0).toUpperCase() + loc.name.slice(1)}
                                             </option>
                                         ))}
                                     </select>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex-1 min-w-[140px]">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">MENSAJERO</label>
+                                    <MessengerSearchSelect
+                                        messengers={messengers}
+                                        selectedId={selectedMessenger}
+                                        onChange={setSelectedMessenger}
+                                        placeholder="Todos los mensajeros"
+                                    />
+                                </div>
+
+                                {/* Consolidated Action Group */}
+                                <div className="flex flex-wrap items-end gap-2">
+                                    <button
+                                        onClick={() => setShowColumnModal(true)}
+                                        className="h-[38px] px-5 bg-white dark:bg-slate-800 text-slate-600 dark:text-gray-300 border border-slate-200 dark:border-slate-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95 shadow-sm flex items-center gap-2"
+                                    >
+                                        <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
+                                        </svg>
+                                        COLUMNAS
+                                    </button>
+
                                     <button
                                         onClick={handleFilter}
-                                        className="flex-1 md:flex-none px-6 py-2 bg-slate-800 text-white rounded-xl font-bold text-xs uppercase hover:bg-slate-700 transition-all active:scale-95 shadow-md shadow-slate-200 dark:shadow-none"
+                                        className="h-[38px] px-8 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition-all active:scale-95 shadow-lg shadow-indigo-200 dark:shadow-none"
                                     >
-                                        Filtrar
+                                        FILTRAR
                                     </button>
+
                                     <button
-                                        onClick={handleClearFilters}
-                                        className="flex-1 md:flex-none px-6 py-2 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs uppercase hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95"
+                                        onClick={handleReset}
+                                        className="h-[38px] px-8 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95 shadow-sm"
                                     >
-                                        Limpiar
+                                        LIMPIAR
+                                    </button>
+
+                                    <button
+                                        onClick={() => setShowExportModal(true)}
+                                        className="h-[38px] px-5 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition-all active:scale-95 shadow-lg shadow-indigo-200 dark:shadow-none flex items-center gap-2"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
+                                        EXPORTAR
                                     </button>
                                 </div>
                             </div>
@@ -140,24 +225,65 @@ export default function PreoperationalReports({ reports, messengers, questions, 
                                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead className="bg-gray-50 dark:bg-gray-700">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Fecha/Hora
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Mensajero
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Placa
-                                            </th>
-                                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Hora Ingreso
-                                            </th>
-                                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Cumplimiento
-                                            </th>
-                                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Respuestas
-                                            </th>
+                                            {isVisible('created_at') && (
+                                                <th
+                                                    onClick={() => handleSort('created_at')}
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                >
+                                                    <div className="flex items-center gap-1">
+                                                        Fecha/Hora
+                                                        {sortField === 'created_at' && (
+                                                            <span className="text-indigo-500">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                                        )}
+                                                    </div>
+                                                </th>
+                                            )}
+                                            {isVisible('messenger_name') && (
+                                                <th
+                                                    onClick={() => handleSort('messenger_name')}
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                >
+                                                    <div className="flex items-center gap-1">
+                                                        Mensajero
+                                                        {sortField === 'messenger_name' && (
+                                                            <span className="text-indigo-500">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                                        )}
+                                                    </div>
+                                                </th>
+                                            )}
+                                            {isVisible('vehicle') && (
+                                                <th
+                                                    onClick={() => handleSort('vehicle')}
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                >
+                                                    <div className="flex items-center gap-1">
+                                                        Placa
+                                                        {sortField === 'vehicle' && (
+                                                            <span className="text-indigo-500">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                                        )}
+                                                    </div>
+                                                </th>
+                                            )}
+                                            {isVisible('location') && (
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                    Sede
+                                                </th>
+                                            )}
+                                            {isVisible('start_time') && (
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                    Hora Ingreso
+                                                </th>
+                                            )}
+                                            {isVisible('compliance') && (
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                    Cumplimiento
+                                                </th>
+                                            )}
+                                            {isVisible('answers') && (
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                    Respuestas
+                                                </th>
+                                            )}
                                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                                 Acciones
                                             </th>
@@ -166,52 +292,81 @@ export default function PreoperationalReports({ reports, messengers, questions, 
                                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                         {reports.data.map((report) => (
                                             <tr key={report.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                    {new Date(report.created_at).toLocaleString('es-CO')}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                    {report.messenger.name}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                    {report.messenger.vehicle}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                                    {report.shift ? (
-                                                        <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-                                                            {report.shift.start_time}
+                                                {isVisible('created_at') && (
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                        {new Date(report.created_at).toLocaleString('es-CO')}
+                                                    </td>
+                                                )}
+                                                {isVisible('messenger_name') && (
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                        {report.messenger.name}
+                                                    </td>
+                                                )}
+                                                {isVisible('vehicle') && (
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                        {report.messenger.vehicle}
+                                                    </td>
+                                                )}
+                                                {isVisible('location') && (
+                                                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                                            {report.shift?.location || 'principal'}
                                                         </span>
-                                                    ) : (
-                                                        <span className="text-gray-400">Sin turno</span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                    {report.compliant === true && (
-                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                                            ✓ A tiempo
-                                                        </span>
-                                                    )}
-                                                    {report.compliant === false && (
-                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                                            ✗ Tardío
-                                                        </span>
-                                                    )}
-                                                    {report.compliant === null && (
-                                                        <span className="text-gray-400 text-xs">-</span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <div className="flex justify-center gap-1">
-                                                        {Object.entries(report.answers).map(([key, value]) => (
-                                                            <span
-                                                                key={key}
-                                                                className={`text-lg font-bold ${getAnswerColor(value)}`}
-                                                                title={key}
-                                                            >
-                                                                {getAnswerIcon(value)}
+                                                    </td>
+                                                )}
+                                                {isVisible('start_time') && (
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                                        {report.shift ? (
+                                                            <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                                                                {report.shift.start_time}
                                                             </span>
-                                                        ))}
-                                                    </div>
-                                                </td>
+                                                        ) : (
+                                                            <span className="text-gray-400">Sin turno</span>
+                                                        )}
+                                                    </td>
+                                                )}
+                                                {isVisible('compliance') && (
+                                                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                        {report.compliant === true && (
+                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                                                ✓ A tiempo
+                                                            </span>
+                                                        )}
+                                                        {report.compliant === false && (
+                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                                                ✗ Tardío
+                                                            </span>
+                                                        )}
+                                                        {report.compliant === null && (
+                                                            <span className="text-gray-400 text-xs">-</span>
+                                                        )}
+                                                    </td>
+                                                )}
+                                                {isVisible('answers') && (
+                                                    <td className="px-6 py-4 text-center">
+                                                        <div className="flex justify-center items-center gap-2">
+                                                            {(() => {
+                                                                const counts = Object.values(report.answers).reduce((acc, val) => {
+                                                                    if (val === true) acc.yes++;
+                                                                    if (val === false) acc.no++;
+                                                                    return acc;
+                                                                }, { yes: 0, no: 0 });
+                                                                return (
+                                                                    <>
+                                                                        <span className="flex items-center gap-1 font-black text-green-600 dark:text-green-500 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-md border border-green-100 dark:border-green-800/50">
+                                                                            <span className="text-sm">{counts.yes}</span>
+                                                                            <span className="text-lg">✓</span>
+                                                                        </span>
+                                                                        <span className="flex items-center gap-1 font-black text-red-600 dark:text-red-500 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-md border border-red-100 dark:border-red-800/50">
+                                                                            <span className="text-sm">{counts.no}</span>
+                                                                            <span className="text-lg leading-none">✗</span>
+                                                                        </span>
+                                                                    </>
+                                                                );
+                                                            })()}
+                                                        </div>
+                                                    </td>
+                                                )}
                                                 <td className="px-6 py-4 text-center">
                                                     <button
                                                         onClick={() => setSelectedReport(report)}
@@ -269,6 +424,10 @@ export default function PreoperationalReports({ reports, messengers, questions, 
                                     <div className="flex items-center gap-3 mt-2">
                                         <p className="text-xs text-gray-500 dark:text-gray-500">
                                             Reportado: {new Date(selectedReport.created_at).toLocaleString('es-CO')}
+                                        </p>
+                                        <span className="text-gray-400">•</span>
+                                        <p className="text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+                                            Sede: {selectedReport.shift?.location || 'principal'}
                                         </p>
                                         {selectedReport.shift && (
                                             <>
@@ -381,24 +540,53 @@ export default function PreoperationalReports({ reports, messengers, questions, 
                         Selecciona el rango de fechas para exportar los reportes preoperacionales.
                     </p>
 
-                    <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label className="block text-sm font-medium mb-1">Fecha Inicio</label>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Fecha Inicio</label>
                             <input
                                 type="date"
                                 value={exportDates.start}
                                 onChange={(e) => setExportDates({ ...exportDates, start: e.target.value })}
-                                className="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                                className="w-full h-[38px] rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm px-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium mb-1">Fecha Fin</label>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Fecha Fin</label>
                             <input
                                 type="date"
                                 value={exportDates.end}
                                 onChange={(e) => setExportDates({ ...exportDates, end: e.target.value })}
-                                className="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                                className="w-full h-[38px] rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm px-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
                             />
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 mb-6">
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Mensajero (Opcional)</label>
+                            <MessengerSearchSelect
+                                messengers={messengers}
+                                selectedId={exportDates.messenger_id}
+                                onChange={(id) => setExportDates({ ...exportDates, messenger_id: id })}
+                                placeholder="Todos los mensajeros"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Sede (Opcional)</label>
+                            <select
+                                value={exportDates.location}
+                                onChange={(e) => setExportDates({ ...exportDates, location: e.target.value })}
+                                className="w-full h-[38px] rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm px-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
+                            >
+                                <option value="">Todas las sedes</option>
+                                <option value="principal">Principal</option>
+                                {locations?.filter(loc => loc.name.toLowerCase() !== 'principal').map((loc) => (
+                                    <option key={loc.id} value={loc.name}>
+                                        {loc.name.charAt(0).toUpperCase() + loc.name.slice(1)}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                     </div>
 
@@ -412,6 +600,64 @@ export default function PreoperationalReports({ reports, messengers, questions, 
                     </div>
                 </div>
             </Modal>
+
+            {/* Column Selection Modal */}
+            <Modal show={showColumnModal} onClose={() => setShowColumnModal(false)}>
+                <div className="p-6 text-gray-900 dark:text-gray-100">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-bold flex items-center gap-2">
+                            <span className="text-2xl">⚙️</span> Configurar Columnas
+                        </h2>
+                        <button
+                            onClick={() => setShowColumnModal(false)}
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                        Selecciona las columnas que deseas visualizar en la tabla de reportes.
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+                        {allColumns.map((col) => (
+                            <label
+                                key={col.id}
+                                className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${isVisible(col.id)
+                                    ? 'bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800'
+                                    : 'bg-white border-slate-100 dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                    }`}
+                            >
+                                <div className="relative flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={isVisible(col.id)}
+                                        onChange={() => toggleColumn(col.id)}
+                                        className="w-5 h-5 rounded-md text-indigo-600 focus:ring-indigo-500 border-slate-300 dark:border-slate-600 dark:bg-slate-900 transition-all"
+                                    />
+                                </div>
+                                <span className={`text-sm font-semibold ${isVisible(col.id) ? 'text-indigo-900 dark:text-indigo-100' : 'text-slate-600 dark:text-slate-400'
+                                    }`}>
+                                    {col.label}
+                                </span>
+                            </label>
+                        ))}
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-700">
+                        <PrimaryButton
+                            onClick={() => setShowColumnModal(false)}
+                            className="bg-slate-800 hover:bg-slate-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 w-full sm:w-auto justify-center"
+                        >
+                            Listo, guardar cambios
+                        </PrimaryButton>
+                    </div>
+                </div>
+            </Modal>
         </LeaderLayout>
     );
 }
+

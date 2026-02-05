@@ -22,14 +22,14 @@ class BeetrackService
         Log::info('BeetrackService: Starting getDispatchStatus');
 
         // Use caching to prevent hammering the API and improve load times
-        return \Illuminate\Support\Facades\Cache::remember('beetrack_status_v2', 120, function () { // Cache for 120 seconds
+        return \Illuminate\Support\Facades\Cache::remember('beetrack_status_v3', 120, function () { // Cache for 120 seconds
 
             $today = now()->format('d-m-Y');
             Log::info("BeetrackService: Fetching for date: {$today} (Fresh Cache)");
 
             try {
                 // 1. Get today's routes
-                $response = Http::timeout(15)->withHeaders([
+                $response = Http::timeout(45)->withHeaders([
                     'X-AUTH-TOKEN' => $this->apiKey,
                 ])->get($this->baseUrl, [
                             'date' => $today,

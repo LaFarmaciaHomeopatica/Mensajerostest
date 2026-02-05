@@ -8,22 +8,50 @@ use App\Models\Messenger;
 use Inertia\Inertia;
 use App\Exports\PreoperationalReportsExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Models\DispatchLocation;
 
 class PreoperationalController extends Controller
 {
     public function index(Request $request)
     {
-        $query = PreoperationalReport::with('messenger')
-            ->orderBy('created_at', 'desc');
+        $query = PreoperationalReport::with('messenger');
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        if ($sortBy === 'messenger_name') {
+            $query->join('messengers', 'preoperational_reports.messenger_id', '=', 'messengers.id')
+                ->select('preoperational_reports.*')
+                ->orderBy('messengers.name', $sortOrder);
+        } elseif ($sortBy === 'vehicle') {
+            $query->join('messengers', 'preoperational_reports.messenger_id', '=', 'messengers.id')
+                ->select('preoperational_reports.*')
+                ->orderBy('messengers.vehicle', $sortOrder);
+        } else {
+            $query->orderBy('preoperational_reports.' . $sortBy, $sortOrder);
+        }
 
         // Filter by date if provided
-        if ($request->has('date')) {
-            $query->whereDate('created_at', $request->date);
+        if ($request->has('date') && $request->date !== '') {
+            $query->whereDate('preoperational_reports.created_at', $request->date);
         }
 
         // Filter by messenger if provided
-        if ($request->has('messenger_id')) {
-            $query->where('messenger_id', $request->messenger_id);
+        if ($request->has('messenger_id') && $request->messenger_id !== '') {
+            $query->where('preoperational_reports.messenger_id', $request->messenger_id);
+        }
+
+        // Filter by location if provided
+        if ($request->has('location') && $request->location !== '') {
+            $location = $request->location;
+            $query->whereExists(function ($q) use ($location) {
+                $q->select(\Illuminate\Support\Facades\DB::raw(1))
+                    ->from('shifts')
+                    ->whereColumn('shifts.messenger_id', 'preoperational_reports.messenger_id')
+                    ->whereRaw('DATE(shifts.date) = DATE(preoperational_reports.created_at)')
+                    ->where('shifts.location', $location);
+            });
         }
 
         $reports = $query->paginate(20);
@@ -56,7 +84,8 @@ class PreoperationalController extends Controller
             'reports' => $reports,
             'messengers' => $messengers,
             'questions' => $questions,
-            'filters' => $request->only(['date', 'messenger_id'])
+            'locations' => DispatchLocation::all(),
+            'filters' => $request->only(['date', 'messenger_id', 'location', 'sort_by', 'sort_order'])
         ]);
     }
 
@@ -104,6 +133,7 @@ class PreoperationalController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'messenger_id' => 'nullable|exists:messengers,id',
+            'location' => 'nullable|string',
         ]);
 
         $fileName = 'reporte_preoperacional_' . now()->format('Y-m-d_His') . '.xlsx';
@@ -112,7 +142,8 @@ class PreoperationalController extends Controller
             new PreoperationalReportsExport(
                 $request->start_date,
                 $request->end_date,
-                $request->messenger_id
+                $request->messenger_id,
+                $request->location
             ),
             $fileName
         );
