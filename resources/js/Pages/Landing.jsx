@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, useForm, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
+import CleaningForm from './Cleaning/Form';
 
 export default function Landing({ preoperationalQuestions = [] }) {
     const { flash, errors } = usePage().props;
@@ -419,119 +420,144 @@ export default function Landing({ preoperationalQuestions = [] }) {
             <Head title="Registro de Mensajeros" />
 
             <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl max-w-md w-full">
-                <div className="text-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Logística LFH</h2>
-                    {viewState === 'search' && <p className="text-gray-500">Ingresa la placa de tu vehículo</p>}
-                    {viewState === 'options' && <p className="text-gray-500">Hola, <span className="font-bold text-indigo-500">{messenger?.name}</span></p>}
-                </div>
-
-                {viewState === 'search' && (
-                    <form onSubmit={checkPlate} className="space-y-6">
-                        <div>
-                            <input
-                                type="text"
-                                placeholder="Ej: AAA-123"
-                                value={plate}
-                                onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                                className="w-full text-center text-3xl font-mono tracking-widest border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 rounded-lg shadow-sm py-4 uppercase"
-                                required
-                                autoFocus
-                            />
-                            {error && <p className="text-red-500 text-center mt-2">{error}</p>}
+                {viewState === 'cleaning' ? (
+                    <CleaningForm
+                        messenger={messenger}
+                        onCancel={() => setViewState('options')}
+                        onSuccess={() => {/* Keep in success state of form */ }}
+                    />
+                ) : (
+                    <>
+                        <div className="text-center mb-6">
+                            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Logística LFH</h2>
+                            {viewState === 'search' && <p className="text-gray-500">Ingresa la placa de tu vehículo</p>}
+                            {viewState === 'options' && <p className="text-gray-500">Hola, <span className="font-bold text-indigo-500">{messenger?.name}</span></p>}
                         </div>
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
-                        >
-                            {loading ? 'Buscando...' : 'Buscar Vehículo'}
-                        </button>
-                    </form>
-                )}
+                        {viewState === 'search' && (
+                            <form onSubmit={checkPlate} className="space-y-6">
+                                <div>
+                                    <input
+                                        type="text"
+                                        placeholder="Ej: AAA-123"
+                                        value={plate}
+                                        onChange={(e) => setPlate(e.target.value.toUpperCase())}
+                                        className="w-full text-center text-3xl font-mono tracking-widest border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 rounded-lg shadow-sm py-4 uppercase"
+                                        required
+                                        autoFocus
+                                    />
+                                    {error && <p className="text-red-500 text-center mt-2">{error}</p>}
+                                </div>
 
-                {/* Button inside options view */}
-                {viewState === 'options' && (
-                    <div className="space-y-4">
-                        {messenger?.shift_finished && (
-                            <div className="bg-gray-100 dark:bg-gray-700 border-l-4 border-gray-500 text-gray-700 dark:text-gray-300 p-4 rounded-md mb-4">
-                                <p className="font-bold">🏁 Turno Finalizado</p>
-                                <p className="text-sm">Ya has registrado el fin de tu turno por hoy.</p>
-                            </div>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                                >
+                                    {loading ? 'Buscando...' : 'Buscar Vehículo'}
+                                </button>
+                            </form>
                         )}
 
-                        {messenger?.preoperational_submitted && !messenger?.shift_finished && (
-                            <div className="bg-green-50 dark:bg-green-900/40 border-l-4 border-green-500 text-green-700 dark:text-green-300 p-4 rounded-md mb-4 shadow-sm">
-                                <p className="font-bold flex items-center gap-2">
-                                    <span>✅</span> Reporte Preoperacional Completado
-                                </p>
-                                <p className="text-sm">Ya has registrado el estado de tu vehículo por hoy.</p>
+                        {/* Button inside options view */}
+                        {viewState === 'options' && (
+                            <div className="space-y-4">
+                                {messenger?.shift_finished && (
+                                    <div className="bg-gray-100 dark:bg-gray-700 border-l-4 border-gray-500 text-gray-700 dark:text-gray-300 p-4 rounded-md mb-4">
+                                        <p className="font-bold">🏁 Turno Finalizado</p>
+                                        <p className="text-sm">Ya has registrado el fin de tu turno por hoy.</p>
+                                    </div>
+                                )}
+
+                                {messenger?.preoperational_submitted && !messenger?.shift_finished && (
+                                    <div className="bg-green-50 dark:bg-green-900/40 border-l-4 border-green-500 text-green-700 dark:text-green-300 p-4 rounded-md mb-4 shadow-sm">
+                                        <p className="font-bold flex items-center gap-2">
+                                            <span>✅</span> Reporte Preoperacional Completado
+                                        </p>
+                                        <p className="text-sm">Ya has registrado el estado de tu vehículo por hoy.</p>
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={() => setViewState('shifts_view')}
+                                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-5 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-between text-lg group"
+                                >
+                                    <span className="flex items-center gap-3">
+                                        <span className="text-2xl">📅</span>
+                                        <span>Ver Mis Horarios</span>
+                                    </span>
+                                    <span className="text-indigo-200 group-hover:text-white">→</span>
+                                </button>
+
+                                <button
+                                    onClick={handlePreopClick}
+                                    className={`w-full font-bold py-5 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-between text-lg group ${messenger?.shift_finished || messenger?.preoperational_submitted
+                                        ? 'bg-gray-300 cursor-not-allowed text-gray-500 shadow-none'
+                                        : 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-xl'
+                                        }`}
+                                    disabled={messenger?.shift_finished || messenger?.preoperational_submitted}
+                                >
+                                    <span className="flex items-center gap-3">
+                                        <span className="text-2xl">📋</span>
+                                        <span>Reporte Preoperacional</span>
+                                    </span>
+                                    {(!messenger?.shift_finished && !messenger?.preoperational_submitted) && <span className="text-blue-200 group-hover:text-white">→</span>}
+                                </button>
+
+                                <button
+                                    onClick={() => setViewState('cleaning')}
+                                    className={`w-full font-bold py-5 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-between text-lg group ${messenger?.shift_finished
+                                        ? 'bg-gray-300 cursor-not-allowed text-gray-500 shadow-none'
+                                        : 'bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-xl'
+                                        }`}
+                                    disabled={messenger?.shift_finished}
+                                >
+                                    <span className="flex items-center gap-3">
+                                        <span className="text-2xl">🧹</span>
+                                        <span>Reporte de Limpieza</span>
+                                    </span>
+                                    {!messenger?.shift_finished && <span className="text-emerald-200 group-hover:text-white">→</span>}
+                                </button>
+
+                                <button
+                                    onClick={() => setViewState('lunch_confirm')}
+                                    className={`w-full font-bold py-5 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-between text-lg group ${messenger?.shift_finished
+                                        ? 'bg-gray-300 cursor-not-allowed text-gray-500 shadow-none'
+                                        : 'bg-green-600 hover:bg-green-700 text-white hover:shadow-xl'
+                                        }`}
+                                    disabled={messenger?.shift_finished}
+                                >
+                                    <span className="flex items-center gap-3">
+                                        <span className="text-2xl">🍽️</span>
+                                        <span>Registrar Almuerzo</span>
+                                    </span>
+                                    {!messenger?.shift_finished && <span className="text-green-200 group-hover:text-white">→</span>}
+                                </button>
+
+                                <button
+                                    onClick={() => setViewState('shift_confirm')}
+                                    className={`w-full font-bold py-5 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-between text-lg group ${messenger?.shift_finished
+                                        ? 'bg-gray-300 cursor-not-allowed text-gray-500 shadow-none'
+                                        : 'bg-gray-800 hover:bg-gray-900 text-white hover:shadow-xl'
+                                        }`}
+                                    disabled={messenger?.shift_finished}
+                                >
+                                    <span className="flex items-center gap-3">
+                                        <span className="text-2xl">🏁</span>
+                                        <span>Reportar Fin Turno</span>
+                                    </span>
+                                    {!messenger?.shift_finished && <span className="text-gray-400 group-hover:text-white">→</span>}
+                                </button>
+
+                                <button
+                                    onClick={resetAll}
+                                    className="w-full text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 py-3 mt-4 text-sm font-medium border border-transparent hover:border-gray-200 rounded-lg transition-all"
+                                >
+                                    Cancelar / Buscar otra placa
+                                </button>
                             </div>
                         )}
-
-                        <button
-                            onClick={() => setViewState('shifts_view')}
-                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-5 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-between text-lg group"
-                        >
-                            <span className="flex items-center gap-3">
-                                <span className="text-2xl">📅</span>
-                                <span>Ver Mis Horarios</span>
-                            </span>
-                            <span className="text-indigo-200 group-hover:text-white">→</span>
-                        </button>
-
-                        <button
-                            onClick={handlePreopClick}
-                            className={`w-full font-bold py-5 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-between text-lg group ${messenger?.shift_finished || messenger?.preoperational_submitted
-                                ? 'bg-gray-300 cursor-not-allowed text-gray-500 shadow-none'
-                                : 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-xl'
-                                }`}
-                            disabled={messenger?.shift_finished || messenger?.preoperational_submitted}
-                        >
-                            <span className="flex items-center gap-3">
-                                <span className="text-2xl">📋</span>
-                                <span>Reporte Preoperacional</span>
-                            </span>
-                            {(!messenger?.shift_finished && !messenger?.preoperational_submitted) && <span className="text-blue-200 group-hover:text-white">→</span>}
-                        </button>
-
-                        <button
-                            onClick={() => setViewState('lunch_confirm')}
-                            className={`w-full font-bold py-5 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-between text-lg group ${messenger?.shift_finished
-                                ? 'bg-gray-300 cursor-not-allowed text-gray-500 shadow-none'
-                                : 'bg-green-600 hover:bg-green-700 text-white hover:shadow-xl'
-                                }`}
-                            disabled={messenger?.shift_finished}
-                        >
-                            <span className="flex items-center gap-3">
-                                <span className="text-2xl">🍽️</span>
-                                <span>Registrar Almuerzo</span>
-                            </span>
-                            {!messenger?.shift_finished && <span className="text-green-200 group-hover:text-white">→</span>}
-                        </button>
-
-                        <button
-                            onClick={() => setViewState('shift_confirm')}
-                            className={`w-full font-bold py-5 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-between text-lg group ${messenger?.shift_finished
-                                ? 'bg-gray-300 cursor-not-allowed text-gray-500 shadow-none'
-                                : 'bg-gray-800 hover:bg-gray-900 text-white hover:shadow-xl'
-                                }`}
-                            disabled={messenger?.shift_finished}
-                        >
-                            <span className="flex items-center gap-3">
-                                <span className="text-2xl">🏁</span>
-                                <span>Reportar Fin Turno</span>
-                            </span>
-                            {!messenger?.shift_finished && <span className="text-gray-400 group-hover:text-white">→</span>}
-                        </button>
-
-                        <button
-                            onClick={resetAll}
-                            className="w-full text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 py-3 mt-4 text-sm font-medium border border-transparent hover:border-gray-200 rounded-lg transition-all"
-                        >
-                            Cancelar / Buscar otra placa
-                        </button>
-                    </div>
+                    </>
                 )}
 
                 {/* Shifts View */}

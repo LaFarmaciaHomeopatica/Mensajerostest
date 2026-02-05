@@ -20,6 +20,8 @@ Route::post('/messenger/check-plate', [LunchController::class, 'checkPlate'])->n
 Route::post('/lunch', [LunchController::class, 'store'])->name('lunch.store');
 Route::post('/shift-completion', [\App\Http\Controllers\ShiftCompletionController::class, 'store'])->name('shift-completion.store');
 Route::post('/preoperational', [\App\Http\Controllers\PreoperationalController::class, 'store'])->name('preoperational.store');
+Route::get('/cleaning', [\App\Http\Controllers\CleaningReportController::class, 'create'])->name('cleaning.create');
+Route::post('/cleaning', [\App\Http\Controllers\CleaningReportController::class, 'store'])->name('cleaning.store');
 
 Route::middleware(['auth'])->group(function () {
     // Rutas exclusivas de Líder
@@ -42,6 +44,8 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:lider,regente'])->group(function () {
         Route::get('/reports/preoperational', [\App\Http\Controllers\PreoperationalController::class, 'index'])->name('reports.preoperational');
         Route::get('/reports/preoperational/export', [\App\Http\Controllers\PreoperationalController::class, 'export'])->name('reports.preoperational.export');
+        Route::get('/reports/cleaning', [\App\Http\Controllers\CleaningReportController::class, 'index'])->name('reports.cleaning');
+        Route::get('/reports/cleaning/export', [\App\Http\Controllers\CleaningReportController::class, 'export'])->name('reports.cleaning.export');
         Route::resource('preoperational-questions', \App\Http\Controllers\PreoperationalQuestionController::class);
     });
 });
