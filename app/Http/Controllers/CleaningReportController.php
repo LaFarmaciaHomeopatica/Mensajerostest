@@ -81,8 +81,63 @@ class CleaningReportController extends Controller
             return back()->withErrors(['messenger_inactive' => 'Tu usuario está inactivo.']);
         }
 
-        // Store image
-        $path = $request->file('evidence')->store('cleaning_evidence', 'public');
+        // Store image with compression
+        $image = $request->file('evidence');
+        $filename = 'cleaning_evidence/' . uniqid() . '.jpg'; // Convert to JPG
+
+        // Native PHP Compression (GD)
+        $sourceImage = null;
+        $extension = strtolower($image->getClientOriginalExtension());
+
+        switch ($extension) {
+            case 'jpeg':
+            case 'jpg':
+                $sourceImage = imagecreatefromjpeg($image->getPathname());
+                break;
+            case 'png':
+                $sourceImage = imagecreatefrompng($image->getPathname());
+                // Preserve transparency for resizing but we convert to JPG so it will be black background
+                // Or we can fill white background
+                $bg = imagecreatetruecolor(imagesx($sourceImage), imagesy($sourceImage));
+                $white = imagecolorallocate($bg, 255, 255, 255);
+                imagefilledrectangle($bg, 0, 0, imagesx($sourceImage), imagesy($sourceImage), $white);
+                imagecopy($bg, $sourceImage, 0, 0, 0, 0, imagesx($sourceImage), imagesy($sourceImage));
+                $sourceImage = $bg;
+                break;
+            case 'webp':
+                if (function_exists('imagecreatefromwebp')) {
+                    $sourceImage = imagecreatefromwebp($image->getPathname());
+                }
+                break;
+        }
+
+        if ($sourceImage) {
+            // Resize if too large (max width 1280)
+            $maxWidth = 1280;
+            $width = imagesx($sourceImage);
+            $height = imagesy($sourceImage);
+
+            if ($width > $maxWidth) {
+                $newWidth = $maxWidth;
+                $newHeight = floor($height * ($maxWidth / $width));
+                $tempImage = imagecreatetruecolor($newWidth, $newHeight);
+                imagecopyresampled($tempImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                imagedestroy($sourceImage);
+                $sourceImage = $tempImage;
+            }
+
+            // Capture output buffer
+            ob_start();
+            imagejpeg($sourceImage, null, 80); // 80% quality
+            $imageData = ob_get_clean();
+            imagedestroy($sourceImage);
+
+            Storage::disk('public')->put($filename, $imageData);
+            $path = $filename;
+        } else {
+            // Fallback if GD fails or format not supported
+            $path = $request->file('evidence')->store('cleaning_evidence', 'public');
+        }
 
         CleaningReport::create([
             'messenger_id' => $messenger->id,
