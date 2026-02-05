@@ -46,6 +46,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports/preoperational/export', [\App\Http\Controllers\PreoperationalController::class, 'export'])->name('reports.preoperational.export');
         Route::get('/reports/cleaning', [\App\Http\Controllers\CleaningReportController::class, 'index'])->name('reports.cleaning');
         Route::get('/reports/cleaning/export', [\App\Http\Controllers\CleaningReportController::class, 'export'])->name('reports.cleaning.export');
+
+        // Consolidated
+        Route::get('/reports/consolidated', [\App\Http\Controllers\ConsolidatedReportController::class, 'index'])->name('reports.consolidated');
+        Route::get('/reports/consolidated/export', [\App\Http\Controllers\ConsolidatedReportController::class, 'export'])->name('reports.consolidated.export');
         Route::resource('preoperational-questions', \App\Http\Controllers\PreoperationalQuestionController::class);
     });
 });
