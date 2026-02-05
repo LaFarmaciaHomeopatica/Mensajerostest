@@ -22,7 +22,10 @@ class CleaningReportController extends Controller
 
     public function index(Request $request)
     {
-        $query = CleaningReport::with('messenger');
+        $query = CleaningReport::with('messenger')
+            ->whereHas('messenger', function ($q) {
+                $q->where('is_active', true);
+            });
 
         // Sorting
         $sortBy = $request->get('sort_by', 'created_at');
@@ -57,7 +60,7 @@ class CleaningReportController extends Controller
 
         return Inertia::render('Reports/Cleaning', [
             'reports' => $reports,
-            'messengers' => Messenger::orderBy('name')->get(),
+            'messengers' => Messenger::where('is_active', true)->orderBy('name')->get(),
             'filters' => $request->only(['date', 'messenger_id', 'type', 'sort_by', 'sort_order'])
         ]);
     }

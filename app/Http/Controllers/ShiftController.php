@@ -22,7 +22,7 @@ class ShiftController extends Controller
         $endOfWeek = $date->copy()->endOfWeek();
 
         // Fetch messengers with shifts for the specific week
-        $messengers = Messenger::with([
+        $messengers = Messenger::where('is_active', true)->with([
             'shifts' => function ($query) use ($startOfWeek, $endOfWeek) {
                 $query->whereBetween('date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')]);
             }

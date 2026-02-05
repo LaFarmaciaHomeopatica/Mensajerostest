@@ -218,12 +218,20 @@ export default function ConsolidatedReport({ reportData, messengers, filters, lo
                                                             <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 px-3 py-1 rounded-full text-xs font-bold mb-1">
                                                                 ✓ Realizado ({row.cleaning.count})
                                                             </span>
-                                                            <div className="flex gap-1">
-                                                                {row.cleaning.types.map((type, idx) => (
-                                                                    <span key={idx} className="text-[9px] uppercase bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600" title={type}>
-                                                                        {type.includes('maletas') ? '🎒' : '🏍️'}
-                                                                    </span>
-                                                                ))}
+                                                            <div className="flex flex-col gap-1 mt-1">
+                                                                {row.cleaning.types.map((type, idx) => {
+                                                                    const isWeekly = type.includes('semanal');
+                                                                    const isMonthly = type.includes('mensual');
+                                                                    const frequency = isWeekly ? 'Semanal' : (isMonthly ? 'Mensual' : '');
+                                                                    const icon = type.includes('maletas') ? '🎒' : '🏍️';
+
+                                                                    return (
+                                                                        <span key={idx} className="flex items-center gap-1.5 text-[10px] uppercase bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-600 w-fit mx-auto" title={type}>
+                                                                            <span className="text-sm">{icon}</span>
+                                                                            <span className="font-bold">{frequency}</span>
+                                                                        </span>
+                                                                    );
+                                                                })}
                                                             </div>
                                                         </div>
                                                     ) : (

@@ -14,7 +14,10 @@ class PreoperationalController extends Controller
 {
     public function index(Request $request)
     {
-        $query = PreoperationalReport::with('messenger');
+        $query = PreoperationalReport::with('messenger')
+            ->whereHas('messenger', function ($q) {
+                $q->where('is_active', true);
+            });
 
         // Sorting
         $sortBy = $request->get('sort_by', 'created_at');
@@ -77,7 +80,7 @@ class PreoperationalController extends Controller
             return $report;
         });
 
-        $messengers = Messenger::orderBy('name')->get();
+        $messengers = Messenger::where('is_active', true)->orderBy('name')->get();
         $questions = \App\Models\PreoperationalQuestion::orderBy('order')->get();
 
         return Inertia::render('Reports/Preoperational', [

@@ -120,7 +120,7 @@ class ConsolidatedReportController extends Controller
                 'messenger_id' => $messengerId,
                 'location' => $location,
             ],
-            'messengers' => Messenger::orderBy('name')->select('id', 'name', 'vehicle')->get(),
+            'messengers' => Messenger::where('is_active', true)->orderBy('name')->select('id', 'name', 'vehicle')->get(),
             // We need locations for the filter
             'locations' => \App\Models\DispatchLocation::select('name')->distinct()->get()
         ]);

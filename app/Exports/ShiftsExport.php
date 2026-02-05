@@ -22,6 +22,9 @@ class ShiftsExport implements FromCollection, WithHeadings, WithMapping, ShouldA
     public function collection()
     {
         return Shift::with('messenger')
+            ->whereHas('messenger', function ($q) {
+                $q->where('is_active', true);
+            })
             ->whereBetween('date', [$this->startDate, $this->endDate])
             ->orderBy('date')
             ->orderBy('location')

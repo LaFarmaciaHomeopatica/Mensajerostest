@@ -102,7 +102,11 @@ class LunchController extends Controller
 
     public function report(Request $request)
     {
-        $query = LunchLog::with('messenger')->orderBy('created_at', 'desc');
+        $query = LunchLog::with('messenger')
+            ->whereHas('messenger', function ($q) {
+                $q->where('is_active', true);
+            })
+            ->orderBy('created_at', 'desc');
 
         if ($request->has('date') && $request->date) {
             $query->whereDate('start_time', $request->date);

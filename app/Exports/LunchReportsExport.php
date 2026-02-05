@@ -23,6 +23,9 @@ class LunchReportsExport implements FromCollection, WithHeadings, WithMapping, S
     public function collection()
     {
         return LunchLog::with('messenger')
+            ->whereHas('messenger', function ($q) {
+                $q->where('is_active', true);
+            })
             ->whereBetween('start_time', [
                 Carbon::parse($this->startDate)->startOfDay(),
                 Carbon::parse($this->endDate)->endOfDay()

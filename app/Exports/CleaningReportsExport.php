@@ -27,6 +27,9 @@ class CleaningReportsExport implements FromCollection, WithHeadings, WithMapping
     public function collection()
     {
         $query = CleaningReport::with('messenger')
+            ->whereHas('messenger', function ($q) {
+                $q->where('is_active', true);
+            })
             ->whereBetween('created_at', [
                 Carbon::parse($this->startDate)->startOfDay(),
                 Carbon::parse($this->endDate)->endOfDay()
