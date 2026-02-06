@@ -1,1 +1,0 @@
-[{"name":"Despachos LFH","\"rol\"":"rol"},{"name":"Mensajero","\"rol\"":"rol"},{"name":"Regente La Farmacia","\"rol\"":"rol"}]

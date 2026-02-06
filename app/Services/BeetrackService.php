@@ -58,25 +58,30 @@ class BeetrackService
                     $total = 0;
 
                     // 2. If active, fetch details for progress (N+1 query as per legacy code)
-                    // Note: This adds overhead. We might want to limit parallel requests or cache deeper.
+                    // Optimization: Use a secondary cache for route details to avoid redundant API calls
                     if ($esActivo && $idRuta) {
-                        try {
-                            $detailUrl = "{$this->baseUrl}/{$idRuta}";
-                            $detailResp = Http::timeout(10)->withHeaders([ // shorter timeout for sub-requests
-                                'X-AUTH-TOKEN' => $this->apiKey,
-                            ])->get($detailUrl);
+                        $cacheKey = "beetrack_route_detail_{$idRuta}";
+                        $details = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($idRuta) {
+                            try {
+                                $detailUrl = "{$this->baseUrl}/{$idRuta}";
+                                $detailResp = Http::timeout(10)->withHeaders([
+                                    'X-AUTH-TOKEN' => $this->apiKey,
+                                ])->get($detailUrl);
 
-                            if ($detailResp->successful()) {
-                                $wrapper = $detailResp->json()['response'] ?? [];
-                                // API structure: response -> route -> dispatches (or sometimes direct dispatches depending on endpoint version)
-                                $rutaDetalle = $wrapper['route'] ?? $wrapper;
-                                $despachos = $rutaDetalle['dispatches'] ?? [];
-
-                                $total = count($despachos);
-                                $gestionadas = collect($despachos)->filter(fn($d) => in_array($d['status'] ?? '', ['completed', 'failed', 'partial', 'delivered']))->count();
+                                if ($detailResp->successful()) {
+                                    return $detailResp->json()['response'] ?? [];
+                                }
+                            } catch (\Exception $e) {
+                                Log::warning("Beetrack Detail Error for Route {$idRuta}: " . $e->getMessage());
                             }
-                        } catch (\Exception $e) {
-                            Log::warning("Beetrack Detail Error for Route {$idRuta}: " . $e->getMessage());
+                            return null;
+                        });
+
+                        if ($details) {
+                            $rutaDetalle = $details['route'] ?? $details;
+                            $despachos = $rutaDetalle['dispatches'] ?? [];
+                            $total = count($despachos);
+                            $gestionadas = collect($despachos)->filter(fn($d) => in_array($d['status'] ?? '', ['completed', 'failed', 'partial', 'delivered']))->count();
                         }
                     }
 

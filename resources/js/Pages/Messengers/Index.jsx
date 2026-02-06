@@ -70,6 +70,7 @@ export default function Index({ messengers, filters }) {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Vehículo</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Duración Almuerzo</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Estado</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Analíticas</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Ubicación</th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Acciones</th>
                                 </tr>
@@ -92,6 +93,14 @@ export default function Index({ messengers, filters }) {
                                                 : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                                                 }`}>
                                                 {messenger.is_active ? 'Activo' : 'Inactivo'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${!messenger.exclude_from_analytics
+                                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                                : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                                                }`}>
+                                                {!messenger.exclude_from_analytics ? 'Incluido' : 'Excluido'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 capitalize">

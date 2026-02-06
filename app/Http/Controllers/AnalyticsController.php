@@ -19,7 +19,7 @@ class AnalyticsController extends Controller
     public function index()
     {
         return Inertia::render('Analytics/Dashboard', [
-            'messengers' => Messenger::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'messengers' => Messenger::where('is_active', true)->where('exclude_from_analytics', false)->orderBy('name')->get(['id', 'name']),
             'locations' => \App\Models\DispatchLocation::select('name')->distinct()->get()->pluck('name')
         ]);
     }
@@ -30,6 +30,9 @@ class AnalyticsController extends Controller
 
         if ($request->has('messenger_id') && $request->messenger_id != '') {
             $query->where('messenger_id', $request->messenger_id);
+        } else {
+            // Filter by non-excluded messengers if no specific messenger is requested
+            $query->whereIn('messenger_id', Messenger::where('exclude_from_analytics', false)->pluck('id'));
         }
 
         $startDate = $request->get('start_date', now()->subDays(30)->toDateString());
@@ -48,13 +51,45 @@ class AnalyticsController extends Controller
 
     public function getGeneralStats(Request $request)
     {
-        return response()->json([
+        $currentStats = [
             'preop_count' => $this->getBaseQuery(PreoperationalReport::class, $request)->count(),
             'cleaning_count' => $this->getBaseQuery(CleaningReport::class, $request)->count(),
             'lunch_count' => $this->getBaseQuery(LunchLog::class, $request)->count(),
             'completion_count' => $this->getBaseQuery(ShiftCompletion::class, $request)->count(),
-            'dispatch_guides' => $this->getBaseQuery(DispatchLog::class, $request)->sum('guides_count'),
+        ];
+
+        $prevRequest = $this->getPreviousPeriodRequest($request);
+        $prevStats = [
+            'preop_count' => $this->getBaseQuery(PreoperationalReport::class, $prevRequest)->count(),
+            'cleaning_count' => $this->getBaseQuery(CleaningReport::class, $prevRequest)->count(),
+            'lunch_count' => $this->getBaseQuery(LunchLog::class, $prevRequest)->count(),
+            'completion_count' => $this->getBaseQuery(ShiftCompletion::class, $prevRequest)->count(),
+        ];
+
+        $trends = [];
+        foreach ($currentStats as $key => $value) {
+            $prevValue = $prevStats[$key];
+            $trends[$key] = $prevValue > 0 ? round((($value - $prevValue) / $prevValue) * 100, 1) : ($value > 0 ? 100 : 0);
+        }
+
+        return response()->json([
+            'current' => (object) $currentStats,
+            'trends' => (object) $trends
         ]);
+    }
+
+    private function getPreviousPeriodRequest(Request $request)
+    {
+        $startDate = Carbon::parse($request->get('start_date', now()->subDays(30)->toDateString()));
+        $endDate = Carbon::parse($request->get('end_date', now()->toDateString()));
+        $diff = $startDate->diffInDays($endDate) + 1;
+
+        $prevReq = new Request($request->all());
+        $prevReq->merge([
+            'start_date' => $startDate->copy()->subDays($diff)->toDateString(),
+            'end_date' => $startDate->copy()->subDay()->toDateString(),
+        ]);
+        return $prevReq;
     }
 
     public function getCleaningStats(Request $request)
@@ -110,26 +145,42 @@ class AnalyticsController extends Controller
     public function getComplianceStats(Request $request)
     {
         $messengerId = $request->get('messenger_id');
-        $messengers = $messengerId ? Messenger::where('id', $messengerId)->get() : Messenger::where('is_active', true)->get();
-
         $startDateStr = $request->get('start_date', now()->subDays(7)->toDateString());
         $endDateStr = $request->get('end_date', now()->toDateString());
+
+        $messengersQuery = Messenger::where('is_active', true)->where('exclude_from_analytics', false);
+        if ($messengerId) {
+            $messengersQuery->where('id', $messengerId);
+        }
+        $messengers = $messengersQuery->get();
+
+        $messengerIds = $messengers->pluck('id');
+
+        // Batch fetch all relevant shifts
+        $shifts = Shift::whereIn('messenger_id', $messengerIds)
+            ->whereBetween('date', [$startDateStr, $endDateStr])
+            ->where('status', 'present')
+            ->get()
+            ->groupBy('messenger_id');
+
+        // Batch fetch all relevant preoperational reports
+        $reports = PreoperationalReport::whereIn('messenger_id', $messengerIds)
+            ->whereBetween('created_at', [Carbon::parse($startDateStr)->startOfDay(), Carbon::parse($endDateStr)->endOfDay()])
+            ->get()
+            ->mapToGroups(function ($item) {
+                return [$item->messenger_id . '_' . $item->created_at->toDateString() => $item];
+            });
 
         $compliance = [];
 
         foreach ($messengers as $messenger) {
-            $shifts = Shift::where('messenger_id', $messenger->id)
-                ->whereBetween('date', [$startDateStr, $endDateStr])
-                ->where('status', 'present')
-                ->get();
-
+            $mShifts = $shifts->get($messenger->id, collect());
             $onTime = 0;
-            $total = $shifts->count();
+            $total = $mShifts->count();
 
-            foreach ($shifts as $shift) {
-                $report = PreoperationalReport::where('messenger_id', $messenger->id)
-                    ->whereDate('created_at', $shift->date)
-                    ->first();
+            foreach ($mShifts as $shift) {
+                $reportKey = $messenger->id . '_' . $shift->date;
+                $report = $reports->get($reportKey)?->first();
 
                 if ($report && $shift->start_time) {
                     if ($report->created_at->format('H:i') <= $shift->start_time) {
@@ -186,67 +237,301 @@ class AnalyticsController extends Controller
             ->groupBy('hour')
             ->orderBy('hour')
             ->get();
-
         return response()->json($completions);
     }
 
-    public function getDispatchTrend(Request $request)
+    public function getCleaningComplianceStats(Request $request)
     {
-        $stats = $this->getBaseQuery(DispatchLog::class, $request)
-            ->select('date', DB::raw('count(*) as routes'), DB::raw('sum(guides_count) as guides'))
+        $messengerId = $request->get('messenger_id');
+        $startDateStr = $request->get('start_date', now()->subDays(30)->toDateString());
+        $endDateStr = $request->get('end_date', now()->toDateString());
+
+        $startDate = Carbon::parse($startDateStr)->startOfDay();
+        $endDate = Carbon::parse($endDateStr)->endOfDay();
+
+        // Calculate weeks and months covered
+        $days = $startDate->diffInDays($endDate) + 1;
+        $weeks = max(1, round($days / 7));
+        $months = max(1, round($days / 30));
+
+        $messengersQuery = Messenger::where('is_active', true)->where('exclude_from_analytics', false);
+        if ($messengerId) {
+            $messengersQuery->where('id', $messengerId);
+        }
+        $messengers = $messengersQuery->get();
+        $messengerIds = $messengers->pluck('id');
+
+        $reports = CleaningReport::whereIn('messenger_id', $messengerIds)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->get()
+            ->groupBy('messenger_id');
+
+        $compliance = [];
+
+        foreach ($messengers as $messenger) {
+            $mReports = $reports->get($messenger->id, collect());
+
+            $counts = [
+                'maletas_semanal' => $mReports->where('type', 'maletas_semanal')->count(),
+                'motos_semanal' => $mReports->where('type', 'motos_semanal')->count(),
+                'maletas_mensual' => $mReports->where('type', 'maletas_mensual')->count(),
+                'motos_mensual' => $mReports->where('type', 'motos_mensual')->count(),
+            ];
+
+            // Target: 1 per week/month
+            $achieved = min($counts['maletas_semanal'], $weeks) +
+                min($counts['motos_semanal'], $weeks) +
+                min($counts['maletas_mensual'], $months) +
+                min($counts['motos_mensual'], $months);
+
+            $totalTarget = ($weeks * 2) + ($months * 2);
+
+            $compliance[] = [
+                'name' => $messenger->name,
+                'rate' => $totalTarget > 0 ? round(($achieved / $totalTarget) * 100, 1) : 0,
+                'details' => $counts,
+                'targets' => ['weeks' => $weeks, 'months' => $months]
+            ];
+        }
+
+        return response()->json($compliance);
+    }
+
+    public function getSectionTrends(Request $request)
+    {
+        $preops = $this->getBaseQuery(PreoperationalReport::class, $request)
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
             ->groupBy('date')
             ->orderBy('date')
             ->get();
 
-        return response()->json($stats);
+        $cleanings = $this->getBaseQuery(CleaningReport::class, $request)
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        // Merge dates
+        $allDates = $preops->pluck('date')->merge($cleanings->pluck('date'))->unique()->sort();
+
+        $trends = $allDates->map(function ($date) use ($preops, $cleanings) {
+            $p = $preops->firstWhere('date', $date);
+            $c = $cleanings->firstWhere('date', $date);
+            return [
+                'date' => $date,
+                'preop' => $p ? $p->count : 0,
+                'cleaning' => $c ? $c->count : 0,
+            ];
+        });
+
+        return response()->json($trends);
     }
 
-    public function getRouteStats(Request $request)
+    public function getAttendanceComplianceStats(Request $request)
     {
-        $messengerId = $request->get('messenger_id');
-        $isToday = $request->get('end_date', now()->toDateString()) === now()->toDateString();
+        $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : now()->subDays(30);
+        $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : now();
+        $messengerId = $request->input('messenger_id');
 
-        if ($isToday && !$messengerId) {
-            $beetrack = app(\App\Services\BeetrackService::class);
-            $status = $beetrack->getDispatchStatus();
-            $managed = 0;
-            $potential = 0;
-            $details = [];
+        $shiftsQuery = Shift::whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()]);
+        if ($messengerId) {
+            $shiftsQuery->where('messenger_id', $messengerId);
+        }
+        $shifts = $shiftsQuery->get()->groupBy('messenger_id');
 
-            if ($status['status'] === 'success') {
-                $all = array_merge($status['activos']->toArray(), $status['libres']->toArray());
-                foreach ($all as $m) {
-                    $prog = explode('/', $m['progreso_str'] ?? '');
-                    if (count($prog) === 2) {
-                        $mManaged = (int) $prog[0];
-                        $mPotential = (int) $prog[1];
-                        $managed += $mManaged;
-                        $potential += $mPotential;
+        $messengersQuery = Messenger::where('is_active', true)->where('exclude_from_analytics', false);
+        if ($messengerId) {
+            $messengersQuery->where('id', $messengerId);
+        }
+        $messengers = $messengersQuery->get();
 
-                        $details[] = [
-                            'name' => $m['nombre'],
-                            'managed' => $mManaged,
-                            'potential' => $mPotential,
-                            'rate' => $mPotential > 0 ? round(($mManaged / $mPotential) * 100) : 0
-                        ];
-                    }
-                }
+        $compliance = [];
+
+        foreach ($messengers as $messenger) {
+            $mShifts = $shifts->get($messenger->id, collect());
+            $scheduledDates = $mShifts->pluck('date')->unique();
+            $expectedReports = $scheduledDates->count() * 2; // Lunch + End of Shift
+
+            if ($expectedReports === 0) {
+                $compliance[] = [
+                    'name' => $messenger->name,
+                    'rate' => 0,
+                    'lunch_count' => 0,
+                    'completion_count' => 0,
+                    'expected' => 0
+                ];
+                continue;
             }
-            return response()->json([
-                'managed' => $managed,
-                'potential' => $potential,
-                'rate' => $potential > 0 ? round(($managed / $potential) * 100, 1) : 0,
-                'details' => $details
-            ]);
+
+            $lunchDone = LunchLog::where('messenger_id', $messenger->id)
+                ->whereIn(DB::raw('DATE(created_at)'), $scheduledDates)
+                ->select(DB::raw('DATE(created_at) as date'))
+                ->distinct()
+                ->get()
+                ->count();
+
+            $completionDone = ShiftCompletion::where('messenger_id', $messenger->id)
+                ->whereIn(DB::raw('DATE(finished_at)'), $scheduledDates)
+                ->select(DB::raw('DATE(finished_at) as date'))
+                ->distinct()
+                ->get()
+                ->count();
+
+            $totalDone = $lunchDone + $completionDone;
+
+            $compliance[] = [
+                'name' => $messenger->name,
+                'rate' => round(($totalDone / $expectedReports) * 100, 1),
+                'lunch_count' => $lunchDone,
+                'completion_count' => $completionDone,
+                'expected' => $expectedReports
+            ];
         }
 
-        // Historical from logs
-        $logs = $this->getBaseQuery(DispatchLog::class, $request);
+        return response()->json($compliance);
+    }
+
+    public function getShiftExitAnalysis(Request $request)
+    {
+        $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : now()->subDays(30);
+        $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : now();
+        $messengerId = $request->input('messenger_id');
+
+        $query = Shift::with(['messenger', 'messenger.shiftCompletions'])
+            ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()]);
+
+        if ($messengerId) {
+            $query->where('messenger_id', $messengerId);
+        }
+
+        $shifts = $query->orderBy('date', 'desc')->get();
+
+        $analysis = $shifts->map(function ($shift) {
+            // Find completion for this shift date
+            $completion = $shift->messenger->shiftCompletions()
+                ->whereDate('finished_at', $shift->date)
+                ->first();
+
+            if (!$completion || !$shift->end_time) {
+                return null;
+            }
+
+            $scheduledEnd = Carbon::parse($shift->date . ' ' . $shift->end_time);
+            $actualEnd = Carbon::parse($completion->finished_at);
+
+            $diffMinutes = $scheduledEnd->diffInMinutes($actualEnd, false);
+
+            return [
+                'date' => $shift->date,
+                'messenger' => $shift->messenger->name,
+                'scheduled_end' => $scheduledEnd->format('H:i'),
+                'actual_end' => $actualEnd->format('H:i'),
+                'diff_minutes' => $diffMinutes,
+                'status' => $diffMinutes > 0 ? 'late' : ($diffMinutes < 0 ? 'early' : 'on-time')
+            ];
+        })->filter()->values();
+
+        // Calculate average diff (abs)
+        $avgDiff = $analysis->count() > 0 ? round($analysis->avg(fn($a) => abs($a['diff_minutes']))) : 0;
+
         return response()->json([
-            'managed' => $logs->sum('guides_count'),
-            'potential' => $logs->sum('guides_count'),
-            'rate' => 100, // Placeholder
-            'details' => []
+            'history' => $analysis,
+            'avg_diff' => $avgDiff
+        ]);
+    }
+
+    public function getGlobalTrend(Request $request)
+    {
+        $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : now()->subDays(30);
+        $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : now();
+
+        $dates = [];
+        $curr = $startDate->copy();
+        while ($curr <= $endDate) {
+            $dates[$curr->toDateString()] = [
+                'date' => $curr->toDateString(),
+                'preop' => 0,
+                'cleaning' => 0,
+                'tiempos' => 0
+            ];
+            $curr->addDay();
+        }
+
+        $excludedIds = Messenger::where('exclude_from_analytics', true)->pluck('id');
+
+        PreoperationalReport::whereBetween('created_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->whereNotIn('messenger_id', $excludedIds)
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
+            ->groupBy('date')
+            ->get()
+            ->each(function ($r) use (&$dates) {
+                if (isset($dates[$r->date]))
+                    $dates[$r->date]['preop'] = $r->count;
+            });
+
+        CleaningReport::whereBetween('created_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->whereNotIn('messenger_id', $excludedIds)
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
+            ->groupBy('date')
+            ->get()
+            ->each(function ($r) use (&$dates) {
+                if (isset($dates[$r->date]))
+                    $dates[$r->date]['cleaning'] = $r->count;
+            });
+
+        LunchLog::whereBetween('created_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->whereNotIn('messenger_id', $excludedIds)
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
+            ->groupBy('date')
+            ->get()
+            ->each(function ($r) use (&$dates) {
+                if (isset($dates[$r->date]))
+                    $dates[$r->date]['tiempos'] += $r->count;
+            });
+
+        ShiftCompletion::whereBetween('finished_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->whereNotIn('messenger_id', $excludedIds)
+            ->select(DB::raw('DATE(finished_at) as date'), DB::raw('count(*) as count'))
+            ->groupBy('date')
+            ->get()
+            ->each(function ($r) use (&$dates) {
+                if (isset($dates[$r->date]))
+                    $dates[$r->date]['tiempos'] += $r->count;
+            });
+
+        return response()->json(array_values($dates));
+    }
+
+    public function getPerformanceSummary(Request $request)
+    {
+        $compliance = collect($this->getComplianceStats($request)->original);
+        $cleaningComp = collect($this->getCleaningComplianceStats($request)->original);
+        $attendanceComp = collect($this->getAttendanceComplianceStats($request)->original);
+
+        $merged = $compliance->map(function ($comp) use ($cleaningComp, $attendanceComp) {
+            $clean = $cleaningComp->firstWhere('name', $comp['name']) ?: ['rate' => 0];
+            $attr = $attendanceComp->firstWhere('name', $comp['name']) ?: ['rate' => 0];
+
+            return [
+                'name' => $comp['name'],
+                'preop_rate' => $comp['rate'],
+                'cleaning_rate' => $clean['rate'],
+                'attendance_rate' => $attr['rate'],
+                'overall' => round(($comp['rate'] + $clean['rate'] + $attr['rate']) / 3, 1)
+            ];
+        })->sortByDesc('overall');
+
+        $health = [
+            'preop' => round($compliance->avg('rate'), 1),
+            'cleaning' => round($cleaningComp->avg('rate'), 1),
+            'attendance' => round($attendanceComp->avg('rate'), 1),
+            'global' => round($merged->avg('overall'), 1)
+        ];
+
+        return response()->json([
+            'health' => $health,
+            'top' => $merged->values()->take(5),
+            'attention' => $merged->where('overall', '<', 70)->values()
         ]);
     }
 }

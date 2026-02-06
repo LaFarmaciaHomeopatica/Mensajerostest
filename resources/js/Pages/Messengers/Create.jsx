@@ -14,7 +14,8 @@ export default function Create() {
         lunch_duration: 60,
         location: 'principal', // default
         beetrack_id: '',
-        is_active: true
+        is_active: true,
+        exclude_from_analytics: false
     });
 
     const submit = (e) => {
@@ -114,6 +115,25 @@ export default function Create() {
                                         <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
                                     </div>
                                     <span className="ml-3 text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 transition-colors">¿Mensajero Activo?</span>
+                                </label>
+                            </div>
+
+                            {/* Exclude from Analytics */}
+                            <div className="flex items-center">
+                                <label className="flex items-center cursor-pointer group">
+                                    <div className="relative">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.exclude_from_analytics}
+                                            onChange={(e) => setData('exclude_from_analytics', e.target.checked)}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500"></div>
+                                    </div>
+                                    <div className="ml-3">
+                                        <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-red-500 transition-colors">Excluir de Analíticas</span>
+                                        <p className="text-[10px] text-gray-500 font-medium">No se contará en promedios ni eficiencia</p>
+                                    </div>
                                 </label>
                             </div>
                         </div>

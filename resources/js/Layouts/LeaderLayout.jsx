@@ -5,16 +5,16 @@ export default function LeaderLayout({ children, title }) {
     const { auth } = usePage().props;
 
     const menuItems = [
-        { label: 'Dashboard', route: 'dashboard', active: route().current('dashboard'), roles: ['lider'] },
-        { label: 'Mensajeros', route: 'messengers.index', active: route().current('messengers.*'), roles: ['lider'] },
-        { label: 'Horarios', route: 'shifts.index', active: route().current('shifts.*'), roles: ['lider'] },
-        { label: 'Almuerzos', route: 'reports.lunch', active: route().current('reports.lunch'), roles: ['lider'] },
-        { label: 'Preoperacionales', route: 'reports.preoperational', active: route().current('reports.preoperational'), roles: ['lider', 'regente'] },
-        { label: 'Limpieza', route: 'reports.cleaning', active: route().current('reports.cleaning'), roles: ['lider', 'regente'] },
-        { label: 'Consolidado', route: 'reports.consolidated', active: route().current('reports.consolidated'), roles: ['lider', 'regente'] },
-        { label: 'Trámites', route: 'internal-procedures.index', active: route().current('internal-procedures.*'), roles: ['lider'] },
-        { label: 'Análisis', route: 'analytics.index', active: route().current('analytics.*'), roles: ['lider', 'regente'] },
-        { label: 'Usuarios', route: 'users.index', active: route().current('users.*'), roles: ['lider'] },
+        { label: 'Dashboard', route: 'dashboard', active: route().current('dashboard'), roles: ['lider', 'administrador'] },
+        { label: 'Horarios', route: 'shifts.index', active: route().current('shifts.*'), roles: ['lider', 'administrador'] },
+        { label: 'Preoperacionales', route: 'reports.preoperational', active: route().current('reports.preoperational'), roles: ['regente', 'administrador'] },
+        { label: 'Limpieza', route: 'reports.cleaning', active: route().current('reports.cleaning'), roles: ['regente', 'administrador'] },
+        { label: 'Almuerzos', route: 'reports.lunch', active: route().current('reports.lunch'), roles: ['lider', 'administrador'] },
+        { label: 'Consolidado', route: 'reports.consolidated', active: route().current('reports.consolidated'), roles: ['regente', 'administrador'] },
+        { label: 'Trámites', route: 'internal-procedures.index', active: route().current('internal-procedures.*'), roles: ['lider', 'tramites', 'administrador'] },
+        { label: 'Análisis', route: 'analytics.index', active: route().current('analytics.*'), roles: ['administrador'] },
+        { label: 'Mensajeros', route: 'messengers.index', active: route().current('messengers.*'), roles: ['administrador'] },
+        { label: 'Usuarios', route: 'users.index', active: route().current('users.*'), roles: ['administrador'] },
     ].filter(item => item.roles.includes(auth.user.role));
 
     const logout = (e) => {

@@ -40,7 +40,8 @@ class MessengerController extends Controller
             'beetrack_id' => 'nullable|string',
             'lunch_duration' => 'required|integer|min:1',
             'location' => 'required|string', // principal, teusaquillo
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'exclude_from_analytics' => 'boolean'
         ]);
 
         Messenger::create($validated);
@@ -65,7 +66,8 @@ class MessengerController extends Controller
             'beetrack_id' => 'nullable|string',
             'lunch_duration' => 'required|integer|min:1',
             'location' => 'required|string',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'exclude_from_analytics' => 'boolean'
         ]);
 
         $messenger->update($validated);
