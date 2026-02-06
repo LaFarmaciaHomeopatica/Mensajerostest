@@ -5,6 +5,7 @@ import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
+import SelectInput from '@/Components/SelectInput';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 
@@ -66,7 +67,7 @@ export default function UserIndex({ users }) {
         <LeaderLayout title="Gestión de Usuarios">
             <Head title="Gestión de Usuarios" />
 
-            <div className="max-w-7xl mx-auto p-3 sm:p-6 lg:p-8">
+            <div className="max-w-[1800px] mx-auto p-3 sm:p-6 lg:p-8">
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
                     <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Gestión de Usuarios</h1>
                     <button
@@ -114,20 +115,20 @@ export default function UserIndex({ users }) {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex justify-end gap-2">
+                                            <div className="flex justify-end gap-3">
                                                 <button
                                                     onClick={() => openModal(user)}
-                                                    className="p-2 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800"
+                                                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 font-bold uppercase text-[10px] tracking-widest transition-colors"
                                                     title="Editar Usuario"
                                                 >
-                                                    ✏️
+                                                    EDITAR
                                                 </button>
                                                 <button
                                                     onClick={() => deleteUser(user)}
-                                                    className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-800"
+                                                    className="text-red-600 dark:text-red-400 hover:text-red-900 font-bold uppercase text-[10px] tracking-widest transition-colors"
                                                     title="Eliminar Usuario"
                                                 >
-                                                    🗑️
+                                                    ELIMINAR
                                                 </button>
                                             </div>
                                         </td>
@@ -186,9 +187,9 @@ export default function UserIndex({ users }) {
 
                         <div>
                             <InputLabel htmlFor="role" value="Rol" />
-                            <select
+                            <SelectInput
                                 id="role"
-                                className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                className="mt-1 block w-full"
                                 value={form.role}
                                 onChange={(e) => setForm({ ...form, role: e.target.value })}
                                 required
@@ -196,7 +197,7 @@ export default function UserIndex({ users }) {
                                 <option value="lider">Líder</option>
                                 <option value="regente">Regente</option>
                                 <option value="mensajero">Mensajero</option>
-                            </select>
+                            </SelectInput>
                             <InputError message={errors.role} className="mt-2" />
                         </div>
 

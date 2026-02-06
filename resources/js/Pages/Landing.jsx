@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import { Head, useForm, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 import CleaningForm from './Cleaning/Form';
+import TextInput from '@/Components/TextInput';
+import TextArea from '@/Components/TextArea';
+import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
+import SuccessButton from '@/Components/SuccessButton';
+import WarningButton from '@/Components/WarningButton';
+import DangerButton from '@/Components/DangerButton';
 
 export default function Landing({ preoperationalQuestions = [] }) {
     const { flash, errors } = usePage().props;
@@ -13,12 +20,14 @@ export default function Landing({ preoperationalQuestions = [] }) {
     const [activeLunch, setActiveLunch] = useState(null);
     const [preoperationalAnswers, setPreoperationalAnswers] = useState({});
 
-    // Group questions by category for rendering
-    const groupedQuestions = preoperationalQuestions.reduce((acc, q) => {
-        if (!acc[q.category]) acc[q.category] = [];
-        acc[q.category].push(q);
-        return acc;
-    }, {});
+    // Grouped questions will be calculated during render if needed or once here
+    const groupedQuestions = React.useMemo(() => {
+        return preoperationalQuestions.reduce((acc, q) => {
+            if (!acc[q.category]) acc[q.category] = [];
+            acc[q.category].push(q);
+            return acc;
+        }, {});
+    }, [preoperationalQuestions]);
 
 
 
@@ -143,12 +152,12 @@ export default function Landing({ preoperationalQuestions = [] }) {
                         Hola <strong>{messenger.name}</strong>, ya registraste el fin de tu turno por hoy.
                     </p>
                     <p className="text-lg mb-6 text-gray-500">¡Nos vemos mañana!</p>
-                    <button
+                    <PrimaryButton
                         onClick={() => setViewState('options')}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-semibold hover:opacity-90 transition-all mb-4"
+                        className="rounded-full mb-4"
                     >
                         Menú
-                    </button>
+                    </PrimaryButton>
                     <button
                         onClick={resetAll}
                         className="block w-full text-gray-600 dark:text-gray-400 font-bold hover:underline"
@@ -170,12 +179,12 @@ export default function Landing({ preoperationalQuestions = [] }) {
                         Has finalizado tu turno correctamente.
                     </p>
                     <p className="text-lg mb-6">Gracias por tu trabajo hoy.</p>
-                    <button
+                    <PrimaryButton
                         onClick={() => setViewState('options')}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-semibold hover:opacity-90 transition-all mb-4"
+                        className="rounded-full mb-4"
                     >
                         Menú
-                    </button>
+                    </PrimaryButton>
                     <button
                         onClick={() => { resetAll(); window.location.reload(); }}
                         className="block w-full text-gray-600 dark:text-gray-400 font-bold hover:underline"
@@ -201,12 +210,12 @@ export default function Landing({ preoperationalQuestions = [] }) {
                         {errors.lunch_end_time || '--:--'}
                     </div>
                     <p className="text-sm mb-6 text-gray-500">No puedes registrar más de un almuerzo por día.</p>
-                    <button
+                    <PrimaryButton
                         onClick={() => setViewState('options')}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-semibold hover:opacity-90 transition-all"
+                        className="rounded-full"
                     >
                         Volver al Menú
-                    </button>
+                    </PrimaryButton>
                 </div>
             </div>
         );
@@ -222,12 +231,12 @@ export default function Landing({ preoperationalQuestions = [] }) {
                         Hola <strong>{messenger.name}</strong>, ya has reportado el fin de tu turno hoy.
                     </p>
                     <p className="text-lg mb-6 text-gray-500">No puedes finalizar el turno más de una vez por día.</p>
-                    <button
+                    <PrimaryButton
                         onClick={() => setViewState('options')}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-semibold hover:opacity-90 transition-all"
+                        className="rounded-full"
                     >
                         Volver al Menú
-                    </button>
+                    </PrimaryButton>
                 </div>
             </div>
         );
@@ -243,12 +252,12 @@ export default function Landing({ preoperationalQuestions = [] }) {
                         Gracias <strong>{messenger.name}</strong>, tu reporte preoperacional ha sido registrado.
                     </p>
                     <p className="text-lg mb-6 text-gray-500">¡Buen viaje y conduce con seguridad!</p>
-                    <button
+                    <PrimaryButton
                         onClick={() => setViewState('options')}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-semibold hover:opacity-90 transition-all mb-4"
+                        className="rounded-full mb-4"
                     >
                         Volver al Menú
-                    </button>
+                    </PrimaryButton>
                 </div>
             </div>
         );
@@ -264,26 +273,19 @@ export default function Landing({ preoperationalQuestions = [] }) {
                         Hola <strong>{messenger.name}</strong>, ya has enviado tu reporte preoperacional hoy.
                     </p>
                     <p className="text-lg mb-6 text-gray-500">Solo puedes enviar un reporte por día.</p>
-                    <button
+                    <PrimaryButton
                         onClick={() => setViewState('options')}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-semibold hover:opacity-90 transition-all"
+                        className="rounded-full"
                     >
                         Volver al Menú
-                    </button>
+                    </PrimaryButton>
                 </div>
             </div>
         );
     }
 
     if (viewState === 'preoperational' && messenger) {
-        // Group questions by category
-        const groupedQuestions = preoperationalQuestions.reduce((acc, question) => {
-            if (!acc[question.category]) {
-                acc[question.category] = [];
-            }
-            acc[question.category].push(question);
-            return acc;
-        }, {});
+        // Use the memoized groupedQuestions from the top level
 
         const allAnswered = preoperationalQuestions.every(q => {
             const answer = preoperationalAnswers[q.key];
@@ -318,36 +320,42 @@ export default function Landing({ preoperationalQuestions = [] }) {
                                 </h3>
                                 <div className="space-y-3">
                                     {questions.map((question) => (
-                                        <div key={question.id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                            <p className="text-sm font-medium mb-3">{question.label}</p>
-                                            <div className="flex gap-3">
+                                        <div key={question.id} className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm transition-all">
+                                            <p className="text-sm font-bold mb-4 text-slate-700 dark:text-slate-200">
+                                                {question.label || question.key || 'Pregunta sin enunciado'}
+                                            </p>
+                                            <div className="flex gap-4">
                                                 {question.type === 'text' ? (
-                                                    <textarea
+                                                    <TextArea
                                                         value={preoperationalAnswers[question.key] || ''}
                                                         onChange={(e) => handlePreoperationalAnswer(question.key, e.target.value)}
-                                                        className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 text-sm focus:ring-indigo-500 focus:border-indigo-500"
                                                         rows="3"
                                                         placeholder="Escribe tu respuesta aquí..."
+                                                        className="w-full"
                                                     />
                                                 ) : (
                                                     <>
                                                         <button
+                                                            type="button"
                                                             onClick={() => handlePreoperationalAnswer(question.key, true)}
-                                                            className={`flex-1 py-4 px-4 rounded-xl font-bold text-lg transition-all active:scale-95 ${preoperationalAnswers[question.key] === true
-                                                                ? 'bg-green-600 text-white'
-                                                                : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-green-100 dark:hover:bg-green-900'
+                                                            className={`flex-1 py-4 px-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-2 ${preoperationalAnswers[question.key] === true
+                                                                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200 dark:shadow-none ring-4 ring-emerald-500/20'
+                                                                : 'bg-white dark:bg-slate-700 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600'
                                                                 }`}
                                                         >
-                                                            ✓ Sí
+                                                            {preoperationalAnswers[question.key] === true && <span>✓</span>}
+                                                            SÍ
                                                         </button>
                                                         <button
+                                                            type="button"
                                                             onClick={() => handlePreoperationalAnswer(question.key, false)}
-                                                            className={`flex-1 py-4 px-4 rounded-xl font-bold text-lg transition-all active:scale-95 ${preoperationalAnswers[question.key] === false
-                                                                ? 'bg-red-600 text-white'
-                                                                : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-red-900'
+                                                            className={`flex-1 py-4 px-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-2 ${preoperationalAnswers[question.key] === false
+                                                                ? 'bg-red-600 text-white shadow-lg shadow-red-200 dark:shadow-none ring-4 ring-red-500/20'
+                                                                : 'bg-white dark:bg-slate-700 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600'
                                                                 }`}
                                                         >
-                                                            ✗ No
+                                                            {preoperationalAnswers[question.key] === false && <span>✗</span>}
+                                                            NO
                                                         </button>
                                                     </>
                                                 )}
@@ -360,25 +368,22 @@ export default function Landing({ preoperationalQuestions = [] }) {
                     </div>
 
                     <div className="mt-6 flex gap-3">
-                        <button
+                        <SecondaryButton
                             onClick={() => {
                                 setViewState('options');
                                 setPreoperationalAnswers({});
                             }}
-                            className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-full font-semibold transition-all"
+                            className="flex-1 justify-center"
                         >
                             Cancelar
-                        </button>
-                        <button
+                        </SecondaryButton>
+                        <PrimaryButton
                             onClick={handlePreoperationalSubmit}
                             disabled={!allAnswered}
-                            className={`flex-1 px-6 py-3 rounded-full font-semibold transition-all ${allAnswered
-                                ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                                : 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed'
-                                }`}
+                            className={`flex-1 justify-center rounded-full ${!allAnswered && 'opacity-50'}`}
                         >
                             Enviar Reporte
-                        </button>
+                        </PrimaryButton>
                     </div>
                 </div>
             </div>
@@ -437,25 +442,25 @@ export default function Landing({ preoperationalQuestions = [] }) {
                         {viewState === 'search' && (
                             <form onSubmit={checkPlate} className="space-y-6">
                                 <div>
-                                    <input
+                                    <TextInput
                                         type="text"
                                         placeholder="Ej: AAA-123"
                                         value={plate}
                                         onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                                        className="w-full text-center text-3xl font-mono tracking-widest border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 rounded-lg shadow-sm py-4 uppercase"
+                                        className="w-full text-center text-3xl font-mono tracking-widest py-4 uppercase"
                                         required
                                         autoFocus
                                     />
-                                    {error && <p className="text-red-500 text-center mt-2">{error}</p>}
+                                    {error && <p className="text-red-500 text-center mt-2 font-bold text-xs">{error}</p>}
                                 </div>
 
-                                <button
+                                <PrimaryButton
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                                    className="w-full justify-center py-4 text-sm"
                                 >
-                                    {loading ? 'Buscando...' : 'Buscar Vehículo'}
-                                </button>
+                                    {loading ? 'Buscando...' : 'BUSCAR VEHÍCULO'}
+                                </PrimaryButton>
                             </form>
                         )}
 
@@ -478,83 +483,71 @@ export default function Landing({ preoperationalQuestions = [] }) {
                                     </div>
                                 )}
 
-                                <button
+                                <PrimaryButton
                                     onClick={() => setViewState('shifts_view')}
-                                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-5 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-between text-lg group"
+                                    className="w-full py-5 flex items-center justify-between text-lg group"
                                 >
                                     <span className="flex items-center gap-3">
                                         <span className="text-2xl">📅</span>
-                                        <span>Ver Mis Horarios</span>
+                                        <span>VER MIS HORARIOS</span>
                                     </span>
                                     <span className="text-indigo-200 group-hover:text-white">→</span>
-                                </button>
+                                </PrimaryButton>
 
-                                <button
+                                <SuccessButton
                                     onClick={handlePreopClick}
-                                    className={`w-full font-bold py-5 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-between text-lg group ${messenger?.shift_finished || messenger?.preoperational_submitted
-                                        ? 'bg-gray-300 cursor-not-allowed text-gray-500 shadow-none'
-                                        : 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-xl'
-                                        }`}
+                                    className="w-full py-5 flex items-center justify-between text-lg group"
                                     disabled={messenger?.shift_finished || messenger?.preoperational_submitted}
                                 >
                                     <span className="flex items-center gap-3">
                                         <span className="text-2xl">📋</span>
-                                        <span>Reporte Preoperacional</span>
+                                        <span>REPORTE PREOPERACIONAL</span>
                                     </span>
-                                    {(!messenger?.shift_finished && !messenger?.preoperational_submitted) && <span className="text-blue-200 group-hover:text-white">→</span>}
-                                </button>
+                                    {(!messenger?.shift_finished && !messenger?.preoperational_submitted) && <span className="text-emerald-200 group-hover:text-white">→</span>}
+                                </SuccessButton>
 
-                                <button
+                                <SuccessButton
                                     onClick={() => setViewState('cleaning')}
-                                    className={`w-full font-bold py-5 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-between text-lg group ${messenger?.shift_finished
-                                        ? 'bg-gray-300 cursor-not-allowed text-gray-500 shadow-none'
-                                        : 'bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-xl'
-                                        }`}
+                                    className="w-full py-5 flex items-center justify-between text-lg group"
                                     disabled={messenger?.shift_finished}
                                 >
                                     <span className="flex items-center gap-3">
                                         <span className="text-2xl">🧹</span>
-                                        <span>Reporte de Limpieza</span>
+                                        <span>REPORTE DE LIMPIEZA</span>
                                     </span>
                                     {!messenger?.shift_finished && <span className="text-emerald-200 group-hover:text-white">→</span>}
-                                </button>
+                                </SuccessButton>
 
-                                <button
+                                <SuccessButton
                                     onClick={() => setViewState('lunch_confirm')}
-                                    className={`w-full font-bold py-5 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-between text-lg group ${messenger?.shift_finished
-                                        ? 'bg-gray-300 cursor-not-allowed text-gray-500 shadow-none'
-                                        : 'bg-green-600 hover:bg-green-700 text-white hover:shadow-xl'
-                                        }`}
+                                    className="w-full py-5 flex items-center justify-between text-lg group"
                                     disabled={messenger?.shift_finished}
                                 >
                                     <span className="flex items-center gap-3">
                                         <span className="text-2xl">🍽️</span>
-                                        <span>Registrar Almuerzo</span>
+                                        <span>REGISTRAR ALMUERZO</span>
                                     </span>
-                                    {!messenger?.shift_finished && <span className="text-green-200 group-hover:text-white">→</span>}
-                                </button>
+                                    {!messenger?.shift_finished && <span className="text-emerald-200 group-hover:text-white">→</span>}
+                                </SuccessButton>
 
-                                <button
+                                <WarningButton
                                     onClick={() => setViewState('shift_confirm')}
-                                    className={`w-full font-bold py-5 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-between text-lg group ${messenger?.shift_finished
-                                        ? 'bg-gray-300 cursor-not-allowed text-gray-500 shadow-none'
-                                        : 'bg-gray-800 hover:bg-gray-900 text-white hover:shadow-xl'
-                                        }`}
+                                    className="w-full py-5 flex items-center justify-between text-lg group"
                                     disabled={messenger?.shift_finished}
                                 >
                                     <span className="flex items-center gap-3">
                                         <span className="text-2xl">🏁</span>
-                                        <span>Reportar Fin Turno</span>
+                                        <span>REPORTAR FIN TURNO</span>
                                     </span>
-                                    {!messenger?.shift_finished && <span className="text-gray-400 group-hover:text-white">→</span>}
-                                </button>
+                                    {!messenger?.shift_finished && <span className="text-amber-200 group-hover:text-white">→</span>}
+                                </WarningButton>
 
-                                <button
+                                <SecondaryButton
                                     onClick={resetAll}
-                                    className="w-full text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 py-3 mt-4 text-sm font-medium border border-transparent hover:border-gray-200 rounded-lg transition-all"
+                                    className="w-full justify-center mt-4"
                                 >
-                                    Cancelar / Buscar otra placa
-                                </button>
+                                    CANCELAR / BUSCAR OTRA PLACA
+                                </SecondaryButton>
                             </div>
                         )}
                     </>
@@ -617,12 +610,12 @@ export default function Landing({ preoperationalQuestions = [] }) {
                             )}
                         </div>
 
-                        <button
+                        <SecondaryButton
                             onClick={() => setViewState('options')}
-                            className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition-all"
+                            className="w-full justify-center"
                         >
                             Volver
-                        </button>
+                        </SecondaryButton>
                     </div>
                 )}
 
@@ -638,19 +631,19 @@ export default function Landing({ preoperationalQuestions = [] }) {
                         </h3>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <button
+                            <SecondaryButton
                                 onClick={() => setViewState('options')}
-                                className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition-all"
+                                className="justify-center"
                             >
                                 Cancelar
-                            </button>
-                            <button
+                            </SecondaryButton>
+                            <WarningButton
                                 onClick={handleShiftSubmit}
                                 disabled={processing}
-                                className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all"
+                                className="justify-center"
                             >
                                 {processing ? 'Finalizando...' : 'Sí, Finalizar'}
-                            </button>
+                            </WarningButton>
                         </div>
                     </div>
                 )}
@@ -665,19 +658,19 @@ export default function Landing({ preoperationalQuestions = [] }) {
                         </p>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <button
+                            <SecondaryButton
                                 onClick={() => setViewState('options')}
-                                className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition-all"
+                                className="justify-center"
                             >
                                 Cancelar
-                            </button>
-                            <button
+                            </SecondaryButton>
+                            <SuccessButton
                                 onClick={handleLunchSubmit}
                                 disabled={processing}
-                                className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all"
+                                className="justify-center"
                             >
                                 {processing ? 'Registrando...' : 'Sí, confirmar'}
-                            </button>
+                            </SuccessButton>
                         </div>
                     </div>
                 )}

@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import LeaderLayout from '@/Layouts/LeaderLayout';
+import TextInput from '@/Components/TextInput';
+import SelectInput from '@/Components/SelectInput';
+import InputLabel from '@/Components/InputLabel';
+import PrimaryButton from '@/Components/PrimaryButton';
 
 export default function Dashboard({ messengers, dispatch_locations, beetrack_data }) {
     const { data, setData, submit, processing, errors, reset } = useForm({
@@ -111,59 +115,59 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
 
                         {/* Brand / Filter */}
                         <div className="flex-grow lg:flex-grow-0 lg:flex-[1.5] min-w-[280px]">
-                            <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Buscar en lista</label>
+                            <InputLabel value="Buscar en lista" />
                             <div className="relative w-full group">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
                                     <svg className="h-3 w-3 text-slate-400 group-focus-within:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                 </div>
-                                <input
+                                <TextInput
                                     type="text"
                                     value={filter}
                                     onChange={(e) => setFilter(e.target.value)}
                                     placeholder="Nombre, placa o estado..."
-                                    className="pl-9 w-full bg-slate-50/50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs py-2 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200"
+                                    className="pl-10 w-full"
                                 />
                             </div>
                         </div>
 
                         {/* File Input - Custom Styling */}
                         <div className="w-full lg:w-[350px] relative group cursor-pointer">
-                            <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider group-hover:text-indigo-500 transition-colors">Archivo de Ruta</label>
+                            <InputLabel value="Archivo de Ruta" />
                             <input
                                 type="file"
                                 onChange={(e) => setData('file', e.target.files[0])}
                                 accept=".xlsx, .xls"
-                                className="block w-full text-xs text-slate-500 bg-slate-50/50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 py-[5px] px-2
+                                className="block w-full text-xs text-slate-500 bg-slate-50/50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 py-2 px-2
                                   file:mr-2 file:py-1 file:px-3
                                   file:rounded-lg file:border-0
                                   file:text-[10px] file:font-semibold
                                   file:bg-indigo-50 file:text-indigo-700
                                   hover:file:bg-indigo-100
-                                  cursor-pointer"
+                                  cursor-pointer focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
                                 required
                             />
                         </div>
 
                         {/* Location & Messenger */}
                         <div className="w-full lg:w-[220px]">
-                            <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Bodega Destino</label>
-                            <select
+                            <InputLabel value="Bodega Destino" />
+                            <SelectInput
                                 value={data.location_id}
                                 onChange={(e) => setData('location_id', e.target.value)}
-                                className="w-full bg-slate-50/50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl text-xs py-2 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                                className="w-full py-2"
                                 required
                             >
                                 <option value="">Seleccionar...</option>
                                 {dispatch_locations.map(d => (
                                     <option key={d.id} value={d.id}>{d.name}</option>
                                 ))}
-                            </select>
+                            </SelectInput>
                         </div>
 
                         {/* Last Route Checkbox */}
                         <div className="flex items-center pb-2">
                             <label className="flex items-center cursor-pointer group">
-                                <span className="mr-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-indigo-500 transition-colors">¿Última Ruta?</span>
+                                <span className="mr-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-indigo-500 transition-colors">¿Última Ruta?</span>
                                 <div className="relative">
                                     <input
                                         type="checkbox"
@@ -171,29 +175,29 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                                         onChange={(e) => setData('last_route', e.target.checked)}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-500/10 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
                                 </div>
                             </label>
                         </div>
 
                         <div className="flex-grow lg:flex-1 min-w-[180px]">
-                            <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Nombre Archivo Salida</label>
+                            <InputLabel value="Nombre Archivo Salida" />
                             <div className="flex gap-2">
-                                <input
+                                <TextInput
                                     type="text"
                                     value={data.output_name}
                                     onChange={(e) => setData('output_name', e.target.value)}
                                     placeholder="Click en una tarjeta..."
-                                    className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-xs py-1.5 focus:ring-indigo-500 focus:border-indigo-500 font-mono"
+                                    className="w-full font-mono py-2"
                                     required
                                 />
-                                <button
+                                <PrimaryButton
                                     type="submit"
                                     disabled={processing}
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-4 rounded-lg shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transform hover:-translate-y-0.5 transition-all duration-200 text-xs"
+                                    className="text-xs px-4"
                                 >
                                     GENERAR
-                                </button>
+                                </PrimaryButton>
                             </div>
                         </div>
                     </form>

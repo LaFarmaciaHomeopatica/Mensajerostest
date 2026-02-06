@@ -1,6 +1,7 @@
 import React from 'react';
 import { Head, Link, usePage, router } from '@inertiajs/react';
 import LeaderLayout from '@/Layouts/LeaderLayout';
+import DangerButton from '@/Components/DangerButton';
 
 export default function Index({ messengers, filters }) {
     const { flash } = usePage().props;
@@ -25,7 +26,7 @@ export default function Index({ messengers, filters }) {
         <LeaderLayout title="Administración de Mensajeros">
             <Head title="Mensajeros" />
 
-            <div className="max-w-7xl mx-auto p-3 sm:p-6 lg:p-8">
+            <div className="max-w-[1800px] mx-auto p-3 sm:p-6 lg:p-8">
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
                     <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Mensajeros</h1>
 
@@ -41,7 +42,7 @@ export default function Index({ messengers, filters }) {
                                 value={search}
                                 onChange={handleSearch}
                                 placeholder="Buscar nombre o vehículo..."
-                                className="pl-10 w-full py-2 rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+                                className="pl-10 w-full py-3 rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
                             />
                         </div>
 
@@ -99,15 +100,15 @@ export default function Index({ messengers, filters }) {
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <Link
                                                 href={route('messengers.edit', messenger.id)}
-                                                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 mr-4"
+                                                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 font-bold uppercase text-[10px] tracking-widest mr-4 transition-colors"
                                             >
-                                                Editar
+                                                EDITAR
                                             </Link>
                                             <button
                                                 onClick={() => handleDelete(messenger.id)}
-                                                className="text-red-600 dark:text-red-400 hover:text-red-900"
+                                                className="text-red-600 dark:text-red-400 hover:text-red-900 font-bold uppercase text-[10px] tracking-widest transition-colors"
                                             >
-                                                Eliminar
+                                                ELIMINAR
                                             </button>
                                         </td>
                                     </tr>

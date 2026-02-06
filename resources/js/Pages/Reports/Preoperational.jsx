@@ -4,6 +4,10 @@ import LeaderLayout from '@/Layouts/LeaderLayout';
 import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import SuccessButton from '@/Components/SuccessButton';
+import TextInput from '@/Components/TextInput';
+import SelectInput from '@/Components/SelectInput';
+import InputLabel from '@/Components/InputLabel';
 import MessengerSearchSelect from '@/Components/MessengerSearchSelect';
 
 export default function PreoperationalReports({ reports, messengers, questions, filters, locations }) {
@@ -127,7 +131,7 @@ export default function PreoperationalReports({ reports, messengers, questions, 
             <Head title="Reportes" />
 
             <div className="py-6 sm:py-12">
-                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+                <div className="max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             {/* Header and Export Button */}
@@ -136,32 +140,34 @@ export default function PreoperationalReports({ reports, messengers, questions, 
                                     <span className="bg-indigo-600/10 p-2 rounded-xl text-xl">📋</span>
                                     Reportes Preoperacionales
                                 </h1>
-                                <Link
-                                    href={route('preoperational-questions.index')}
-                                    className="px-4 py-2 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 font-bold uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 group"
-                                >
-                                    <span className="group-hover:rotate-90 transition-transform duration-500">⚙️</span>
-                                    Config Preguntas
-                                </Link>
+                                <div className="flex items-center gap-4">
+                                    <Link
+                                        href={route('preoperational-questions.index')}
+                                        className="px-4 py-2 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 font-bold uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 group"
+                                    >
+                                        <span className="group-hover:rotate-90 transition-transform duration-500">⚙️</span>
+                                        CONFIG PREGUNTAS
+                                    </Link>
+                                </div>
                             </div>
 
                             {/* Filters */}
                             <div className="mb-8 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col md:flex-row gap-4 items-stretch md:items-end">
                                 <div className="flex-1 min-w-[120px]">
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">FECHA</label>
-                                    <input
+                                    <InputLabel value="FECHA" />
+                                    <TextInput
                                         type="date"
                                         value={selectedDate}
                                         onChange={(e) => setSelectedDate(e.target.value)}
-                                        className="w-full h-[38px] rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm px-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm"
+                                        className="w-full"
                                     />
                                 </div>
                                 <div className="flex-1 min-w-[180px]">
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">SEDE</label>
-                                    <select
+                                    <InputLabel value="SEDE" />
+                                    <SelectInput
                                         value={selectedLocation}
                                         onChange={(e) => setSelectedLocation(e.target.value)}
-                                        className="w-full h-[38px] rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm px-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
+                                        className="w-full"
                                     >
                                         <option value="">Todas las sedes</option>
                                         <option value="principal">Principal</option>
@@ -170,10 +176,10 @@ export default function PreoperationalReports({ reports, messengers, questions, 
                                                 {loc.name.charAt(0).toUpperCase() + loc.name.slice(1)}
                                             </option>
                                         ))}
-                                    </select>
+                                    </SelectInput>
                                 </div>
                                 <div className="flex-1 min-w-[140px]">
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">MENSAJERO</label>
+                                    <InputLabel value="MENSAJERO" />
                                     <MessengerSearchSelect
                                         messengers={messengers}
                                         selectedId={selectedMessenger}
@@ -184,39 +190,36 @@ export default function PreoperationalReports({ reports, messengers, questions, 
 
                                 {/* Consolidated Action Group */}
                                 <div className="flex flex-wrap items-end gap-2">
-                                    <button
+                                    <SecondaryButton
                                         onClick={() => setShowColumnModal(true)}
-                                        className="h-[38px] px-5 bg-white dark:bg-slate-800 text-slate-600 dark:text-gray-300 border border-slate-200 dark:border-slate-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95 shadow-sm flex items-center gap-2"
+                                        className="h-[46px] px-5"
                                     >
-                                        <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-4 h-4 opacity-50 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
                                         </svg>
                                         COLUMNAS
-                                    </button>
-
-                                    <button
+                                    </SecondaryButton>
+                                    <PrimaryButton
                                         onClick={handleFilter}
-                                        className="h-[38px] px-8 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition-all active:scale-95 shadow-lg shadow-indigo-200 dark:shadow-none"
+                                        className="h-[46px] px-8"
                                     >
                                         FILTRAR
-                                    </button>
-
-                                    <button
+                                    </PrimaryButton>
+                                    <SecondaryButton
                                         onClick={handleReset}
-                                        className="h-[38px] px-8 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95 shadow-sm"
+                                        className="h-[46px] px-8"
                                     >
                                         LIMPIAR
-                                    </button>
-
-                                    <button
+                                    </SecondaryButton>
+                                    <SuccessButton
                                         onClick={() => setShowExportModal(true)}
-                                        className="h-[38px] px-5 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition-all active:scale-95 shadow-lg shadow-indigo-200 dark:shadow-none flex items-center gap-2"
+                                        className="h-[46px] px-5"
                                     >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                         </svg>
                                         EXPORTAR
-                                    </button>
+                                    </SuccessButton>
                                 </div>
                             </div>
 
@@ -370,7 +373,7 @@ export default function PreoperationalReports({ reports, messengers, questions, 
                                                 <td className="px-6 py-4 text-center">
                                                     <button
                                                         onClick={() => setSelectedReport(report)}
-                                                        className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold"
+                                                        className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 font-bold uppercase text-[10px] tracking-widest"
                                                     >
                                                         Ver Detalles
                                                     </button>
@@ -521,12 +524,12 @@ export default function PreoperationalReports({ reports, messengers, questions, 
                         </div>
 
                         <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 p-4">
-                            <button
+                            <PrimaryButton
                                 onClick={() => setSelectedReport(null)}
-                                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition-all"
+                                className="w-full justify-center"
                             >
-                                Cerrar
-                            </button>
+                                CERRAR
+                            </PrimaryButton>
                         </div>
                     </div>
                 </div>
@@ -542,28 +545,28 @@ export default function PreoperationalReports({ reports, messengers, questions, 
 
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Fecha Inicio</label>
-                            <input
+                            <InputLabel value="Fecha Inicio" />
+                            <TextInput
                                 type="date"
                                 value={exportDates.start}
                                 onChange={(e) => setExportDates({ ...exportDates, start: e.target.value })}
-                                className="w-full h-[38px] rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm px-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                                className="w-full"
                             />
                         </div>
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Fecha Fin</label>
-                            <input
+                            <InputLabel value="Fecha Fin" />
+                            <TextInput
                                 type="date"
                                 value={exportDates.end}
                                 onChange={(e) => setExportDates({ ...exportDates, end: e.target.value })}
-                                className="w-full h-[38px] rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm px-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                                className="w-full"
                             />
                         </div>
                     </div>
 
                     <div className="space-y-4 mb-6">
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Mensajero (Opcional)</label>
+                            <InputLabel value="Mensajero (Opcional)" />
                             <MessengerSearchSelect
                                 messengers={messengers}
                                 selectedId={exportDates.messenger_id}
@@ -573,11 +576,11 @@ export default function PreoperationalReports({ reports, messengers, questions, 
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Sede (Opcional)</label>
-                            <select
+                            <InputLabel value="Sede (Opcional)" />
+                            <SelectInput
                                 value={exportDates.location}
                                 onChange={(e) => setExportDates({ ...exportDates, location: e.target.value })}
-                                className="w-full h-[38px] rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm px-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
+                                className="w-full"
                             >
                                 <option value="">Todas las sedes</option>
                                 <option value="principal">Principal</option>
@@ -586,7 +589,7 @@ export default function PreoperationalReports({ reports, messengers, questions, 
                                         {loc.name.charAt(0).toUpperCase() + loc.name.slice(1)}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                         </div>
                     </div>
 
@@ -594,9 +597,12 @@ export default function PreoperationalReports({ reports, messengers, questions, 
                         <SecondaryButton onClick={() => setShowExportModal(false)} className="uppercase tracking-widest text-xs">
                             Cancelar
                         </SecondaryButton>
-                        <PrimaryButton onClick={handleExport} className="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-900 focus:ring-indigo-500 uppercase tracking-widest text-xs">
-                            Generar Reporte
-                        </PrimaryButton>
+                        <SuccessButton onClick={handleExport} className="uppercase tracking-widest text-xs flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            EXPORTAR
+                        </SuccessButton>
                     </div>
                 </div>
             </Modal>

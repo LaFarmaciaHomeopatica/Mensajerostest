@@ -4,6 +4,9 @@ import LeaderLayout from '@/Layouts/LeaderLayout';
 import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import TextInput from '@/Components/TextInput';
+import SelectInput from '@/Components/SelectInput';
+import InputLabel from '@/Components/InputLabel';
 
 export default function QuestionsIndex({ questions }) {
     const [showModal, setShowModal] = useState(false);
@@ -112,8 +115,8 @@ export default function QuestionsIndex({ questions }) {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                                                    <button onClick={() => openModal(q)} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold">Editar</button>
-                                                    <button onClick={() => handleDelete(q.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 font-bold">Eliminar</button>
+                                                    <button onClick={() => openModal(q)} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold uppercase text-[10px] tracking-widest transition-colors">EDITAR</button>
+                                                    <button onClick={() => handleDelete(q.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 font-bold uppercase text-[10px] tracking-widest transition-colors">ELIMINAR</button>
                                                 </td>
                                             </tr>
                                         ))}
@@ -133,28 +136,28 @@ export default function QuestionsIndex({ questions }) {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="col-span-2 sm:col-span-1">
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1 italic">Categoría</label>
-                            <select
+                            <InputLabel value="Categoría" />
+                            <SelectInput
                                 value={data.category}
                                 onChange={e => setData('category', e.target.value)}
-                                className="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                                className="w-full"
                                 required
                             >
                                 <option value="">Selecciona una...</option>
                                 <option value="Vehículo">Vehículo</option>
                                 <option value="Seguridad">Seguridad</option>
                                 <option value="Documentos">Documentos</option>
-                            </select>
+                            </SelectInput>
                             {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
                         </div>
 
                         <div className="col-span-2 sm:col-span-1">
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1 italic">Key (Identificador único)</label>
-                            <input
+                            <InputLabel value="Key (Identificador único)" />
+                            <TextInput
                                 type="text"
                                 value={data.key}
                                 onChange={e => setData('key', e.target.value)}
-                                className="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white font-mono"
+                                className="w-full font-mono"
                                 placeholder="ej: luces_direccionales"
                                 required
                                 disabled={editingQuestion}
@@ -163,26 +166,26 @@ export default function QuestionsIndex({ questions }) {
                         </div>
 
                         <div className="col-span-2 sm:col-span-1">
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1 italic">Tipo de Campo</label>
-                            <select
+                            <InputLabel value="Tipo de Campo" />
+                            <SelectInput
                                 value={data.type}
                                 onChange={e => setData('type', e.target.value)}
-                                className="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                                className="w-full"
                                 required
                             >
                                 <option value="boolean">Sí / No (Botones)</option>
                                 <option value="text">Texto Libre (Escribir)</option>
-                            </select>
+                            </SelectInput>
                             {errors.type && <p className="text-red-500 text-xs mt-1">{errors.type}</p>}
                         </div>
 
                         <div className="col-span-2">
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1 italic">Texto de la Pregunta</label>
-                            <input
+                            <InputLabel value="Texto de la Pregunta" />
+                            <TextInput
                                 type="text"
                                 value={data.label}
                                 onChange={e => setData('label', e.target.value)}
-                                className="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                                className="w-full"
                                 placeholder="¿Las luces funcionan correctamente?"
                                 required
                             />
@@ -190,12 +193,12 @@ export default function QuestionsIndex({ questions }) {
                         </div>
 
                         <div className="col-span-1">
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1 italic">Orden</label>
-                            <input
+                            <InputLabel value="Orden" />
+                            <TextInput
                                 type="number"
                                 value={data.order}
                                 onChange={e => setData('order', e.target.value)}
-                                className="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                                className="w-full"
                                 required
                             />
                         </div>

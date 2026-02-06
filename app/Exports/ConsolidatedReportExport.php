@@ -107,12 +107,12 @@ class ConsolidatedReportExport implements FromCollection, WithHeadings, WithMapp
             $preopStatus = 'Realizado';
             $preopTime = $row->preop->created_at->format('H:i');
 
-            if ($row->shift_obj) {
+            if ($row->shift_obj && $row->shift_obj->start_time) {
                 $reportTime = $row->preop->created_at->timezone(config('app.timezone'));
-                $shiftStart = Carbon::parse($row->shift_obj->date . ' ' . $row->shift_obj->start_time, config('app.timezone'));
+                $shiftStart = Carbon::parse($row->shift_obj->date)->setTimeFromTimeString($row->shift_obj->start_time);
                 $preopCompliance = $reportTime->lessThan($shiftStart) ? 'A tiempo' : 'Tardío';
             } else {
-                $preopCompliance = 'Sin turno';
+                $preopCompliance = $row->shift_obj ? 'Incompleto' : 'Sin turno';
             }
         }
 

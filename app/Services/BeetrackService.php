@@ -109,5 +109,60 @@ class BeetrackService
         });
     }
 
+    public function createDispatch(array $data)
+    {
+        try {
+            // Beetrack API endpoint for creating dispatches
+            // Note: This is a placeholder - actual endpoint may vary
+            $createUrl = str_replace('/routes', '/dispatches', $this->baseUrl);
+
+            $payload = [
+                'identifier' => $data['guide'],
+                'contact' => $data['contact'],
+                'phone' => $data['phone'],
+                'email' => $data['email'] ?? '',
+                'address' => $data['address'],
+                'notes' => $data['description'] ?? '',
+                'date' => now()->format('d-m-Y'),
+            ];
+
+            Log::info('BeetrackService: Creating dispatch', $payload);
+
+            $response = Http::timeout(30)->withHeaders([
+                'X-AUTH-TOKEN' => $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])->post($createUrl, $payload);
+
+            if ($response->successful()) {
+                $result = $response->json();
+                Log::info('BeetrackService: Dispatch created successfully', $result);
+
+                return [
+                    'success' => true,
+                    'dispatch_id' => $result['response']['id'] ?? null,
+                    'data' => $result
+                ];
+            } else {
+                Log::error('BeetrackService: Failed to create dispatch', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+
+                return [
+                    'success' => false,
+                    'message' => 'Error en la API de Beetrack: ' . $response->status()
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('BeetrackService: Exception creating dispatch', [
+                'message' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        }
+    }
 
 }

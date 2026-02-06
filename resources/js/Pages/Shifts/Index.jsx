@@ -4,6 +4,9 @@ import { Head, Link, useForm, router, usePage } from '@inertiajs/react'; // Corr
 import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
 import PrimaryButton from '@/Components/PrimaryButton';
+import SuccessButton from '@/Components/SuccessButton';
+import TextInput from '@/Components/TextInput';
+import InputLabel from '@/Components/InputLabel';
 import ShiftModal from '@/Components/ShiftModal';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
@@ -88,7 +91,7 @@ export default function ShiftsIndex({ auth, messengers, weekStart, weekEnd }) {
             <Head title="Horarios" />
 
             <div className="py-6 sm:py-12">
-                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+                <div className="max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8">
                     {/* Navigation */}
                     <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center mb-8 gap-6">
                         <div className="flex flex-col sm:flex-row items-stretch gap-3">
@@ -108,12 +111,15 @@ export default function ShiftsIndex({ auth, messengers, weekStart, weekEnd }) {
                                 />
                             </label>
 
-                            <button
+                            <SuccessButton
                                 onClick={() => setShowExportModal(true)}
-                                className="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 border border-transparent rounded-xl font-bold text-[10px] text-white uppercase tracking-widest hover:bg-emerald-500 shadow-lg shadow-emerald-200 dark:shadow-none transition-all"
+                                className="justify-center"
                             >
-                                📊 Exportar
-                            </button>
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                EXPORTAR
+                            </SuccessButton>
                         </div>
 
                         <div className="flex items-center justify-between sm:justify-center gap-4 bg-slate-100 dark:bg-slate-900/50 p-2 rounded-2xl">
@@ -220,28 +226,32 @@ export default function ShiftsIndex({ auth, messengers, weekStart, weekEnd }) {
                     <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Exportar Reporte de Horarios</h2>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha Inicio</label>
-                        <input
+                        <InputLabel value="Fecha Inicio" />
+                        <TextInput
                             type="date"
                             value={exportDates.start}
                             onChange={(e) => setExportDates({ ...exportDates, start: e.target.value })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                            className="w-full"
                         />
                     </div>
-
                     <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha Fin</label>
-                        <input
+                        <InputLabel value="Fecha Fin" />
+                        <TextInput
                             type="date"
                             value={exportDates.end}
                             onChange={(e) => setExportDates({ ...exportDates, end: e.target.value })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                            className="w-full"
                         />
                     </div>
 
                     <div className="flex justify-end space-x-3">
                         <SecondaryButton onClick={() => setShowExportModal(false)}>Cancelar</SecondaryButton>
-                        <PrimaryButton onClick={handleExport}>Descargar</PrimaryButton>
+                        <SuccessButton onClick={handleExport} className="flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            EXPORTAR
+                        </SuccessButton>
                     </div>
                 </div>
             </Modal>

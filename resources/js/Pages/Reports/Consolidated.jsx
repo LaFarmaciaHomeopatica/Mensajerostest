@@ -3,6 +3,9 @@ import { Head, router } from '@inertiajs/react';
 import LeaderLayout from '@/Layouts/LeaderLayout';
 import MessengerSearchSelect from '@/Components/MessengerSearchSelect';
 import ExportModal from '@/Components/ExportModal';
+import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
+import SuccessButton from '@/Components/SuccessButton';
 
 export default function ConsolidatedReport({ reportData, messengers, filters, locations }) {
     const [selectedDate, setSelectedDate] = useState(filters.date || '');
@@ -46,12 +49,15 @@ export default function ConsolidatedReport({ reportData, messengers, filters, lo
                                     <span className="bg-indigo-600/10 p-2 rounded-xl text-xl">📊</span>
                                     Reporte Consolidado
                                 </h1>
-                                <button
+                                <SuccessButton
                                     onClick={() => setIsExportModalOpen(true)}
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-all shadow-md active:scale-95"
+                                    className="flex items-center gap-2"
                                 >
-                                    <span>📥</span> EXPORTAR EXCEL
-                                </button>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    EXPORTAR
+                                </SuccessButton>
                             </div>
 
                             {/* Filters */}
@@ -62,7 +68,7 @@ export default function ConsolidatedReport({ reportData, messengers, filters, lo
                                         type="date"
                                         value={selectedDate}
                                         onChange={(e) => setSelectedDate(e.target.value)}
-                                        className="w-full h-[38px] rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm px-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm"
+                                        className="w-full h-[46px] rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm px-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm"
                                     />
                                 </div>
                                 <div className="flex-1 min-w-[200px]">
@@ -79,7 +85,7 @@ export default function ConsolidatedReport({ reportData, messengers, filters, lo
                                     <select
                                         value={selectedLocation}
                                         onChange={(e) => setSelectedLocation(e.target.value)}
-                                        className="w-full h-[38px] rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm px-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
+                                        className="w-full h-[46px] rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm px-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
                                     >
                                         <option value="">Todas las sedes</option>
                                         {locations?.map((loc) => (
@@ -91,18 +97,18 @@ export default function ConsolidatedReport({ reportData, messengers, filters, lo
                                 </div>
 
                                 <div className="flex gap-2">
-                                    <button
+                                    <PrimaryButton
                                         onClick={handleFilter}
-                                        className="h-[38px] px-8 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition-all active:scale-95 shadow-lg shadow-indigo-200 dark:shadow-none"
+                                        className="h-[46px] px-8"
                                     >
                                         FILTRAR
-                                    </button>
-                                    <button
+                                    </PrimaryButton>
+                                    <SecondaryButton
                                         onClick={handleReset}
-                                        className="h-[38px] px-8 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95 shadow-sm"
+                                        className="h-[46px] px-8"
                                     >
                                         LIMPIAR
-                                    </button>
+                                    </SecondaryButton>
                                 </div>
                             </div>
 

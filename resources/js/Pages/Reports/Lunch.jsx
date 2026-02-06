@@ -4,6 +4,9 @@ import LeaderLayout from '@/Layouts/LeaderLayout';
 import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import SuccessButton from '@/Components/SuccessButton';
+import TextInput from '@/Components/TextInput';
+import InputLabel from '@/Components/InputLabel';
 
 export default function LunchReport({ logs, filters }) {
     const [date, setDate] = useState(filters.date || '');
@@ -36,24 +39,27 @@ export default function LunchReport({ logs, filters }) {
         <LeaderLayout title="Reporte de Almuerzos">
             <Head title="Reporte Almuerzos" />
 
-            <div className="max-w-7xl mx-auto p-3 sm:p-6 lg:p-8">
+            <div className="max-w-[1800px] mx-auto p-3 sm:p-6 lg:p-8">
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
                     <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Reporte de Almuerzos</h1>
 
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                        <button
+                        <SuccessButton
                             onClick={() => setShowExportModal(true)}
-                            className="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 flex items-center justify-center gap-2"
+                            className="w-full sm:w-auto flex items-center justify-center gap-2"
                         >
-                            <span>📥</span> Exportar Reporte
-                        </button>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            EXPORTAR
+                        </SuccessButton>
                         <div className="flex items-center gap-2 bg-white dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-2">Filtrar:</span>
-                            <input
+                            <TextInput
                                 type="date"
                                 value={date}
                                 onChange={handleDateChange}
-                                className="border-none bg-transparent dark:text-white text-xs focus:ring-0 py-1"
+                                className="border-none bg-transparent dark:text-white text-xs focus:ring-0 py-1 shadow-none"
                             />
                             {date && (
                                 <button
@@ -61,7 +67,7 @@ export default function LunchReport({ logs, filters }) {
                                         setDate('');
                                         router.get(route('reports.lunch'), {}, { preserveState: true, replace: true });
                                     }}
-                                    className="p-1 px-2 text-[10px] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-bold uppercase"
+                                    className="p-1 px-2 text-[10px] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-bold uppercase transition-colors"
                                 >
                                     ✕
                                 </button>
@@ -153,27 +159,23 @@ export default function LunchReport({ logs, filters }) {
                     <form onSubmit={handleExport}>
                         <div className="grid grid-cols-2 gap-4 mb-6">
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                                    Fecha Inicio
-                                </label>
-                                <input
+                                <InputLabel value="Fecha Inicio" />
+                                <TextInput
                                     type="date"
                                     required
                                     value={exportDates.start}
                                     onChange={(e) => setExportDates({ ...exportDates, start: e.target.value })}
-                                    className="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+                                    className="w-full"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                                    Fecha Fin
-                                </label>
-                                <input
+                                <InputLabel value="Fecha Fin" />
+                                <TextInput
                                     type="date"
                                     required
                                     value={exportDates.end}
                                     onChange={(e) => setExportDates({ ...exportDates, end: e.target.value })}
-                                    className="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+                                    className="w-full"
                                 />
                             </div>
                         </div>
@@ -182,9 +184,12 @@ export default function LunchReport({ logs, filters }) {
                             <SecondaryButton onClick={() => setShowExportModal(false)}>
                                 Cancelar
                             </SecondaryButton>
-                            <PrimaryButton type="submit">
-                                Generar Excel
-                            </PrimaryButton>
+                            <SuccessButton type="submit" className="flex items-center gap-2">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                EXPORTAR
+                            </SuccessButton>
                         </div>
                     </form>
                 </div>

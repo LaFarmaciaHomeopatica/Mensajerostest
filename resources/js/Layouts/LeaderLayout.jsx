@@ -12,6 +12,7 @@ export default function LeaderLayout({ children, title }) {
         { label: 'Preoperacionales', route: 'reports.preoperational', active: route().current('reports.preoperational'), roles: ['lider', 'regente'] },
         { label: 'Limpieza', route: 'reports.cleaning', active: route().current('reports.cleaning'), roles: ['lider', 'regente'] },
         { label: 'Consolidado', route: 'reports.consolidated', active: route().current('reports.consolidated'), roles: ['lider', 'regente'] },
+        { label: 'Trámites', route: 'internal-procedures.index', active: route().current('internal-procedures.*'), roles: ['lider'] },
         { label: 'Usuarios', route: 'users.index', active: route().current('users.*'), roles: ['lider'] },
     ].filter(item => item.roles.includes(auth.user.role));
 

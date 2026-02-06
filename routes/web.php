@@ -38,6 +38,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/shifts/import', [\App\Http\Controllers\ShiftController::class, 'import'])->name('shifts.import');
         Route::resource('shifts', \App\Http\Controllers\ShiftController::class)->only(['index', 'store', 'destroy']);
         Route::resource('users', \App\Http\Controllers\UserController::class)->except(['create', 'edit', 'show']);
+
+        // Trámites Internos
+        Route::resource('internal-procedures', \App\Http\Controllers\InternalProcedureController::class)->only(['index', 'create', 'store']);
+        Route::post('/internal-procedures/{id}/sync', [\App\Http\Controllers\InternalProcedureController::class, 'sync'])->name('internal-procedures.sync');
     });
 
     // Rutas compartidas (Líder y Regente)

@@ -69,12 +69,12 @@ class PreoperationalController extends Controller
             $report->shift = $shift;
 
             // Calculate compliance (report submitted before shift start)
-            if ($shift) {
+            if ($shift && $shift->start_time) {
                 $reportTime = \Carbon\Carbon::parse($report->created_at);
-                $shiftDateTime = \Carbon\Carbon::parse($shift->date . ' ' . $shift->start_time);
+                $shiftDateTime = \Carbon\Carbon::parse($shift->date)->setTimeFromTimeString($shift->start_time);
                 $report->compliant = $reportTime->lessThan($shiftDateTime);
             } else {
-                $report->compliant = null; // No shift found
+                $report->compliant = null; // No shift or no start time found
             }
 
             return $report;

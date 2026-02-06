@@ -67,9 +67,9 @@ class PreoperationalReportsExport implements FromCollection, WithHeadings, WithM
             ->first();
 
         $compliance = 'N/A';
-        if ($shift) {
+        if ($shift && $shift->start_time) {
             $reportTime = Carbon::parse($report->created_at);
-            $shiftDateTime = Carbon::parse($shift->date . ' ' . $shift->start_time);
+            $shiftDateTime = Carbon::parse($shift->date)->setTimeFromTimeString($shift->start_time);
             $compliance = $reportTime->lessThan($shiftDateTime) ? 'A tiempo' : 'Tardío';
         }
 

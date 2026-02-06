@@ -70,14 +70,14 @@ class ConsolidatedReportController extends Controller
             $compliant = null;
             $shiftStartTime = null;
 
-            if ($shift) {
-                $shiftStartTime = Carbon::parse($shift->date . ' ' . $shift->start_time, config('app.timezone'))->format('H:i');
+            if ($shift && $shift->start_time) {
+                $shiftStartTime = Carbon::parse($shift->date)->setTimeFromTimeString($shift->start_time)->format('H:i');
             }
 
-            if ($preop && $shift) {
+            if ($preop && $shift && $shift->start_time) {
                 // Parse dates to compare objects with explicit timezone
                 $reportTime = $preop->created_at->timezone(config('app.timezone'));
-                $shiftStart = Carbon::parse($shift->date . ' ' . $shift->start_time, config('app.timezone'));
+                $shiftStart = Carbon::parse($shift->date)->setTimeFromTimeString($shift->start_time);
                 $compliant = $reportTime->lessThan($shiftStart);
             }
 

@@ -35,13 +35,13 @@ export default function MessengerSearchSelect({ messengers, selectedId, onChange
         <div className="relative w-full" ref={wrapperRef}>
             <div
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full h-[38px] rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm px-3 flex justify-between items-center cursor-pointer hover:border-indigo-500 transition-colors shadow-sm"
+                className="w-full h-[46px] rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 text-sm px-4 flex justify-between items-center cursor-pointer hover:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-sm"
             >
-                <span className={selectedMessenger ? 'text-slate-900 dark:text-gray-100' : 'text-slate-400'}>
+                <span className={selectedMessenger ? 'text-slate-900 dark:text-gray-100 font-medium' : 'text-slate-400'}>
                     {selectedMessenger ? `${selectedMessenger.name} (${selectedMessenger.vehicle})` : placeholder}
                 </span>
                 <span className="text-slate-400">
-                    <svg className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`w-4 h-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
                 </span>
@@ -56,7 +56,7 @@ export default function MessengerSearchSelect({ messengers, selectedId, onChange
                             placeholder="Buscar por nombre o placa..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full rounded-lg border-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300 text-xs focus:ring-indigo-500 focus:border-indigo-500"
+                            className="w-full p-3 rounded-lg border-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300 text-xs focus:ring-indigo-500 focus:border-indigo-500"
                             onClick={(e) => e.stopPropagation()}
                         />
                     </div>

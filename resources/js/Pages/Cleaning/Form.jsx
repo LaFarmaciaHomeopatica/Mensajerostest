@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useForm, Head } from '@inertiajs/react';
+import TextArea from '@/Components/TextArea';
+import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
 
 export default function CleaningForm({ messenger, onCancel, onSuccess }) {
     const [step, setStep] = useState('type'); // type, questions, success
@@ -67,12 +70,12 @@ export default function CleaningForm({ messenger, onCancel, onSuccess }) {
                 <p className="text-gray-600 dark:text-gray-400 mb-8">
                     Tu reporte de limpieza ha sido registrado correctamente.
                 </p>
-                <button
+                <PrimaryButton
                     onClick={onCancel}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all"
+                    className="w-full justify-center"
                 >
                     Volver al Menú
-                </button>
+                </PrimaryButton>
             </div>
         );
     }
@@ -152,10 +155,9 @@ export default function CleaningForm({ messenger, onCancel, onSuccess }) {
 
                         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-600">
                             <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">💬 Observaciones (Opcional)</p>
-                            <textarea
+                            <TextArea
                                 value={data.observations}
                                 onChange={(e) => setData('observations', e.target.value)}
-                                className="w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-800 text-sm focus:ring-indigo-500"
                                 rows="2"
                                 placeholder="..."
                             />
@@ -163,20 +165,20 @@ export default function CleaningForm({ messenger, onCancel, onSuccess }) {
                     </div>
 
                     <div className="flex gap-3 pt-2">
-                        <button
+                        <SecondaryButton
                             type="button"
                             onClick={() => setStep('type')}
-                            className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-4 rounded-xl transition-all"
+                            className="flex-1 justify-center"
                         >
                             Atrás
-                        </button>
-                        <button
+                        </SecondaryButton>
+                        <PrimaryButton
                             type="submit"
                             disabled={processing}
-                            className="flex-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-all disabled:opacity-50"
+                            className="flex-[2] justify-center"
                         >
                             {processing ? 'Enviando...' : 'Enviar Reporte'}
-                        </button>
+                        </PrimaryButton>
                     </div>
                 </form>
             )}
