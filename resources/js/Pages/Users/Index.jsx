@@ -69,7 +69,7 @@ export default function UserIndex({ users }) {
 
             <div className="max-w-[1800px] mx-auto p-3 sm:p-6 lg:p-8">
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
-                    <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Gestión de Usuarios</h1>
+                    <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Gestión de Usuarios</h1>
                     <button
                         onClick={() => openModal()}
                         className="w-full lg:w-auto px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 flex items-center justify-center gap-2"

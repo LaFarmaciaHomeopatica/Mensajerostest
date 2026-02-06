@@ -28,7 +28,7 @@ export default function Index({ messengers, filters }) {
 
             <div className="max-w-[1800px] mx-auto p-3 sm:p-6 lg:p-8">
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
-                    <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Mensajeros</h1>
+                    <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Mensajeros</h1>
 
                     <div className="flex flex-col sm:flex-row items-stretch gap-3 w-full lg:w-auto">
                         <div className="relative flex-grow sm:min-w-[300px] group">
