@@ -165,4 +165,9 @@ class BeetrackService
         }
     }
 
+    public function clearCache()
+    {
+        \Illuminate\Support\Facades\Cache::forget('beetrack_status_v3');
+        \Illuminate\Support\Facades\Log::info('BeetrackService: Cache cleared manually');
+    }
 }

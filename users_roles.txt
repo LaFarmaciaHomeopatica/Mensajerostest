@@ -1,0 +1,1 @@
+[{"name":"Despachos LFH","role":"lider"},{"name":"Mensajero","role":"mensajero"},{"name":"Regente La Farmacia","role":"regente"}]

@@ -8,6 +8,7 @@ use Inertia\Inertia;
 
 class MessengerController extends Controller
 {
+    use \App\Traits\BroadcastsMessengerStatus;
     public function index(Request $request)
     {
         $query = Messenger::query();
@@ -44,6 +45,8 @@ class MessengerController extends Controller
 
         Messenger::create($validated);
 
+        $this->broadcastStatus();
+
         return redirect()->route('messengers.index')->with('success', 'Mensajero creado correctamente.');
     }
 
@@ -67,12 +70,15 @@ class MessengerController extends Controller
 
         $messenger->update($validated);
 
+        $this->broadcastStatus();
+
         return redirect()->route('messengers.index')->with('success', 'Mensajero actualizado correctamente.');
     }
 
     public function destroy(Messenger $messenger)
     {
         $messenger->delete();
+        $this->broadcastStatus();
         return redirect()->route('messengers.index')->with('success', 'Mensajero eliminado.');
     }
 }

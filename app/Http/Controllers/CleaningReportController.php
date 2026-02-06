@@ -12,6 +12,7 @@ use App\Exports\CleaningReportsExport;
 
 class CleaningReportController extends Controller
 {
+    use \App\Traits\BroadcastsMessengerStatus;
     public function create()
     {
         return Inertia::render('Landing', [
@@ -89,26 +90,33 @@ class CleaningReportController extends Controller
         $sourceImage = null;
         $extension = strtolower($image->getClientOriginalExtension());
 
-        switch ($extension) {
-            case 'jpeg':
-            case 'jpg':
-                $sourceImage = imagecreatefromjpeg($image->getPathname());
-                break;
-            case 'png':
-                $sourceImage = imagecreatefrompng($image->getPathname());
-                // Preserve transparency for resizing but we convert to JPG so it will be black background
-                // Or we can fill white background
-                $bg = imagecreatetruecolor(imagesx($sourceImage), imagesy($sourceImage));
-                $white = imagecolorallocate($bg, 255, 255, 255);
-                imagefilledrectangle($bg, 0, 0, imagesx($sourceImage), imagesy($sourceImage), $white);
-                imagecopy($bg, $sourceImage, 0, 0, 0, 0, imagesx($sourceImage), imagesy($sourceImage));
-                $sourceImage = $bg;
-                break;
-            case 'webp':
-                if (function_exists('imagecreatefromwebp')) {
-                    $sourceImage = imagecreatefromwebp($image->getPathname());
-                }
-                break;
+        // Check if GD extension is available
+        $hasGd = function_exists('imagecreatefromjpeg') && function_exists('imagecreatetruecolor');
+
+        if ($hasGd) {
+            switch ($extension) {
+                case 'jpeg':
+                case 'jpg':
+                    $sourceImage = imagecreatefromjpeg($image->getPathname());
+                    break;
+                case 'png':
+                    if (function_exists('imagecreatefrompng')) {
+                        $sourceImage = imagecreatefrompng($image->getPathname());
+                        // Preserve transparency for resizing but we convert to JPG so it will be black background
+                        // Or we can fill white background
+                        $bg = imagecreatetruecolor(imagesx($sourceImage), imagesy($sourceImage));
+                        $white = imagecolorallocate($bg, 255, 255, 255);
+                        imagefilledrectangle($bg, 0, 0, imagesx($sourceImage), imagesy($sourceImage), $white);
+                        imagecopy($bg, $sourceImage, 0, 0, 0, 0, imagesx($sourceImage), imagesy($sourceImage));
+                        $sourceImage = $bg;
+                    }
+                    break;
+                case 'webp':
+                    if (function_exists('imagecreatefromwebp')) {
+                        $sourceImage = imagecreatefromwebp($image->getPathname());
+                    }
+                    break;
+            }
         }
 
         if ($sourceImage) {
@@ -146,6 +154,8 @@ class CleaningReportController extends Controller
             'evidence_path' => $path,
             'observations' => $request->observations,
         ]);
+
+        $this->broadcastStatus();
 
         return back()->with('success', [
             'message' => '¡Reporte de limpieza enviado exitosamente!',

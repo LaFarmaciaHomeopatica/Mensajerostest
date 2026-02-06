@@ -14,6 +14,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ShiftController extends Controller
 {
+    use \App\Traits\BroadcastsMessengerStatus;
     public function index(Request $request)
     {
         // Default to current week start if no date provided
@@ -63,6 +64,8 @@ class ShiftController extends Controller
             ]
         );
 
+        $this->broadcastStatus();
+
         return redirect()->back()->with('success', 'Turno actualizado correctamente.');
     }
 
@@ -70,6 +73,8 @@ class ShiftController extends Controller
     {
         $shift = Shift::findOrFail($id);
         $shift->delete();
+
+        $this->broadcastStatus();
 
         return redirect()->back()->with('success', 'Turno eliminado correctamente.');
     }
@@ -82,6 +87,7 @@ class ShiftController extends Controller
 
         try {
             Excel::import(new ShiftsImport, $request->file('file'));
+            $this->broadcastStatus();
             return redirect()->back()->with('success', 'Horarios importados correctamente.');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['file' => 'Error al importar: ' . $e->getMessage()]);

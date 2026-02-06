@@ -1,0 +1,2 @@
+GENERAL: {"preop_count":467,"cleaning_count":129,"lunch_count":475,"completion_count":471,"dispatch_guides":14269}
+TREND: [{"date":"2026-01-30","routes":102,"guides":1515},{"date":"2026-01-31","routes":108,"guides":1724},{"date":"2026-02-01","routes":127,"guides":1875},{"date":"2026-02-02","routes":111,"guides":1681},{"date":"2026-02-03","routes":123,"guides":1932},{"date":"2026-02-04","routes":123,"guides":1789},{"date":"2026-02-05","routes":110,"guides":1725},{"date":"2026-02-06","routes":121,"guides":2028}]

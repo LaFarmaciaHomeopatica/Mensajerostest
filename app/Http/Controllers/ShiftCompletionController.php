@@ -8,6 +8,7 @@ use App\Models\Messenger;
 
 class ShiftCompletionController extends Controller
 {
+    use \App\Traits\BroadcastsMessengerStatus;
     public function store(Request $request)
     {
         $request->validate([
@@ -35,6 +36,8 @@ class ShiftCompletionController extends Controller
             'messenger_id' => $messenger->id,
             'finished_at' => now(),
         ]);
+
+        $this->broadcastStatus();
 
         return back()->with('success', 'Turno finalizado correctamente.');
     }

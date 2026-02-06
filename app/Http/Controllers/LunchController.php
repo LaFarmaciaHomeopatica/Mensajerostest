@@ -13,6 +13,7 @@ use Inertia\Inertia;
 
 class LunchController extends Controller
 {
+    use \App\Traits\BroadcastsMessengerStatus;
     public function index()
     {
         $questions = \App\Models\PreoperationalQuestion::where('active', true)->orderBy('order')->get();
@@ -171,6 +172,8 @@ class LunchController extends Controller
             'end_time' => $endTime,
             'status' => 'active',
         ]);
+
+        $this->broadcastStatus();
 
         return back()->with('success', [
             'message' => '¡A disfrutar! 🍔',

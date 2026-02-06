@@ -12,6 +12,7 @@ use App\Models\DispatchLocation;
 
 class PreoperationalController extends Controller
 {
+    use \App\Traits\BroadcastsMessengerStatus;
     public function index(Request $request)
     {
         $query = PreoperationalReport::with('messenger')
@@ -122,6 +123,8 @@ class PreoperationalController extends Controller
             'answers' => $request->answers,
             'observations' => $request->observations,
         ]);
+
+        $this->broadcastStatus();
 
         return back()->with('success', [
             'message' => '¡Reporte preoperacional enviado exitosamente!',

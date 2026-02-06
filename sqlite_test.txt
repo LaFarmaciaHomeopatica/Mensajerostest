@@ -1,0 +1,8 @@
+Array
+(
+    [0] => stdClass Object
+        (
+            [hour] => 16:00
+        )
+
+)

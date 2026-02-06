@@ -123,6 +123,15 @@ class DispatchController extends Controller
             ];
         }
 
+        // Save log for statistics
+        \App\Models\DispatchLog::create([
+            'messenger_id' => $messenger->id,
+            'location_id' => $location->id,
+            'consecutive' => $nextGuide ?? 'LAST_ROUTE',
+            'guides_count' => count($processed),
+            'date' => now()->toDateString(),
+        ]);
+
         return Excel::download(
             new class ($processed) implements FromCollection, WithHeadings {
             private $data;

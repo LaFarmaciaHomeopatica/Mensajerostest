@@ -42,6 +42,17 @@ Route::middleware(['auth'])->group(function () {
         // Trámites Internos
         Route::resource('internal-procedures', \App\Http\Controllers\InternalProcedureController::class)->only(['index', 'create', 'store']);
         Route::post('/internal-procedures/{id}/sync', [\App\Http\Controllers\InternalProcedureController::class, 'sync'])->name('internal-procedures.sync');
+
+        // Analytics
+        Route::get('/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('analytics.index');
+        Route::get('/analytics/cleaning', [\App\Http\Controllers\AnalyticsController::class, 'getCleaningStats'])->name('analytics.cleaning');
+        Route::get('/analytics/mechanical', [\App\Http\Controllers\AnalyticsController::class, 'getMechanicalStats'])->name('analytics.mechanical');
+        Route::get('/analytics/compliance', [\App\Http\Controllers\AnalyticsController::class, 'getComplianceStats'])->name('analytics.compliance');
+        Route::get('/analytics/route-stats', [\App\Http\Controllers\AnalyticsController::class, 'getRouteStats'])->name('analytics.route-stats');
+        Route::get('/analytics/dispatch-trend', [\App\Http\Controllers\AnalyticsController::class, 'getDispatchTrend'])->name('analytics.dispatch-trend');
+        Route::get('/analytics/general', [\App\Http\Controllers\AnalyticsController::class, 'getGeneralStats'])->name('analytics.general');
+        Route::get('/analytics/lunch', [\App\Http\Controllers\AnalyticsController::class, 'getLunchStats'])->name('analytics.lunch');
+        Route::get('/analytics/completion', [\App\Http\Controllers\AnalyticsController::class, 'getShiftCompletionStats'])->name('analytics.completion');
     });
 
     // Rutas compartidas (Líder y Regente)

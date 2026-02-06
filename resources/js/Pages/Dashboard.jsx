@@ -19,8 +19,21 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
     const [localMessengers, setLocalMessengers] = useState(messengers);
     const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleTimeString());
 
-    // --- Polling for Real-time Updates ---
+    // --- Real-time Updates with WebSockets & Polling Fallback ---
     useEffect(() => {
+        // 1. Listen for real-time events
+        if (window.Echo) {
+            window.Echo.channel('messengers')
+                .listen('.status.updated', (e) => {
+                    console.log('Real-time update received:', e);
+                    if (e.data && e.data.messengers) {
+                        setLocalMessengers(e.data.messengers);
+                        setLastUpdated(new Date().toLocaleTimeString());
+                    }
+                });
+        }
+
+        // 2. Polling as fallback (increased interval to 1 minute)
         const interval = setInterval(() => {
             fetch(route('messenger.status'))
                 .then(res => res.json())
@@ -29,9 +42,14 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                     setLastUpdated(new Date().toLocaleTimeString());
                 })
                 .catch(err => console.error('Polling error:', err));
-        }, 30000); // 30 seconds
+        }, 60000);
 
-        return () => clearInterval(interval);
+        return () => {
+            if (window.Echo) {
+                window.Echo.leaveChannel('messengers');
+            }
+            clearInterval(interval);
+        };
     }, []);
 
     // Update local state when props change (initial load or manual refresh)
@@ -82,9 +100,8 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
 
     // --- Filtering & Sorting ---
     const getFilteredMessengers = (loc) => {
-        if (!localMessengers) return [];
         return localMessengers
-            .filter(m => m.location === loc)
+            .filter(m => m.location?.toLowerCase() === loc.toLowerCase())
             .filter(m => {
                 const search = filter.toUpperCase();
                 return m.name.toUpperCase().includes(search) ||

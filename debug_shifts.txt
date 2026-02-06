@@ -6,3 +6,6 @@ Store Request: {"start_time":"21:00","end_time":"22:00","status":"present","loca
 Store Request: {"start_time":"21:00","end_time":"22:00","status":"present","location":"principal","messenger_id":12,"date":"2026-02-04"}
 Store Request: {"start_time":"22:00","end_time":"23:00","status":"present","location":"principal","messenger_id":17,"date":"2026-02-04"}
 Store Request: {"start_time":"08:00","end_time":"17:00","status":"absent","location":"principal","messenger_id":18,"date":"2026-02-04"}
+Store Request: {"start_time":"07:00","end_time":"09:00","status":"present","location":"Teusaquillo","messenger_id":1,"date":"2026-02-06"}
+Store Request: {"start_time":"08:00","end_time":"21:00","status":"present","location":"teusaquillo","messenger_id":29,"date":"2026-02-06"}
+Store Request: {"start_time":"08:00","end_time":"12:09","status":"present","location":"Principal","messenger_id":3,"date":"2026-02-06"}

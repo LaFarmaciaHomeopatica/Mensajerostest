@@ -10,6 +10,7 @@ use Inertia\Inertia;
 
 class InternalProcedureController extends Controller
 {
+    use \App\Traits\BroadcastsMessengerStatus;
     public function index(Request $request)
     {
         $query = InternalProcedure::with('messenger');
@@ -81,6 +82,8 @@ class InternalProcedureController extends Controller
                     'status' => 'synced',
                     'beetrack_id' => $result['dispatch_id'] ?? null
                 ]);
+
+                $this->broadcastStatus(true); // Clear cache because Beetrack status changed
 
                 return back()->with('success', "Trámite {$procedure->code} sincronizado con Beetrack.");
             } else {
