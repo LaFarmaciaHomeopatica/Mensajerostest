@@ -19,6 +19,7 @@ export default function Landing({ preoperationalQuestions = [] }) {
     const [loading, setLoading] = useState(false);
     const [activeLunch, setActiveLunch] = useState(null);
     const [preoperationalAnswers, setPreoperationalAnswers] = useState({});
+    const [preoperationalObservations, setPreoperationalObservations] = useState('');
 
     // Grouped questions will be calculated during render if needed or once here
     const groupedQuestions = React.useMemo(() => {
@@ -77,7 +78,26 @@ export default function Landing({ preoperationalQuestions = [] }) {
             setMessenger(mData);
             setData('messenger_id', mData.id);
 
-            // Always go to options menu after plate check
+            // Handle Active Lunch
+            if (mData.active_lunch) {
+                setActiveLunch({
+                    start: mData.active_lunch.start,
+                    end: mData.active_lunch.end
+                });
+                setViewState('active_lunch');
+                return;
+            }
+
+            // Handle Shift Finished (Optional: redirect to finished view or options)
+            if (mData.shift_finished) {
+                // We can either go to options (which shows finished banner) or redirect to finished view
+                // Let's stick to options as it gives more context but maybe highlight it?
+                // Actually, if they are done, maybe show the finished screen directly?
+                setViewState('shift_finished');
+                return;
+            }
+
+            // Default to options menu
             setViewState('options');
         } catch (err) {
             setError('Placa no encontrada o error en el sistema.');
@@ -110,11 +130,12 @@ export default function Landing({ preoperationalQuestions = [] }) {
         router.post(route('preoperational.store'), {
             messenger_id: messenger.id,
             answers: preoperationalAnswers,
-            observations: null,
+            observations: preoperationalObservations,
         }, {
             onSuccess: () => {
                 setViewState('preop_success');
                 setPreoperationalAnswers({});
+                setPreoperationalObservations('');
                 setMessenger(prev => ({ ...prev, preoperational_submitted: true }));
             },
             onError: (errors) => {
@@ -367,11 +388,26 @@ export default function Landing({ preoperationalQuestions = [] }) {
                         ))}
                     </div>
 
+                    {/* Observaciones Field */}
+                    <div className="mt-6 bg-amber-50 dark:bg-amber-900/10 p-5 rounded-2xl border border-amber-200 dark:border-amber-800">
+                        <label className="block text-sm font-bold mb-2 text-amber-900 dark:text-amber-100">
+                            📝 Observaciones (Opcional)
+                        </label>
+                        <TextArea
+                            value={preoperationalObservations}
+                            onChange={(e) => setPreoperationalObservations(e.target.value)}
+                            rows="3"
+                            placeholder="Agrega cualquier observación adicional sobre el estado del vehículo..."
+                            className="w-full"
+                        />
+                    </div>
+
                     <div className="mt-6 flex gap-3">
                         <SecondaryButton
                             onClick={() => {
                                 setViewState('options');
                                 setPreoperationalAnswers({});
+                                setPreoperationalObservations('');
                             }}
                             className="flex-1 justify-center"
                         >

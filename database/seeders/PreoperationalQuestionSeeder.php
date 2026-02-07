@@ -13,23 +13,37 @@ class PreoperationalQuestionSeeder extends Seeder
     public function run(): void
     {
         $questions = [
-            // Vehículo
-            ['category' => 'Vehículo', 'label' => 'Luces (delanteras, traseras, direccionales)', 'key' => 'luces', 'order' => 10],
-            ['category' => 'Vehículo', 'label' => 'Frenos (funcionamiento correcto)', 'key' => 'frenos', 'order' => 20],
-            ['category' => 'Vehículo', 'label' => 'Llantas (estado y presión)', 'key' => 'llantas', 'order' => 30],
-            ['category' => 'Vehículo', 'label' => 'Espejos retrovisores', 'key' => 'espejos', 'order' => 40],
-            ['category' => 'Vehículo', 'label' => 'Limpieza general del vehículo', 'key' => 'limpieza', 'order' => 50],
+            // Estado Mecánico de la Motocicleta
+            ['category' => 'Estado Mecánico', 'label' => 'Frenos (delantero y trasero)', 'key' => 'frenos', 'order' => 10],
+            ['category' => 'Estado Mecánico', 'label' => 'Luces (delantera, trasera, direccionales, freno)', 'key' => 'luces', 'order' => 20],
+            ['category' => 'Estado Mecánico', 'label' => 'Llantas (estado, presión, profundidad de labrado)', 'key' => 'llantas', 'order' => 30],
+            ['category' => 'Estado Mecánico', 'label' => 'Espejos retrovisores (ambos lados)', 'key' => 'espejos', 'order' => 40],
+            ['category' => 'Estado Mecánico', 'label' => 'Cadena de transmisión (tensión y lubricación)', 'key' => 'cadena', 'order' => 50],
+            ['category' => 'Estado Mecánico', 'label' => 'Nivel de aceite del motor', 'key' => 'aceite', 'order' => 60],
+            ['category' => 'Estado Mecánico', 'label' => 'Sistema de escape (sin fugas)', 'key' => 'escape', 'order' => 70],
+            ['category' => 'Estado Mecánico', 'label' => 'Pito/bocina (funcionamiento)', 'key' => 'pito', 'order' => 80],
+            ['category' => 'Estado Mecánico', 'label' => 'Suspensión (amortiguadores)', 'key' => 'suspension', 'order' => 90],
 
-            // Seguridad
-            ['category' => 'Seguridad', 'label' => 'Cinturón de seguridad', 'key' => 'cinturon', 'order' => 60],
-            ['category' => 'Seguridad', 'label' => 'Casco (en buen estado)', 'key' => 'casco', 'order' => 70],
-            ['category' => 'Seguridad', 'label' => 'Chaleco reflectivo', 'key' => 'chaleco', 'order' => 80],
-            ['category' => 'Seguridad', 'label' => 'Kit de carreteras (botiquín, extintor)', 'key' => 'kit_carreteras', 'order' => 90],
+            // Seguridad Personal
+            ['category' => 'Seguridad Personal', 'label' => 'Casco (certificado, sin grietas)', 'key' => 'casco', 'order' => 100],
+            ['category' => 'Seguridad Personal', 'label' => 'Chaleco reflectivo', 'key' => 'chaleco', 'order' => 110],
+            ['category' => 'Seguridad Personal', 'label' => 'Guantes de protección', 'key' => 'guantes', 'order' => 120],
+            ['category' => 'Seguridad Personal', 'label' => 'Calzado cerrado adecuado', 'key' => 'calzado', 'order' => 130],
 
-            // Documentos
-            ['category' => 'Documentos', 'label' => 'SOAT vigente', 'key' => 'soat', 'order' => 100],
-            ['category' => 'Documentos', 'label' => 'Licencia de conducción', 'key' => 'licencia', 'order' => 110],
-            ['category' => 'Documentos', 'label' => 'Tarjeta de propiedad', 'key' => 'tarjeta_propiedad', 'order' => 120],
+            // Seguridad del Vehículo
+            ['category' => 'Seguridad del Vehículo', 'label' => 'Botiquín de primeros auxilios', 'key' => 'botiquin', 'order' => 140],
+            ['category' => 'Seguridad del Vehículo', 'label' => 'Kit de herramientas básicas', 'key' => 'herramientas', 'order' => 150],
+            ['category' => 'Seguridad del Vehículo', 'label' => 'Triángulos de seguridad', 'key' => 'triangulos', 'order' => 160],
+
+            // Documentación
+            ['category' => 'Documentación', 'label' => 'SOAT vigente', 'key' => 'soat', 'order' => 170],
+            ['category' => 'Documentación', 'label' => 'Licencia de conducción (A2 o superior)', 'key' => 'licencia', 'order' => 180],
+            ['category' => 'Documentación', 'label' => 'Tarjeta de propiedad', 'key' => 'tarjeta_propiedad', 'order' => 190],
+            ['category' => 'Documentación', 'label' => 'Revisión técnico-mecánica vigente', 'key' => 'tecnomecanica', 'order' => 200],
+
+            // Limpieza y Presentación
+            ['category' => 'Limpieza y Presentación', 'label' => 'Limpieza general de la motocicleta', 'key' => 'limpieza', 'order' => 210],
+            ['category' => 'Limpieza y Presentación', 'label' => 'Placa visible y legible', 'key' => 'placa', 'order' => 220],
         ];
 
         foreach ($questions as $question) {

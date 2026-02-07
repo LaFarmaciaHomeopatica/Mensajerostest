@@ -7,9 +7,9 @@ export default function LeaderLayout({ children, title }) {
     const menuItems = [
         { label: 'Dashboard', route: 'dashboard', active: route().current('dashboard'), roles: ['lider', 'administrador'] },
         { label: 'Horarios', route: 'shifts.index', active: route().current('shifts.*'), roles: ['lider', 'administrador'] },
-        { label: 'Preoperacionales', route: 'reports.preoperational', active: route().current('reports.preoperational'), roles: ['regente', 'administrador'] },
+        { label: 'Preoperacional', route: 'reports.preoperational', active: route().current('reports.preoperational'), roles: ['regente', 'administrador'] },
         { label: 'Limpieza', route: 'reports.cleaning', active: route().current('reports.cleaning'), roles: ['regente', 'administrador'] },
-        { label: 'Almuerzos', route: 'reports.lunch', active: route().current('reports.lunch'), roles: ['lider', 'administrador'] },
+        { label: 'Almuerzo', route: 'reports.lunch', active: route().current('reports.lunch'), roles: ['lider', 'administrador'] },
         { label: 'Consolidado', route: 'reports.consolidated', active: route().current('reports.consolidated'), roles: ['regente', 'administrador'] },
         { label: 'Trámites', route: 'internal-procedures.index', active: route().current('internal-procedures.*'), roles: ['lider', 'tramites', 'administrador'] },
         { label: 'Análisis', route: 'analytics.index', active: route().current('analytics.*'), roles: ['administrador'] },

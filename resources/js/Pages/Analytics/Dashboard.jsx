@@ -52,19 +52,23 @@ export default function Dashboard({ messengers, locations }) {
             messenger_id: selectedMessenger
         });
 
+        // Create abort controller to cancel previous requests
+        const abortController = new AbortController();
+        const signal = abortController.signal;
+
         try {
             const [gen, cleaning, mechanical, compliance, cleaningComp, completion, summary, section, attendance, exit, globalTrendData] = await Promise.all([
-                fetch(`${route('analytics.general')}?${params}`).then(res => res.json()),
-                fetch(`${route('analytics.cleaning')}?${params}`).then(res => res.json()),
-                fetch(`${route('analytics.mechanical')}?${params}`).then(res => res.json()),
-                fetch(`${route('analytics.compliance')}?${params}`).then(res => res.json()),
-                fetch(`${route('analytics.cleaning-compliance')}?${params}`).then(res => res.json()),
-                fetch(`${route('analytics.completion')}?${params}`).then(res => res.json()),
-                fetch(`${route('analytics.performance-summary')}?${params}`).then(res => res.json()),
-                fetch(`${route('analytics.section-trends')}?${params}`).then(res => res.json()),
-                fetch(`${route('analytics.attendance-compliance')}?${params}`).then(res => res.json()),
-                fetch(`${route('analytics.exit-analysis')}?${params}`).then(res => res.json()),
-                fetch(`${route('analytics.global-trend')}?${params}`).then(res => res.json()),
+                fetch(`${route('analytics.general')}?${params}`, { signal }).then(res => res.json()),
+                fetch(`${route('analytics.cleaning')}?${params}`, { signal }).then(res => res.json()),
+                fetch(`${route('analytics.mechanical')}?${params}`, { signal }).then(res => res.json()),
+                fetch(`${route('analytics.compliance')}?${params}`, { signal }).then(res => res.json()),
+                fetch(`${route('analytics.cleaning-compliance')}?${params}`, { signal }).then(res => res.json()),
+                fetch(`${route('analytics.completion')}?${params}`, { signal }).then(res => res.json()),
+                fetch(`${route('analytics.performance-summary')}?${params}`, { signal }).then(res => res.json()),
+                fetch(`${route('analytics.section-trends')}?${params}`, { signal }).then(res => res.json()),
+                fetch(`${route('analytics.attendance-compliance')}?${params}`, { signal }).then(res => res.json()),
+                fetch(`${route('analytics.exit-analysis')}?${params}`, { signal }).then(res => res.json()),
+                fetch(`${route('analytics.global-trend')}?${params}`, { signal }).then(res => res.json()),
             ]);
 
             setGeneralStats(gen);
@@ -79,14 +83,26 @@ export default function Dashboard({ messengers, locations }) {
             setExitAnalysis(exit);
             setGlobalTrend(globalTrendData);
         } catch (error) {
-            console.error('Error fetching analytics:', error);
+            if (error.name === 'AbortError') {
+                console.log('Request was cancelled');
+            } else {
+                console.error('Error fetching analytics:', error);
+            }
         } finally {
             setLoading(false);
         }
+
+        // Cleanup function to abort on unmount
+        return () => abortController.abort();
     }, [startDate, endDate, selectedMessenger]);
 
     useEffect(() => {
-        fetchData();
+        const cleanup = fetchData();
+        return () => {
+            if (cleanup && typeof cleanup === 'function') {
+                cleanup();
+            }
+        };
     }, [fetchData]);
 
     const tabs = [
@@ -213,6 +229,22 @@ export default function Dashboard({ messengers, locations }) {
                         <PrimaryButton onClick={fetchData} className="mb-[2px] h-[42px]">
                             Filtrar
                         </PrimaryButton>
+                        <button
+                            onClick={() => {
+                                const params = new URLSearchParams({
+                                    start_date: startDate,
+                                    end_date: endDate,
+                                    messenger_id: selectedMessenger
+                                });
+                                window.location.href = `${route('analytics.export')}?${params}`;
+                            }}
+                            className="mb-[2px] h-[42px] px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 dark:shadow-none transition-all active:scale-95 flex items-center gap-2 text-sm"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Exportar
+                        </button>
                     </div>
                 </div>
 
@@ -330,7 +362,7 @@ export default function Dashboard({ messengers, locations }) {
                                                                     {p.name.charAt(0)}
                                                                 </div>
                                                                 <div className="flex flex-col">
-                                                                    <span className="text-sm font-bold truncate max-w-[120px]">{p.name}</span>
+                                                                    <span className="text-sm font-bold">{p.name}</span>
                                                                     <span className="text-[10px] opacity-60 font-medium">Cumplimiento Master</span>
                                                                 </div>
                                                             </div>

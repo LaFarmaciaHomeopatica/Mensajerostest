@@ -12,11 +12,18 @@ class InternalProcedure extends Model
     protected $fillable = [
         'code',
         'messenger_id',
-        'description',
+        'item_name',
+        'item_quantity',
+        'item_code',
+        'contact_identifier',
         'destination_address',
+        'destination_city',
         'contact_name',
         'contact_phone',
         'contact_email',
+
+        'min_delivery_at',
+        'max_delivery_at',
         'status',
         'beetrack_id'
     ];

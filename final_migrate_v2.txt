@@ -1,0 +1,31 @@
+
+  Dropping all tables .............................. 63.10ms DONE
+
+   INFO  Preparing database.  
+
+  Creating migration table ......................... 12.96ms DONE
+
+   INFO  Running migrations.  
+
+  0001_01_01_000000_create_users_table ............ 102.58ms DONE
+  0001_01_01_000001_create_cache_table ............. 67.75ms DONE
+  0001_01_01_000002_create_jobs_table .............. 80.28ms DONE
+  2026_02_03_022512_create_messengers_table ........ 14.64ms DONE
+  2026_02_03_022513_create_lunch_logs_table ........ 38.94ms DONE
+  2026_02_03_030249_create_dispatch_locations_table  34.15ms DONE
+  2026_02_03_031546_add_location_to_messengers_table  18.81ms DONE
+  2026_02_03_105613_add_role_to_users_table ........ 18.88ms DONE
+  2026_02_03_113102_add_is_active_to_messengers_table  18.76ms DONE
+  2026_02_03_113815_create_shift_completions_table . 43.87ms DONE
+  2026_02_03_114723_create_shifts_table ............ 63.39ms DONE
+  2026_02_03_194621_add_status_to_shifts_table ..... 19.24ms DONE
+  2026_02_03_200658_add_location_to_shifts_table ... 18.04ms DONE
+  2026_02_03_211542_create_preoperational_reports_table  36.04ms DONE
+  2026_02_03_214653_create_preoperational_questions_table  32.00ms DONE
+  2026_02_03_215547_add_type_to_preoperational_questions_table  18.77ms DONE
+  2026_02_04_193503_create_cleaning_reports_table .. 36.91ms DONE
+  2026_02_04_213747_create_internal_procedures_table  59.65ms DONE
+  2026_02_06_062456_create_dispatch_logs_table ..... 66.13ms DONE
+  2026_02_06_181648_add_exclude_from_analytics_to_messengers_table  18.02ms DONE
+  2026_02_06_190120_add_indexes_to_performance_tables  323.55ms DONE
+

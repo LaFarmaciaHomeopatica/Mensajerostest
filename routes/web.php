@@ -59,12 +59,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/analytics/exit-analysis', [\App\Http\Controllers\AnalyticsController::class, 'getShiftExitAnalysis'])->name('analytics.exit-analysis');
         Route::get('/analytics/global-trend', [\App\Http\Controllers\AnalyticsController::class, 'getGlobalTrend'])->name('analytics.global-trend');
         Route::get('/analytics/performance-summary', [\App\Http\Controllers\AnalyticsController::class, 'getPerformanceSummary'])->name('analytics.performance-summary');
+        Route::get('/analytics/export', [\App\Http\Controllers\AnalyticsController::class, 'exportData'])->name('analytics.export');
     });
 
     // Rutas de Trámites (Lider, Tramites y Administrador)
     Route::middleware(['role:lider,tramites,administrador'])->group(function () {
         Route::resource('internal-procedures', \App\Http\Controllers\InternalProcedureController::class)->only(['index', 'create', 'store']);
         Route::post('/internal-procedures/{id}/sync', [\App\Http\Controllers\InternalProcedureController::class, 'sync'])->name('internal-procedures.sync');
+        Route::post('/internal-procedures/sync-bulk', [\App\Http\Controllers\InternalProcedureController::class, 'syncBulk'])->name('internal-procedures.sync-bulk');
     });
 
     // Rutas compartidas de Reportes (Regente y Administrador)

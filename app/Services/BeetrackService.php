@@ -81,7 +81,14 @@ class BeetrackService
                             $rutaDetalle = $details['route'] ?? $details;
                             $despachos = $rutaDetalle['dispatches'] ?? [];
                             $total = count($despachos);
+
                             $gestionadas = collect($despachos)->filter(fn($d) => in_array($d['status'] ?? '', ['completed', 'failed', 'partial', 'delivered']))->count();
+
+                            // Detailed Metrics
+                            $successful = collect($despachos)->filter(fn($d) => in_array($d['status'] ?? '', ['completed', 'delivered']))->count();
+                            $failed = collect($despachos)->filter(fn($d) => in_array($d['status'] ?? '', ['failed', 'partial']))->count();
+                            // Determine on-time based on delivery window if available (simplified for now)
+                            // $onTime = ... 
                         }
                     }
 
@@ -97,7 +104,14 @@ class BeetrackService
                         'activo' => $esActivo,
                         'hora_cierre' => $finalizadaEn ? substr($finalizadaEn, 11, 5) : '',
                         'progreso_str' => "{$gestionadas}/{$total}",
-                        'porcentaje' => $porcentaje
+                        'porcentaje' => $porcentaje,
+                        'metrics' => [
+                            'total' => $total,
+                            'completed' => $gestionadas, // 'completed' here means processed/managed
+                            'successful' => $successful ?? 0,
+                            'failed' => $failed ?? 0,
+                            'routes_count' => 1 // Each item in $rutasRaw is a route
+                        ]
                     ];
                 }
 
@@ -123,20 +137,95 @@ class BeetrackService
 
             $payload = [
                 'identifier' => $data['guide'],
-                'contact' => $data['contact'],
-                'phone' => $data['phone'],
-                'email' => $data['email'] ?? '',
-                'address' => $data['address'],
+                'contact_name' => $data['contact_name'],
+                'contact' => $data['contact_name'],
+                'contact_phone' => $data['contact_phone'] ?: '0',
+                'phone' => $data['contact_phone'] ?: '0',
+                'contact_email' => $data['contact_email'] ?? '',
+                'email' => $data['contact_email'] ?? '',
+                'contact_identifier' => $data['contact_identifier'] ?? '',
+                'contact_id' => $data['contact_identifier'] ?? '',
+                'vat_number' => $data['contact_identifier'] ?? '',
+                'address' => ($data['address'] ?? '') . ', ' . ($data['city'] ?? 'BOGOTA') . ', Colombia',
+                'contact_address' => ($data['address'] ?? '') . ', ' . ($data['city'] ?? 'BOGOTA') . ', Colombia',
+                'city' => $data['city'] ?? 'BOGOTA',
+                'lat' => $data['latitude'] ?? '',
+                'lng' => $data['longitude'] ?? '',
+                'latitude' => $data['latitude'] ?? '',
+                'longitude' => $data['longitude'] ?? '',
+                'min_delivery_time' => $data['min_delivery_at'] ? date('Y-m-d H:i:s', strtotime($data['min_delivery_at'])) : '',
+                'max_delivery_time' => $data['max_delivery_at'] ? date('Y-m-d H:i:s', strtotime($data['max_delivery_at'])) : '',
                 'notes' => $data['description'] ?? '',
-                'date' => now()->format('d-m-Y'),
+                'description' => $data['description'] ?? '',
+
+                // --- CUSTOM FIELDS SHOTGUN ---
+
+                // 1. Standard Beetrack fields array (try multiple casings)
+                'fields' => [
+                    ['name' => 'Prioridad', 'value' => $data['priority'] ?? 'Normal'],
+                    ['name' => 'INFO', 'value' => $data['observations'] ?? ''],
+                    ['name' => 'prioridad', 'value' => $data['priority'] ?? 'Normal'],
+                    ['name' => 'info', 'value' => $data['observations'] ?? ''],
+                    ['name' => 'PRIORIDAD', 'value' => $data['priority'] ?? 'Normal'],
+                ],
+
+                // 2. custom_fields array variant
+                'custom_fields' => [
+                    ['name' => 'Prioridad', 'value' => $data['priority'] ?? 'Normal'],
+                    ['name' => 'INFO', 'value' => $data['observations'] ?? ''],
+                ],
+
+                // 3. custom_attributes object variant (Case sensitive matching is common here)
+                'custom_attributes' => [
+                    'Prioridad' => $data['priority'] ?? 'Normal',
+                    'INFO' => $data['observations'] ?? '',
+                    'prioridad' => $data['priority'] ?? 'Normal',
+                    'info' => $data['observations'] ?? '',
+                ],
+
+                // 4. Root level attributes (fallback for some v1 endpoints)
+                'Prioridad' => $data['priority'] ?? 'Normal',
+                'INFO' => $data['observations'] ?? '',
+                'prioridad' => $data['priority'] ?? 'Normal',
+                'info' => $data['observations'] ?? '',
+
+                'items' => [
+                    [
+                        'name' => $data['item_name'] ?? 'RECOGER',
+                        'quantity' => $data['item_quantity'] ?? 1,
+                        'code' => $data['item_code'] ?? '',
+                        // 5. Item Extras variant
+                        'extras' => [
+                            ['name' => 'Prioridad', 'value' => $data['priority'] ?? 'Normal'],
+                            ['name' => 'INFO', 'value' => $data['observations'] ?? ''],
+                            ['name' => 'prioridad', 'value' => $data['priority'] ?? 'Normal'],
+                            ['name' => 'info', 'value' => $data['observations'] ?? ''],
+                        ]
+                    ]
+                ],
+                'date' => now()->format('Y-m-d'),
             ];
 
-            Log::info('BeetrackService: Creating dispatch', $payload);
+            // Forced logging to the main log file
+            Log::channel('single')->info('BEETRACK ATTEMPT - GUID: ' . $data['guide'], ['payload' => $payload]);
 
-            $response = Http::timeout(30)->withHeaders([
+            // Emergency Logging to a file we can definitely read
+            $debugData = [
+                'timestamp' => now()->toIso8601String(),
+                'url' => $createUrl,
+                'payload' => $payload
+            ];
+            file_put_contents('/tmp/beetrack_sync_debug.json', json_encode($debugData, JSON_PRETTY_PRINT));
+            chmod('/tmp/beetrack_sync_debug.json', 0666);
+
+            $response = Http::timeout(45)->withHeaders([
                 'X-AUTH-TOKEN' => $this->apiKey,
                 'Content-Type' => 'application/json',
             ])->post($createUrl, $payload);
+
+            $debugData['response_status'] = $response->status();
+            $debugData['response_body'] = $response->json() ?: $response->body();
+            file_put_contents('/tmp/beetrack_sync_debug.json', json_encode($debugData, JSON_PRETTY_PRINT));
 
             if ($response->successful()) {
                 $result = $response->json();

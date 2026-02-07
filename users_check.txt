@@ -1,0 +1,6 @@
+Name: Admin User, Email: admin@example.com, Role: mensajero
+Name: Regente Farmacia, Email: regente@lafarmacia.com, Role: regente
+Name: Mensajero Prueba, Email: mensajero@lafarmacia.com, Role: mensajero
+Name: Gestor Tramites, Email: tramites@lafarmacia.com, Role: tramites
+Name: Lider Despachos, Email: despachos@lafarmacia.com, Role: lider
+Name: Administrador Sistema, Email: admin@lafarmacia.com, Role: administrador

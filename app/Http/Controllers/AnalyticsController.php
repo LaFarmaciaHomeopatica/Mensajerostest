@@ -534,4 +534,24 @@ class AnalyticsController extends Controller
             'attention' => $merged->where('overall', '<', 70)->values()
         ]);
     }
+
+    public function exportData(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'messenger_id' => 'nullable|exists:messengers,id',
+        ]);
+
+        $fileName = 'analisis_datos_' . now()->format('Y-m-d_His') . '.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\AnalyticsMultiSheetExport(
+                $request->start_date,
+                $request->end_date,
+                $request->messenger_id
+            ),
+            $fileName
+        );
+    }
 }

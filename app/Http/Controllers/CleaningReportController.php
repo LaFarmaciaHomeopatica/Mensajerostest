@@ -140,7 +140,7 @@ class CleaningReportController extends Controller
             $imageData = ob_get_clean();
             imagedestroy($sourceImage);
 
-            Storage::disk('public')->put($filename, $imageData);
+            Storage::put($filename, $imageData);
             $path = $filename;
         } else {
             // Fallback if GD fails or format not supported

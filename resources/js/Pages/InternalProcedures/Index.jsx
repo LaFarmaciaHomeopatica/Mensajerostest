@@ -6,6 +6,9 @@ import MessengerSearchSelect from '@/Components/MessengerSearchSelect';
 export default function Index({ procedures, messengers, filters }) {
     const [selectedMessenger, setSelectedMessenger] = useState(filters.messenger_id || '');
     const [selectedStatus, setSelectedStatus] = useState(filters.status || '');
+    const [syncingId, setSyncingId] = useState(null);
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [isBulkSyncing, setIsBulkSyncing] = useState(false);
 
     const handleFilter = () => {
         router.get(route('internal-procedures.index'), {
@@ -24,11 +27,44 @@ export default function Index({ procedures, messengers, filters }) {
     };
 
     const handleSync = (id) => {
+        setSyncingId(id);
         router.post(route('internal-procedures.sync', id), {}, {
             preserveScroll: true,
-            onSuccess: () => {
-                // Flash message is handled by Inertia
-            }
+            onFinish: () => setSyncingId(null),
+        });
+    };
+
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            const syncableIds = procedures.data
+                .filter(proc => proc.status !== 'synced')
+                .map(proc => proc.id);
+            setSelectedIds(syncableIds);
+        } else {
+            setSelectedIds([]);
+        }
+    };
+
+    const handleSelectOne = (id) => {
+        setSelectedIds(prev =>
+            prev.includes(id)
+                ? prev.filter(selectedId => selectedId !== id)
+                : [...prev, id]
+        );
+    };
+
+    const handleBulkSync = () => {
+        if (selectedIds.length === 0) return;
+
+        setIsBulkSyncing(true);
+        router.post(route('internal-procedures.sync-bulk'), {
+            ids: selectedIds
+        }, {
+            preserveScroll: true,
+            onFinish: () => {
+                setIsBulkSyncing(false);
+                setSelectedIds([]);
+            },
         });
     };
 
@@ -112,14 +148,51 @@ export default function Index({ procedures, messengers, filters }) {
                                 </div>
                             </div>
 
+                            {/* Bulk Action Toolbar */}
+                            {selectedIds.length > 0 && (
+                                <div className="mb-6 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border-2 border-indigo-200 dark:border-indigo-700 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">
+                                            {selectedIds.length} trámite(s) seleccionado(s)
+                                        </span>
+                                        <button
+                                            onClick={() => setSelectedIds([])}
+                                            className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 underline"
+                                        >
+                                            Limpiar selección
+                                        </button>
+                                    </div>
+                                    <button
+                                        onClick={handleBulkSync}
+                                        disabled={isBulkSyncing}
+                                        className={`
+                                            px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all
+                                            ${isBulkSyncing
+                                                ? 'bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed'
+                                                : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95'}
+                                        `}
+                                    >
+                                        {isBulkSyncing ? '⏳ Sincronizando...' : `🔄 Sincronizar ${selectedIds.length}`}
+                                    </button>
+                                </div>
+                            )}
+
                             {/* Table */}
                             <div className="overflow-x-auto rounded-xl border border-slate-100 dark:border-slate-700">
                                 <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-700">
                                     <thead className="bg-slate-50 dark:bg-slate-900/50">
                                         <tr>
+                                            <th className="px-4 py-4 text-center w-12">
+                                                <input
+                                                    type="checkbox"
+                                                    onChange={handleSelectAll}
+                                                    checked={selectedIds.length > 0 && selectedIds.length === procedures.data.filter(p => p.status !== 'synced').length}
+                                                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                                />
+                                            </th>
                                             <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Código</th>
                                             <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Mensajero</th>
-                                            <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Descripción / Destino</th>
+                                            <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Destino / Acción</th>
                                             <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Estado</th>
                                             <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Acciones</th>
                                         </tr>
@@ -127,13 +200,23 @@ export default function Index({ procedures, messengers, filters }) {
                                     <tbody className="divide-y divide-slate-50 dark:divide-slate-700 bg-white dark:bg-slate-800">
                                         {procedures.data.length === 0 ? (
                                             <tr>
-                                                <td colSpan="5" className="px-6 py-12 text-center text-slate-400 text-sm italic">
+                                                <td colSpan="6" className="px-6 py-12 text-center text-slate-400 text-sm italic">
                                                     No se encontraron trámites internos.
                                                 </td>
                                             </tr>
                                         ) : (
                                             procedures.data.map((proc) => (
                                                 <tr key={proc.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
+                                                    <td className="px-4 py-4 text-center">
+                                                        {proc.status !== 'synced' && (
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedIds.includes(proc.id)}
+                                                                onChange={() => handleSelectOne(proc.id)}
+                                                                className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                                            />
+                                                        )}
+                                                    </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <span className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 rounded">
                                                             {proc.code}
@@ -151,15 +234,25 @@ export default function Index({ procedures, messengers, filters }) {
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        <div className="text-sm text-slate-600 dark:text-slate-300 line-clamp-1 italic mb-1">
-                                                            "{proc.description}"
-                                                        </div>
-                                                        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-800 dark:text-slate-200">
-                                                            <span className="text-slate-400">📍</span>
-                                                            {proc.destination_address}
-                                                        </div>
-                                                        <div className="text-[10px] text-slate-400 mt-0.5">
-                                                            {proc.contact_name} - {proc.contact_phone}
+                                                        <div className="flex flex-col gap-1">
+                                                            {proc.item_name ? (
+                                                                <span className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight">
+                                                                    {proc.item_name}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-xs text-slate-400 italic">Sin acción definida</span>
+                                                            )}
+
+                                                            <div className="flex items-center gap-1.5 text-sm font-medium text-slate-600 dark:text-slate-300">
+                                                                <span className="text-slate-400">📍</span>
+                                                                {proc.destination_address} {proc.destination_city && <span className="text-slate-400 text-xs">({proc.destination_city})</span>}
+                                                            </div>
+
+                                                            <div className="text-[10px] text-slate-400 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                                                                <span className="flex items-center gap-1">👤 {proc.contact_name}</span>
+                                                                <span className="flex items-center gap-1">📞 {proc.contact_phone}</span>
+                                                                {proc.contact_identifier && <span className="flex items-center gap-1">🆔 {proc.contact_identifier}</span>}
+                                                            </div>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
@@ -174,10 +267,18 @@ export default function Index({ procedures, messengers, filters }) {
                                                         {proc.status !== 'synced' && (
                                                             <button
                                                                 onClick={() => handleSync(proc.id)}
-                                                                className="text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 uppercase tracking-tighter flex items-center gap-1 mx-auto group"
+                                                                disabled={syncingId === proc.id}
+                                                                className={`
+                                                                    text-xs font-bold uppercase tracking-tighter flex items-center gap-1 mx-auto group
+                                                                    ${syncingId === proc.id
+                                                                        ? 'text-slate-400 cursor-not-allowed'
+                                                                        : 'text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300'}
+                                                                `}
                                                             >
-                                                                <span className="group-hover:rotate-180 transition-transform duration-500">🔄</span>
-                                                                Sincronizar
+                                                                <span className={`transition-transform duration-500 ${syncingId === proc.id ? 'animate-spin' : 'group-hover:rotate-180'}`}>
+                                                                    {syncingId === proc.id ? '⏳' : '🔄'}
+                                                                </span>
+                                                                {syncingId === proc.id ? 'Sincronizando...' : 'Sincronizar'}
                                                             </button>
                                                         )}
                                                         {proc.status === 'synced' && (

@@ -26,7 +26,7 @@ function logTest($name, $status, $message = '')
 
 function cleanup()
 {
-    Messenger::where('email', 'test_audit@example.com')->delete();
+    Messenger::whereIn('vehicle', ['TEST01', 'TEST02'])->delete();
 }
 
 echo "--- INICIANDO AUDITORÍA DEL SISTEMA ---\n";
@@ -35,18 +35,14 @@ cleanup();
 // 1. SETUP TEST DATA
 $activeMessenger = Messenger::create([
     'name' => 'Usuario Activo Test',
-    'email' => 'active_test@example.com',
     'vehicle' => 'TEST01',
-    'phone' => '123456789',
     'is_active' => true,
     'lunch_duration' => 60
 ]);
 
 $inactiveMessenger = Messenger::create([
     'name' => 'Usuario Inactivo Test',
-    'email' => 'inactive_test@example.com',
     'vehicle' => 'TEST02',
-    'phone' => '987654321',
     'is_active' => false,
     'lunch_duration' => 60
 ]);
@@ -127,6 +123,18 @@ $results = $indexQuery->get();
 $containsInactive = $results->contains('id', $inactiveMessenger->id);
 logTest('Consolidated: Main Query', !$containsInactive, "Inactive user found in Consolidated main query");
 
+
+// 7. MESSENGER METRICS CHECK
+echo "\n--- VERIFICANDO MESSENGER METRICS ---\n";
+try {
+    $hasTable = \Illuminate\Support\Facades\Schema::hasTable('messenger_metrics');
+    logTest('Database: Table Exists', $hasTable, "messenger_metrics table missing");
+
+    $count = \App\Models\MessengerMetric::count();
+    logTest('Database: Data Exists', $count > 0, "No metrics found (Count: $count)");
+} catch (\Exception $e) {
+    logTest('Database: Error Checking Metrics', false, $e->getMessage());
+}
 
 // CLEANUP
 cleanup();
