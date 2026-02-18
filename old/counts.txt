@@ -1,0 +1,7 @@
+Shifts: 1023
+Preop: 969
+Clean: 162
+Lunch: 969
+Finish: 969
+Dispatch: 2467
+Internal: 293

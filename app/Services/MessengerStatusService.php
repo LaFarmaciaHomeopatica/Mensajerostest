@@ -25,7 +25,9 @@ class MessengerStatusService
                     $q->whereDate('date', today());
                 },
                 'lunchLogs' => function ($q) {
-                    $q->where('status', 'active')->latest();
+                    $q->where('status', 'active')
+                        ->whereDate('start_time', today())
+                        ->latest();
                 },
                 'shiftCompletions' => function ($q) {
                     $q->whereDate('finished_at', today());

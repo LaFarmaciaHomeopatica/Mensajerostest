@@ -17,11 +17,13 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
-            'password' => bcrypt('password'),
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Admin User',
+                'password' => bcrypt('password'),
+            ]
+        );
 
         $messengers = [
             ["name" => "Franklinn Ortiz", "vehicle" => "VAS19D", "duration" => 60],
@@ -60,11 +62,13 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($messengers as $m) {
-            \App\Models\Messenger::create([
-                'name' => $m['name'],
-                'vehicle' => $m['vehicle'],
-                'lunch_duration' => $m['duration']
-            ]);
+            \App\Models\Messenger::firstOrCreate(
+                ['name' => $m['name']],
+                [
+                    'vehicle' => $m['vehicle'],
+                    'lunch_duration' => $m['duration']
+                ]
+            );
         }
 
         // Seeding Dispatch Locations
@@ -86,7 +90,14 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($locations as $loc) {
-            \App\Models\DispatchLocation::create($loc);
+            \App\Models\DispatchLocation::firstOrCreate(
+                ['name' => $loc['name']],
+                [
+                    'address' => $loc['address'],
+                    'prefix' => $loc['prefix'],
+                    'current_consecutive' => $loc['current_consecutive']
+                ]
+            );
         }
     }
 }

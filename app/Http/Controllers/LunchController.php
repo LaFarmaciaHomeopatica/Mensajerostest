@@ -109,15 +109,17 @@ class LunchController extends Controller
             })
             ->orderBy('created_at', 'desc');
 
-        if ($request->has('date') && $request->date) {
-            $query->whereDate('start_time', $request->date);
+        $date = $request->input('date', today()->toDateString());
+
+        if ($date) {
+            $query->whereDate('start_time', $date);
         }
 
         $logs = $query->paginate(20)->withQueryString();
 
         return Inertia::render('Reports/Lunch', [
             'logs' => $logs,
-            'filters' => $request->only(['date'])
+            'filters' => array_merge($request->only(['date']), ['date' => $date])
         ]);
     }
 

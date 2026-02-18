@@ -67,13 +67,16 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
         formData.append('last_route', data.last_route ? '1' : '0');
         formData.append('output_name', data.output_name);
 
-        // Manual CSRF token just to be safe with fetch
+        // Send token both in form data and headers for maximum compatibility
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         if (token) formData.append('_token', token);
 
         fetch(route('dispatch.store'), {
             method: 'POST',
             body: formData,
+            headers: {
+                'X-CSRF-TOKEN': token,
+            }
         })
             .then(response => {
                 if (response.ok) return response.blob();

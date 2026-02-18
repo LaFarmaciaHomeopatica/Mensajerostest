@@ -21,96 +21,90 @@ class BeetrackService
     {
         Log::info('BeetrackService: Starting getDispatchStatus');
 
-        // Use caching to prevent hammering the API and improve load times
-        return \Illuminate\Support\Facades\Cache::remember('beetrack_status_v3', 120, function () { // Cache for 120 seconds
-
+        return \Illuminate\Support\Facades\Cache::remember('beetrack_status_v4', 60, function () {
             $today = now()->format('d-m-Y');
             Log::info("BeetrackService: Fetching for date: {$today} (Fresh Cache)");
 
             try {
-                // 1. Get today's routes
-                $response = Http::timeout(45)->withHeaders([
+                $response = Http::timeout(20)->withHeaders([
                     'X-AUTH-TOKEN' => $this->apiKey,
-                ])->get($this->baseUrl, [
-                            'date' => $today,
-                        ]);
+                ])->get($this->baseUrl, ['date' => $today]);
 
                 if (!$response->successful()) {
                     Log::error("Beetrack API Error: " . $response->body());
-                    return ['status' => 'error', 'message' => 'API Error or Timeout', 'details' => $response->body()];
+                    return ['status' => 'error', 'message' => 'API Error'];
                 }
 
                 $rutasRaw = $response->json()['response']['routes'] ?? [];
                 Log::info('Beetrack Raw Routes Count: ' . count($rutasRaw));
 
-                $estadoMensajeros = [];
-
+                $activeRoutes = [];
                 foreach ($rutasRaw as $r) {
                     $idRuta = $r['id'] ?? null;
-                    $nombre = $r['driver_name'] ?? $r['driver_identifier'] ?? 'Sin Nombre';
-                    $iniciadaEn = $r['started_at'] ?? null;
-                    $finalizadaEn = $r['ended_at'] ?? null;
+                    if ($idRuta && ($r['started_at'] ?? null) !== null && ($r['ended_at'] ?? null) === null) {
+                        $activeRoutes[] = $r;
+                    }
+                }
 
-                    // Active if started but not ended
-                    $esActivo = $iniciadaEn !== null && $finalizadaEn === null;
+                // Concurrent fetching for active route details
+                $activeDetails = [];
+                if (!empty($activeRoutes)) {
+                    $responses = Http::pool(
+                        fn($pool) =>
+                        collect($activeRoutes)->map(
+                            fn($r) =>
+                            $pool->as($r['id'])->timeout(10)->withHeaders(['X-AUTH-TOKEN' => $this->apiKey])->get("{$this->baseUrl}/{$r['id']}")
+                        )
+                    );
+
+                    foreach ($responses as $id => $resp) {
+                        if ($resp->successful()) {
+                            $activeDetails[$id] = $resp->json()['response'] ?? [];
+                        }
+                    }
+                }
+
+                $estadoMensajeros = [];
+                foreach ($rutasRaw as $r) {
+                    $nombre = $r['driver_name'] ?? $r['driver_identifier'] ?? 'Sin Nombre';
+                    $idRuta = $r['id'] ?? null;
+                    $esActivo = isset($activeDetails[$idRuta]);
 
                     $gestionadas = 0;
                     $total = 0;
+                    $successful = 0;
+                    $failed = 0;
 
-                    // 2. If active, fetch details for progress (N+1 query as per legacy code)
-                    // Optimization: Use a secondary cache for route details to avoid redundant API calls
-                    if ($esActivo && $idRuta) {
-                        $cacheKey = "beetrack_route_detail_{$idRuta}";
-                        $details = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($idRuta) {
-                            try {
-                                $detailUrl = "{$this->baseUrl}/{$idRuta}";
-                                $detailResp = Http::timeout(10)->withHeaders([
-                                    'X-AUTH-TOKEN' => $this->apiKey,
-                                ])->get($detailUrl);
-
-                                if ($detailResp->successful()) {
-                                    return $detailResp->json()['response'] ?? [];
-                                }
-                            } catch (\Exception $e) {
-                                Log::warning("Beetrack Detail Error for Route {$idRuta}: " . $e->getMessage());
-                            }
-                            return null;
-                        });
-
+                    if ($esActivo) {
+                        $details = $activeDetails[$idRuta]['route'] ?? $activeDetails[$idRuta] ?? null;
                         if ($details) {
-                            $rutaDetalle = $details['route'] ?? $details;
-                            $despachos = $rutaDetalle['dispatches'] ?? [];
+                            $despachos = $details['dispatches'] ?? [];
                             $total = count($despachos);
-
                             $gestionadas = collect($despachos)->filter(fn($d) => in_array($d['status'] ?? '', ['completed', 'failed', 'partial', 'delivered']))->count();
-
-                            // Detailed Metrics
                             $successful = collect($despachos)->filter(fn($d) => in_array($d['status'] ?? '', ['completed', 'delivered']))->count();
-                            $failed = collect($despachos)->filter(fn($d) => in_array($d['status'] ?? '', ['failed', 'partial']))->count();
-                            // Determine on-time based on delivery window if available (simplified for now)
-                            // $onTime = ... 
+                            $failed = $total - $successful;
                         }
+                    } else {
+                        // For finished routes, we might get some info from the raw route object
+                        $total = $r['dispatches_count'] ?? 0;
+                        $gestionadas = $r['dispatches_count'] ?? 0;
                     }
 
                     $porcentaje = ($total > 0) ? round(($gestionadas / $total) * 100) : 0;
-
-                    if (isset($estadoMensajeros[$nombre]) && $estadoMensajeros[$nombre]['activo'] && !$esActivo) {
-                        continue;
-                    }
 
                     $estadoMensajeros[$nombre] = [
                         'nombre' => $nombre,
                         'unidad' => $r['truck']['identifier'] ?? 'S/U',
                         'activo' => $esActivo,
-                        'hora_cierre' => $finalizadaEn ? substr($finalizadaEn, 11, 5) : '',
+                        'hora_cierre' => ($r['ended_at'] ?? null) ? substr($r['ended_at'], 11, 5) : '',
                         'progreso_str' => "{$gestionadas}/{$total}",
                         'porcentaje' => $porcentaje,
                         'metrics' => [
                             'total' => $total,
-                            'completed' => $gestionadas, // 'completed' here means processed/managed
-                            'successful' => $successful ?? 0,
-                            'failed' => $failed ?? 0,
-                            'routes_count' => 1 // Each item in $rutasRaw is a route
+                            'completed' => $gestionadas,
+                            'successful' => $successful,
+                            'failed' => $failed,
+                            'routes_count' => 1
                         ]
                     ];
                 }

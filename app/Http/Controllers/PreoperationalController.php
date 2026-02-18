@@ -36,9 +36,10 @@ class PreoperationalController extends Controller
             $query->orderBy('preoperational_reports.' . $sortBy, $sortOrder);
         }
 
-        // Filter by date if provided
-        if ($request->has('date') && $request->date !== '') {
-            $query->whereDate('preoperational_reports.created_at', $request->date);
+        // Default to today if no date provided
+        $date = $request->input('date', today()->toDateString());
+        if ($date) {
+            $query->whereDate('preoperational_reports.created_at', $date);
         }
 
         // Filter by messenger if provided
@@ -89,7 +90,7 @@ class PreoperationalController extends Controller
             'messengers' => $messengers,
             'questions' => $questions,
             'locations' => DispatchLocation::all(),
-            'filters' => $request->only(['date', 'messenger_id', 'location', 'sort_by', 'sort_order'])
+            'filters' => array_merge($request->only(['messenger_id', 'location', 'sort_by', 'sort_order']), ['date' => $date])
         ]);
     }
 

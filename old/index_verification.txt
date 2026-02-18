@@ -1,0 +1,3 @@
+
+   Illuminate\Database\QueryException  SQLSTATE[42S02]: Base table or view not found: 1146 Table 'mensajeros_lfh.shifts' doesn't exist (Connection: mysql, Host: 127.0.0.1, Port: 3306, Database: mensajeros_lfh, SQL: SHOW INDEX FROM shifts).
+

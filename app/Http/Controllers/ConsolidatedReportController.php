@@ -39,7 +39,7 @@ class ConsolidatedReportController extends Controller
                 $q->whereDate('created_at', $date);
             },
             'lunchLogs' => function ($q) use ($date) {
-                $q->whereDate('created_at', $date); // Or start_time depending on schema
+                $q->whereDate('start_time', $date);
             },
             'shiftCompletions' => function ($q) use ($date) {
                 $q->whereDate('finished_at', $date);

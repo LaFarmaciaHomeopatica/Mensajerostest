@@ -1,0 +1,12 @@
+Debug script started.
+------------------------------------------------
+Messenger: John Gonzalez (ID: 12)
+Today: 2026-02-04
+Report Created At (Raw): 2026-02-04 20:09:05
+Report Created At (Carbon): 2026-02-04 20:09:05 (America/Bogota)
+Report Created At (Format H:i): 20:09
+Shift Date: 2026-02-04
+Shift Start Time: 08:00
+Calculated Shift Start: 2026-02-04 08:00:00 (America/Bogota)
+Compliant (Is 2026-02-04 20:09:05 < 2026-02-04 08:00:00?): NO
+Debug script finished.

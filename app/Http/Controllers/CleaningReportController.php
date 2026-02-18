@@ -44,9 +44,10 @@ class CleaningReportController extends Controller
             $query->orderBy('cleaning_reports.' . $sortBy, $sortOrder);
         }
 
-        // Filters
-        if ($request->has('date') && $request->date !== '') {
-            $query->whereDate('cleaning_reports.created_at', $request->date);
+        // Default to today if no date provided
+        $date = $request->input('date', today()->toDateString());
+        if ($date) {
+            $query->whereDate('cleaning_reports.created_at', $date);
         }
 
         if ($request->has('messenger_id') && $request->messenger_id !== '') {
@@ -62,7 +63,7 @@ class CleaningReportController extends Controller
         return Inertia::render('Reports/Cleaning', [
             'reports' => $reports,
             'messengers' => Messenger::where('is_active', true)->orderBy('name')->get(),
-            'filters' => $request->only(['date', 'messenger_id', 'type', 'sort_by', 'sort_order'])
+            'filters' => array_merge($request->only(['messenger_id', 'type', 'sort_by', 'sort_order']), ['date' => $date])
         ]);
     }
 
