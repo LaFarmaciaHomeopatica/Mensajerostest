@@ -88,7 +88,9 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                             status: status,
                             class_name: currentClass,
                             beetrack_info: beetrackInfo,
-                            priority: priority
+                            priority: priority,
+                            lat: beetrackInfo?.lat || m.lat,
+                            lng: beetrackInfo?.lng || m.lng,
                         };
                     });
 
@@ -163,7 +165,9 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                                 status: (oldM?.beetrack_info && !newM.finished_info) ? 'En Ruta' : newM.status,
                                 class_name: (oldM?.beetrack_info && !newM.finished_info) ? 'status-en-ruta' : newM.class_name,
                                 beetrack_info: oldM ? oldM.beetrack_info : null,
-                                priority: (oldM?.beetrack_info && !newM.finished_info) ? 2 : 1
+                                priority: (oldM?.beetrack_info && !newM.finished_info) ? 2 : 1,
+                                lat: oldM?.beetrack_info?.lat || newM.lat,
+                                lng: oldM?.beetrack_info?.lng || newM.lng,
                             };
                         })
                     });
@@ -278,6 +282,10 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
             messenger_id: m.id,
             output_name: `${m.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 16).replace(/[-T:]/g, '')}`
         }));
+    };
+
+    const openAssignModal = (m) => {
+        selectMessenger(m);
         setIsModalOpen(true);
     };
 
@@ -408,6 +416,13 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
             <div className="max-w-[1800px] mx-auto p-3 sm:p-4 mb-4">
                 <MapView
                     messengers={localMessengers}
+                    locations={dispatch_locations.map(loc => ({
+                        ...loc,
+                        lat: loc.name.includes('Principal') || loc.name.includes('116') ? 4.7001 :
+                            loc.name.includes('Teusaquillo') ? 4.6293 : null,
+                        lng: loc.name.includes('Principal') || loc.name.includes('116') ? -74.0478 :
+                            loc.name.includes('Teusaquillo') ? -74.0720 : null,
+                    }))}
                     selectedMessengerId={data.messenger_id}
                 />
             </div>
@@ -427,7 +442,8 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                         <MessengerCard
                             key={m.id}
                             m={m}
-                            onClick={selectMessenger}
+                            onSelect={() => selectMessenger(m)}
+                            onAssign={() => openAssignModal(m)}
                             isSelected={data.messenger_id === m.id}
                         />
                     ))}
@@ -500,7 +516,7 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
     );
 }
 
-function MessengerCard({ m, onClick, isSelected }) {
+function MessengerCard({ m, onSelect, onAssign, isSelected }) {
     const config = {
         'status-en-ruta': { color: 'red', avatar: 'bg-red-500', rowBg: 'bg-red-50/60 dark:bg-red-900/10', border: 'border-l-4 border-l-red-500' },
         'status-almuerzo': { color: 'amber', avatar: 'bg-amber-400', rowBg: 'bg-amber-50/60 dark:bg-amber-900/10', border: 'border-l-4 border-l-amber-400' },
@@ -513,7 +529,7 @@ function MessengerCard({ m, onClick, isSelected }) {
 
     return (
         <div
-            onClick={() => onClick(m)}
+            onClick={onSelect}
             className={`
                 flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3 rounded-xl shadow-sm cursor-pointer transition-all duration-200 ease-out
                 ${config.rowBg}
@@ -611,7 +627,7 @@ function MessengerCard({ m, onClick, isSelected }) {
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
-                        onClick(m);
+                        onAssign();
                     }}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm transition-all active:scale-95 group/btn"
                 >
@@ -625,7 +641,7 @@ function MessengerCard({ m, onClick, isSelected }) {
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
-                        onClick(m);
+                        onAssign();
                     }}
                     className="p-1.5 bg-indigo-500 text-white rounded-lg shadow-sm active:scale-90 transition-transform"
                 >

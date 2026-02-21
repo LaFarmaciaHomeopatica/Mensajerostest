@@ -99,6 +99,8 @@ class BeetrackService
                         'hora_cierre' => ($r['ended_at'] ?? null) ? substr($r['ended_at'], 11, 5) : '',
                         'progreso_str' => "{$gestionadas}/{$total}",
                         'porcentaje' => $porcentaje,
+                        'lat' => $r['latitude'] ?? $r['truck']['latitude'] ?? null,
+                        'lng' => $r['longitude'] ?? $r['truck']['longitude'] ?? null,
                         'metrics' => [
                             'total' => $total,
                             'completed' => $gestionadas,

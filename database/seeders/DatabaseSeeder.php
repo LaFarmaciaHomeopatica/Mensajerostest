@@ -83,7 +83,7 @@ class DatabaseSeeder extends Seeder
             // Teusaquillo -> TE
             [
                 'name' => 'Teusaquillo',
-                'address' => 'CALLE 34 # 16-24',
+                'address' => 'CRA 19 # 39-31',
                 'prefix' => 'TE',
                 'current_consecutive' => 100
             ],

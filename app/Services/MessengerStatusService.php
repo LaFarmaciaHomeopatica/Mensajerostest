@@ -121,8 +121,8 @@ class MessengerStatusService
             'finished_info' => $finished,
             'beetrack_info' => null, // Placeholder for async load
             'priority' => 1,
-            'lat' => 4.6482 + (rand(-100, 100) / 5000), // Mock coord near Bogota
-            'lng' => -74.0601 + (rand(-100, 100) / 5000),
+            'lat' => null,
+            'lng' => null,
         ];
     }
 
