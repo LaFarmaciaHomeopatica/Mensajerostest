@@ -23,6 +23,7 @@ export default function ShiftsIndex({ auth, messengers, weekStart, weekEnd }) {
     const [modalMessenger, setModalMessenger] = useState(null);
     const [showExportModal, setShowExportModal] = useState(false);
     const [exportDates, setExportDates] = useState({ start: '', end: '' });
+    const [messengerSearch, setMessengerSearch] = useState('');
 
     const { data, setData, post, delete: destroy, reset } = useForm({});
 
@@ -122,6 +123,25 @@ export default function ShiftsIndex({ auth, messengers, weekStart, weekEnd }) {
                             </SuccessButton>
                         </div>
 
+                        {/* Messenger search — centro */}
+                        <div className="relative flex items-center gap-2 bg-white dark:bg-slate-800 p-1 pl-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <svg className="w-3 h-3 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <TextInput
+                                type="text"
+                                value={messengerSearch}
+                                onChange={(e) => setMessengerSearch(e.target.value)}
+                                placeholder="Buscar mensajero..."
+                                className="border-none bg-transparent dark:text-white text-xs focus:ring-0 py-1 shadow-none w-40"
+                            />
+                            {messengerSearch && (
+                                <button onClick={() => setMessengerSearch('')} className="pr-2 text-slate-400 hover:text-slate-600">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            )}
+                        </div>
+
                         <div className="flex items-center justify-between sm:justify-center gap-4 bg-slate-100 dark:bg-slate-900/50 p-2 rounded-2xl">
                             <Link
                                 href={`/shifts?date=${start.subtract(1, 'week').format('YYYY-MM-DD')}`}
@@ -155,54 +175,56 @@ export default function ShiftsIndex({ auth, messengers, weekStart, weekEnd }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {messengers.map(messenger => (
-                                    <tr key={messenger.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                        <td className="px-6 py-4 font-medium text-gray-900 dark:text-white sticky left-0 bg-white dark:bg-gray-800 z-10">
-                                            {messenger.name}
-                                            <div className="text-xs text-slate-500">{messenger.vehicle}</div>
-                                        </td>
-                                        {days.map(d => {
-                                            const dateStr = d.format('YYYY-MM-DD');
-                                            const shift = messenger.shifts.find(s => s.date === dateStr);
+                                {messengers
+                                    .filter(m => !messengerSearch || m.name.toLowerCase().includes(messengerSearch.toLowerCase()))
+                                    .map(messenger => (
+                                        <tr key={messenger.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                            <td className="px-6 py-4 font-medium text-gray-900 dark:text-white sticky left-0 bg-white dark:bg-gray-800 z-10">
+                                                {messenger.name}
+                                                <div className="text-xs text-slate-500">{messenger.vehicle}</div>
+                                            </td>
+                                            {days.map(d => {
+                                                const dateStr = d.format('YYYY-MM-DD');
+                                                const shift = messenger.shifts.find(s => s.date === dateStr);
 
-                                            // Determine cell style
-                                            let cellClass = "px-2 py-4 text-center cursor-pointer transition border border-gray-100 dark:border-gray-700 ";
-                                            if (shift) {
-                                                if (shift.status === 'absent') {
-                                                    cellClass += "bg-red-100 dark:bg-red-900/30 text-red-600 hover:bg-red-200 dark:hover:bg-red-900/50";
-                                                } else if (shift.location === 'teusaquillo') {
-                                                    cellClass += "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/40";
+                                                // Determine cell style
+                                                let cellClass = "px-2 py-4 text-center cursor-pointer transition border border-gray-100 dark:border-gray-700 ";
+                                                if (shift) {
+                                                    if (shift.status === 'absent') {
+                                                        cellClass += "bg-red-100 dark:bg-red-900/30 text-red-600 hover:bg-red-200 dark:hover:bg-red-900/50";
+                                                    } else if (shift.location === 'teusaquillo') {
+                                                        cellClass += "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/40";
+                                                    } else {
+                                                        cellClass += "bg-blue-50 dark:bg-blue-900/20 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/40";
+                                                    }
                                                 } else {
-                                                    cellClass += "bg-blue-50 dark:bg-blue-900/20 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/40";
+                                                    cellClass += "hover:bg-slate-50 dark:hover:bg-slate-700";
                                                 }
-                                            } else {
-                                                cellClass += "hover:bg-slate-50 dark:hover:bg-slate-700";
-                                            }
 
-                                            return (
-                                                <td
-                                                    key={dateStr}
-                                                    onClick={() => handleCellClick(messenger, dateStr, shift)}
-                                                    className={cellClass}
-                                                >
-                                                    {shift ? (
-                                                        shift.status === 'absent' ? (
-                                                            <span className="font-bold text-xs uppercase">No Asiste</span>
+                                                return (
+                                                    <td
+                                                        key={dateStr}
+                                                        onClick={() => handleCellClick(messenger, dateStr, shift)}
+                                                        className={cellClass}
+                                                    >
+                                                        {shift ? (
+                                                            shift.status === 'absent' ? (
+                                                                <span className="font-bold text-xs uppercase">No Asiste</span>
+                                                            ) : (
+                                                                <div className="flex flex-col text-xs font-mono">
+                                                                    <span>{shift.start_time?.substring(0, 5)}</span>
+                                                                    <span>-</span>
+                                                                    <span>{shift.end_time?.substring(0, 5)}</span>
+                                                                </div>
+                                                            )
                                                         ) : (
-                                                            <div className="flex flex-col text-xs font-mono">
-                                                                <span>{shift.start_time?.substring(0, 5)}</span>
-                                                                <span>-</span>
-                                                                <span>{shift.end_time?.substring(0, 5)}</span>
-                                                            </div>
-                                                        )
-                                                    ) : (
-                                                        <span className="text-slate-300 dark:text-slate-600 text-2xl">+</span>
-                                                    )}
-                                                </td>
-                                            );
-                                        })}
-                                    </tr>
-                                ))}
+                                                            <span className="text-slate-300 dark:text-slate-600 text-2xl">+</span>
+                                                        )}
+                                                    </td>
+                                                );
+                                            })}
+                                        </tr>
+                                    ))}
                             </tbody>
                         </table>
                     </div>

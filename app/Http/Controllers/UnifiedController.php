@@ -20,22 +20,31 @@ class UnifiedController extends Controller
 
     public function index()
     {
-        $status = $this->statusService->getFullStatus();
+        $status = $this->statusService->getLocalStatus();
 
         return Inertia::render('Dashboard', [
             'messengers' => $status['messengers'],
             'dispatch_locations' => DispatchLocation::all(),
-            'beetrack_data' => $status['beetrack_data'],
+            'beetrack_data' => null,
         ]);
     }
 
     public function getMessengerStatus()
     {
-        $status = $this->statusService->getFullStatus();
+        $status = $this->statusService->getLocalStatus();
 
         return response()->json([
             'messengers' => $status['messengers'],
-            'beetrack_data' => $status['beetrack_data'],
+            'timestamp' => now()->toDateTimeString()
+        ]);
+    }
+
+    public function getBeetrackAsync()
+    {
+        $beetrackData = $this->statusService->getBeetrackStatus();
+
+        return response()->json([
+            'beetrack_data' => $beetrackData,
             'timestamp' => now()->toDateTimeString()
         ]);
     }

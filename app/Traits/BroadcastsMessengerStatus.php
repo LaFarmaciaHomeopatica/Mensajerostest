@@ -14,7 +14,7 @@ trait BroadcastsMessengerStatus
         }
 
         $service = app(MessengerStatusService::class);
-        $status = $service->getFullStatus();
+        $status = $service->getLocalStatus();
 
         broadcast(new MessengerStatusUpdated($status))->toOthers();
     }

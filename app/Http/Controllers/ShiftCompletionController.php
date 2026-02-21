@@ -5,6 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ShiftCompletion;
 use App\Models\Messenger;
+use App\Models\Shift;
+use Carbon\Carbon;
+use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ExitReportExport;
 
 class ShiftCompletionController extends Controller
 {
@@ -39,6 +44,83 @@ class ShiftCompletionController extends Controller
 
         $this->broadcastStatus();
 
-        return back()->with('success', 'Turno finalizado correctamente.');
+        return back()->with('success', true);
+    }
+
+    public function index(Request $request)
+    {
+        return Inertia::render('Reports/Exit', [
+            'messengers' => Messenger::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'filters' => $request->only(['start_date', 'end_date', 'messenger_id'])
+        ]);
+    }
+
+    public function getExitAnalysis(Request $request)
+    {
+        $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : now()->subDays(30);
+        $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : now();
+        $messengerId = $request->input('messenger_id');
+
+        $query = Shift::with(['messenger', 'messenger.shiftCompletions'])
+            ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()]);
+
+        if ($messengerId) {
+            $query->where('messenger_id', $messengerId);
+        }
+
+        $shifts = $query->orderBy('date', 'desc')->get();
+
+        $analysis = $shifts->map(function ($shift) {
+            // Find completion for this shift date
+            $completion = $shift->messenger->shiftCompletions()
+                ->whereDate('finished_at', $shift->date)
+                ->first();
+
+            if (!$completion || !$shift->end_time) {
+                return null;
+            }
+
+            $scheduledEnd = Carbon::parse($shift->date . ' ' . $shift->end_time);
+            $actualEnd = Carbon::parse($completion->finished_at);
+
+            $diffMinutes = $scheduledEnd->diffInMinutes($actualEnd, false);
+
+            return [
+                'date' => $shift->date,
+                'messenger' => $shift->messenger->name,
+                'scheduled_end' => $scheduledEnd->format('H:i'),
+                'actual_end' => $actualEnd->format('H:i'),
+                'diff_minutes' => $diffMinutes,
+                'status' => $diffMinutes > 15 ? 'late' : ($diffMinutes < -15 ? 'early' : 'on-time')
+            ];
+        })->filter()->values();
+
+        // Calculate average diff (abs)
+        $avgDiff = $analysis->count() > 0 ? round($analysis->avg(fn($a) => abs($a['diff_minutes']))) : 0;
+
+        return response()->json([
+            'history' => $analysis,
+            'avg_diff' => $avgDiff
+        ]);
+    }
+
+    public function export(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'messenger_id' => 'nullable|exists:messengers,id',
+        ]);
+
+        $fileName = 'reporte_salidas_' . now()->format('Y-m-d_His') . '.xlsx';
+
+        return Excel::download(
+            new ExitReportExport(
+                $request->start_date,
+                $request->end_date,
+                $request->messenger_id
+            ),
+            $fileName
+        );
     }
 }

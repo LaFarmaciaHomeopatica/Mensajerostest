@@ -1,20 +1,15 @@
 import React from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 
-export default function LeaderLayout({ children, title }) {
+export default function LeaderLayout({ children, title, onPurgeClick }) {
     const { auth } = usePage().props;
 
     const menuItems = [
-        { label: 'Dashboard', route: 'dashboard', active: route().current('dashboard'), roles: ['lider', 'administrador'] },
-        { label: 'Horarios', route: 'shifts.index', active: route().current('shifts.*'), roles: ['lider', 'administrador'] },
-        { label: 'Preoperacional', route: 'reports.preoperational', active: route().current('reports.preoperational'), roles: ['regente', 'administrador'] },
-        { label: 'Limpieza', route: 'reports.cleaning', active: route().current('reports.cleaning'), roles: ['regente', 'administrador'] },
-        { label: 'Almuerzo', route: 'reports.lunch', active: route().current('reports.lunch'), roles: ['lider', 'administrador'] },
-        { label: 'Consolidado', route: 'reports.consolidated', active: route().current('reports.consolidated'), roles: ['regente', 'administrador'] },
-        { label: 'Trámites', route: 'internal-procedures.index', active: route().current('internal-procedures.*'), roles: ['lider', 'tramites', 'administrador'] },
-        { label: 'Análisis', route: 'analytics.index', active: route().current('analytics.*'), roles: ['administrador'] },
+        { label: 'Dashboard', route: 'dashboard', active: route().current('dashboard'), roles: ['administrador'] },
+        { label: 'Horarios', route: 'shifts.index', active: route().current('shifts.*'), roles: ['administrador'] },
+        { label: 'Almuerzo', route: 'reports.lunch', active: route().current('reports.lunch'), roles: ['administrador'] },
+        { label: 'Salida', route: 'reports.exit', active: route().current('reports.exit'), roles: ['administrador'] },
         { label: 'Mensajeros', route: 'messengers.index', active: route().current('messengers.*'), roles: ['administrador'] },
-        { label: 'Usuarios', route: 'users.index', active: route().current('users.*'), roles: ['administrador'] },
     ].filter(item => item.roles.includes(auth.user.role));
 
     const logout = (e) => {
@@ -59,6 +54,17 @@ export default function LeaderLayout({ children, title }) {
                             <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Usuario</span>
                             <span className="text-xs font-bold text-white">{auth.user.name}</span>
                         </div>
+
+                        {onPurgeClick && (
+                            <button
+                                onClick={onPurgeClick}
+                                className="hidden md:flex items-center gap-1.5 bg-slate-800 hover:bg-red-900/60 border border-red-800/40 text-red-400 hover:text-red-300 px-3 py-2 rounded-lg text-xs font-bold transition-colors duration-200"
+                                title="Depurar base de datos"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                Depurar BD
+                            </button>
+                        )}
 
                         <button
                             onClick={logout}

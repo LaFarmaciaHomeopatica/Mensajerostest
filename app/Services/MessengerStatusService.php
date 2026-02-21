@@ -15,10 +15,8 @@ class MessengerStatusService
         $this->beetrack = $beetrack;
     }
 
-    public function getFullStatus()
+    public function getLocalStatus()
     {
-        $beetrackData = $this->beetrack->getDispatchStatus();
-
         $messengers = Messenger::where('is_active', true)
             ->with([
                 'shifts' => function ($q) {
@@ -40,7 +38,7 @@ class MessengerStatusService
 
         $now = now();
 
-        $messengersData = $messengers->map(function ($m) use ($now, $beetrackData) {
+        $messengersData = $messengers->map(function ($m) use ($now) {
             $shift = $m->shifts->first();
             $log = $m->lunchLogs->first();
 
@@ -61,25 +59,6 @@ class MessengerStatusService
                 $range = $start->format('h:i A') . ' - ' . $end->format('h:i A');
             }
 
-            $normalize = function ($str) {
-                if (!$str)
-                    return '';
-                return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $str));
-            };
-
-            $beetrackInfo = null;
-            if (isset($beetrackData['activos'])) {
-                $active = collect($beetrackData['activos'])->first(function ($item) use ($m, $normalize) {
-                    return $normalize($item['unidad'] ?? '') === $normalize($m->vehicle);
-                });
-
-                if ($active) {
-                    $status = 'En Ruta';
-                    $class = 'status-en-ruta';
-                    $beetrackInfo = $active;
-                }
-            }
-
             $finished = null;
             $completion = $m->shiftCompletions->first();
             if ($completion) {
@@ -90,29 +69,36 @@ class MessengerStatusService
                 $class = 'pendiente';
             }
 
-            $btMatch = null;
-            if (isset($beetrackData['activos']) || isset($beetrackData['libres'])) {
-                $allBt = collect($beetrackData['activos'] ?? [])->concat($beetrackData['libres'] ?? []);
-                $btMatch = $allBt->first(fn($item) => $normalize($item['unidad'] ?? '') === $normalize($m->vehicle));
+            $shift_info = 'Sin Turno';
+            if ($shift) {
+                $start = \Carbon\Carbon::parse($shift->start_time)->format('h:i A');
+                $end = \Carbon\Carbon::parse($shift->end_time)->format('h:i A');
+                $shift_info = $start . ' - ' . $end;
             }
 
             return [
                 'id' => $m->id,
-                'name' => $btMatch ? ($btMatch['nombre'] ?? $m->name) : $m->name,
+                'name' => $m->name,
                 'vehicle' => $m->vehicle,
                 'location' => strtolower($shift->location ?? 'principal'),
                 'status' => $status,
                 'class_name' => $class,
                 'lunch_range' => $range,
-                'beetrack_info' => $beetrackInfo,
+                'shift_info' => $shift_info,
                 'finished_info' => $finished,
-                'priority' => ($status === 'En Ruta') ? 2 : 1,
+                'beetrack_info' => null, // Placeholder for async load
+                'priority' => 1,
             ];
         })->values();
 
         return [
             'messengers' => $messengersData,
-            'beetrack_data' => $beetrackData,
+            'beetrack_data' => null, // Placeholder
         ];
+    }
+
+    public function getBeetrackStatus()
+    {
+        return $this->beetrack->getDispatchStatus();
     }
 }

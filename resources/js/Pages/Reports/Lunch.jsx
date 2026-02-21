@@ -1,189 +1,191 @@
-import React, { useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import React, { useState, useEffect, useCallback } from 'react';
 import LeaderLayout from '@/Layouts/LeaderLayout';
-import Modal from '@/Components/Modal';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
+import { Head } from '@inertiajs/react';
 import SuccessButton from '@/Components/SuccessButton';
+import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
+import Modal from '@/Components/Modal';
 
-export default function LunchReport({ logs, filters }) {
-    const [date, setDate] = useState(filters.date || '');
+export default function LunchReport({ filters }) {
+    const [startDate, setStartDate] = useState(filters?.start_date || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+    const [endDate, setEndDate] = useState(filters?.end_date || new Date().toISOString().split('T')[0]);
+    const [messengerSearch, setMessengerSearch] = useState('');
+    const [logs, setLogs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
     const [showExportModal, setShowExportModal] = useState(false);
     const [exportDates, setExportDates] = useState({ start: '', end: '' });
+    const PAGE_SIZE = 10;
 
-    const handleDateChange = (e) => {
-        const newDate = e.target.value;
-        setDate(newDate);
-        router.get(route('reports.lunch'), { date: newDate }, { preserveState: true, replace: true });
-    };
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        const params = new URLSearchParams({ start_date: startDate, end_date: endDate });
+        try {
+            const res = await fetch(`${route('reports.lunch.data')}?${params}`);
+            const data = await res.json();
+            setLogs(data.logs || []);
+        } catch (e) {
+            console.error('Error fetching lunch data:', e);
+        } finally {
+            setLoading(false);
+        }
+    }, [startDate, endDate]);
+
+    useEffect(() => { fetchData(); setCurrentPage(1); }, [fetchData]);
+    useEffect(() => { setCurrentPage(1); }, [messengerSearch]);
 
     const handleExport = (e) => {
         e.preventDefault();
-        if (!exportDates.start || !exportDates.end) {
-            alert('Por favor selecciona ambas fechas para exportar.');
-            return;
-        }
-
-        const params = new URLSearchParams({
-            start_date: exportDates.start,
-            end_date: exportDates.end
-        }).toString();
-
+        if (!exportDates.start || !exportDates.end) { alert('Por favor selecciona ambas fechas.'); return; }
+        const params = new URLSearchParams({ start_date: exportDates.start, end_date: exportDates.end }).toString();
         window.location.href = route('reports.lunch.export') + '?' + params;
         setShowExportModal(false);
     };
+
+    const filteredRows = logs.filter(l => !messengerSearch || l.messenger.toLowerCase().includes(messengerSearch.toLowerCase()));
+    const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+    const safePage = Math.min(currentPage, totalPages);
+    const paginatedRows = filteredRows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+    const statusBadge = (status) => status === 'active'
+        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
 
     return (
         <LeaderLayout title="Reporte de Almuerzos">
             <Head title="Reporte Almuerzos" />
 
             <div className="max-w-[1800px] mx-auto p-3 sm:p-6 lg:p-8">
+                {/* Header */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
                     <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Reporte de Almuerzos</h1>
 
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                        <SuccessButton
-                            onClick={() => setShowExportModal(true)}
-                            className="w-full sm:w-auto flex items-center justify-center gap-2"
-                        >
+                    <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                        {/* Desde */}
+                        <div className="flex items-center gap-2 bg-white dark:bg-slate-800 p-1 pl-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Desde:</span>
+                            <TextInput type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
+                                className="border-none bg-transparent dark:text-white text-xs focus:ring-0 py-1 shadow-none" />
+                        </div>
+                        {/* Hasta */}
+                        <div className="flex items-center gap-2 bg-white dark:bg-slate-800 p-1 pl-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Hasta:</span>
+                            <TextInput type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
+                                className="border-none bg-transparent dark:text-white text-xs focus:ring-0 py-1 shadow-none" />
+                        </div>
+                        {/* Search */}
+                        <div className="relative flex items-center gap-2 bg-white dark:bg-slate-800 p-1 pl-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <svg className="w-3 h-3 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <TextInput type="text" value={messengerSearch} onChange={(e) => setMessengerSearch(e.target.value)}
+                                placeholder="Buscar mensajero..."
+                                className="border-none bg-transparent dark:text-white text-xs focus:ring-0 py-1 shadow-none w-44" />
+                            {messengerSearch && (
+                                <button onClick={() => setMessengerSearch('')} className="pr-2 text-slate-400 hover:text-slate-600">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            )}
+                        </div>
+                        {/* Export */}
+                        <SuccessButton onClick={() => { setExportDates({ start: startDate, end: endDate }); setShowExportModal(true); }} className="flex items-center gap-2">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                             </svg>
                             EXPORTAR
                         </SuccessButton>
-                        <div className="flex items-center gap-2 bg-white dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-2">Filtrar:</span>
-                            <TextInput
-                                type="date"
-                                value={date}
-                                onChange={handleDateChange}
-                                className="border-none bg-transparent dark:text-white text-xs focus:ring-0 py-1 shadow-none"
-                            />
-                            {date && (
-                                <button
-                                    onClick={() => {
-                                        setDate('');
-                                        router.get(route('reports.lunch'), {}, { preserveState: true, replace: true });
-                                    }}
-                                    className="p-1 px-2 text-[10px] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-bold uppercase transition-colors"
-                                >
-                                    ✕
-                                </button>
-                            )}
+                    </div>
+                </div>
+
+                {/* Table */}
+                {loading ? (
+                    <div className="flex justify-center py-20">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+                    </div>
+                ) : (
+                    <>
+                        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead className="bg-gray-50 dark:bg-gray-700">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Mensajero</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fecha</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Inicio</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fin (Estimado)</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                        {paginatedRows.map((log) => (
+                                            <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{log.messenger}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{log.date}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{log.start_time}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{log.end_time}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full w-fit ${statusBadge(log.status)}`}>
+                                                        {log.status === 'active' ? 'Activo' : 'Completado'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {paginatedRows.length === 0 && (
+                                            <tr><td colSpan="5" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">No hay registros de almuerzo.</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead className="bg-gray-50 dark:bg-gray-700">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Mensajero</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fecha</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Inicio</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fin (Estimado)</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                {logs.data.map((log) => (
-                                    <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                                            {log.messenger?.name || 'Desconocido'}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                            {new Date(log.created_at).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                            {new Date(log.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                            {new Date(log.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                                ${log.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                                                {log.status === 'active' ? 'Activo' : log.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {logs.data.length === 0 && (
-                                    <tr>
-                                        <td colSpan="5" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                                            No hay registros de almuerzo.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                {/* Pagination */}
-                <div className="mt-6 flex justify-center">
-                    {logs.links.map((link, key) => (
-                        link.url ? (
-                            <Link
-                                key={key}
-                                href={link.url}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                className={`px-4 py-2 mx-1 rounded border text-sm
-                                    ${link.active ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}
-                                `}
-                            />
-                        ) : (
-                            <span
-                                key={key}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                className="px-4 py-2 mx-1 rounded border bg-gray-100 text-gray-400 text-sm"
-                            />
-                        )
-                    ))}
-                </div>
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="mt-6 flex items-center justify-between">
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    Mostrando {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filteredRows.length)} de {filteredRows.length} registros
+                                </span>
+                                <div className="flex gap-1">
+                                    <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safePage === 1}
+                                        className="px-3 py-1.5 rounded border text-sm bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">←</button>
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                        .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2)
+                                        .reduce((acc, p, idx, arr) => { if (idx > 0 && p - arr[idx - 1] > 1) acc.push('...'); acc.push(p); return acc; }, [])
+                                        .map((p, i) => p === '...' ? (
+                                            <span key={`e-${i}`} className="px-3 py-1.5 text-sm text-gray-400">…</span>
+                                        ) : (
+                                            <button key={p} onClick={() => setCurrentPage(p)}
+                                                className={`px-3 py-1.5 rounded border text-sm transition-colors ${p === safePage ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'}`}>
+                                                {p}
+                                            </button>
+                                        ))}
+                                    <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}
+                                        className="px-3 py-1.5 rounded border text-sm bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">→</button>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
 
             {/* Export Modal */}
             <Modal show={showExportModal} onClose={() => setShowExportModal(false)}>
                 <div className="p-6">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
-                        📥 Exportar Reporte de Almuerzos
-                    </h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                        Selecciona el rango de fechas para generar el archivo Excel.
-                    </p>
-
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">📥 Exportar Reporte de Almuerzos</h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Selecciona el rango de fechas para generar el archivo Excel.</p>
                     <form onSubmit={handleExport}>
                         <div className="grid grid-cols-2 gap-4 mb-6">
                             <div>
                                 <InputLabel value="Fecha Inicio" />
-                                <TextInput
-                                    type="date"
-                                    required
-                                    value={exportDates.start}
-                                    onChange={(e) => setExportDates({ ...exportDates, start: e.target.value })}
-                                    className="w-full"
-                                />
+                                <TextInput type="date" required value={exportDates.start} onChange={(e) => setExportDates({ ...exportDates, start: e.target.value })} className="w-full" />
                             </div>
                             <div>
                                 <InputLabel value="Fecha Fin" />
-                                <TextInput
-                                    type="date"
-                                    required
-                                    value={exportDates.end}
-                                    onChange={(e) => setExportDates({ ...exportDates, end: e.target.value })}
-                                    className="w-full"
-                                />
+                                <TextInput type="date" required value={exportDates.end} onChange={(e) => setExportDates({ ...exportDates, end: e.target.value })} className="w-full" />
                             </div>
                         </div>
-
                         <div className="flex justify-end gap-3">
-                            <SecondaryButton onClick={() => setShowExportModal(false)}>
-                                Cancelar
-                            </SecondaryButton>
+                            <SecondaryButton onClick={() => setShowExportModal(false)}>Cancelar</SecondaryButton>
                             <SuccessButton type="submit" className="flex items-center gap-2">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />

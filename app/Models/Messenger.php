@@ -23,13 +23,4 @@ class Messenger extends Model
         return $this->hasMany(Shift::class);
     }
 
-    public function preoperationalReports()
-    {
-        return $this->hasMany(PreoperationalReport::class);
-    }
-
-    public function cleaningReports()
-    {
-        return $this->hasMany(CleaningReport::class);
-    }
 }

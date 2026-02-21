@@ -16,30 +16,6 @@ class RBACSeeder extends Seeder
     {
         $users = [
             [
-                'name' => 'Regente Farmacia',
-                'email' => 'regente@lafarmacia.com',
-                'password' => Hash::make('asd123'),
-                'role' => 'regente',
-            ],
-            [
-                'name' => 'Mensajero Prueba',
-                'email' => 'mensajero@lafarmacia.com',
-                'password' => Hash::make('asd123'),
-                'role' => 'mensajero',
-            ],
-            [
-                'name' => 'Gestor Tramites',
-                'email' => 'tramites@lafarmacia.com',
-                'password' => Hash::make('asd123'),
-                'role' => 'tramites',
-            ],
-            [
-                'name' => 'Lider Despachos',
-                'email' => 'despachos@lafarmacia.com',
-                'password' => Hash::make('asd123'),
-                'role' => 'lider',
-            ],
-            [
                 'name' => 'Administrador Sistema',
                 'email' => 'admin@lafarmacia.com',
                 'password' => Hash::make('asd123'),

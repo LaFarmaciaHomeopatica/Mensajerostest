@@ -17,7 +17,7 @@ export default function UserIndex({ users }) {
         name: '',
         email: '',
         password: '',
-        role: 'regente',
+        role: 'administrador',
     });
 
     const openModal = (user = null) => {
@@ -35,7 +35,7 @@ export default function UserIndex({ users }) {
                 name: '',
                 email: '',
                 password: '',
-                role: 'regente',
+                role: 'administrador',
             });
         }
         setErrors({});
@@ -107,10 +107,7 @@ export default function UserIndex({ users }) {
                                             {user.email}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                            <span className={`px-2 inline-flex text-[10px] leading-5 font-black uppercase tracking-widest rounded-full border ${user.role === 'lider' ? 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-800' :
-                                                user.role === 'regente' ? 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800' :
-                                                    'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'
-                                                }`}>
+                                            <span className="px-2 inline-flex text-[10px] leading-5 font-black uppercase tracking-widest rounded-full border bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-800">
                                                 {user.role}
                                             </span>
                                         </td>
@@ -194,9 +191,7 @@ export default function UserIndex({ users }) {
                                 onChange={(e) => setForm({ ...form, role: e.target.value })}
                                 required
                             >
-                                <option value="lider">Líder</option>
-                                <option value="regente">Regente</option>
-                                <option value="mensajero">Mensajero</option>
+                                <option value="administrador">Administrador</option>
                             </SelectInput>
                             <InputError message={errors.role} className="mt-2" />
                         </div>

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Head, useForm, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
-import CleaningForm from './Cleaning/Form';
 import TextInput from '@/Components/TextInput';
 import TextArea from '@/Components/TextArea';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -10,7 +9,7 @@ import SuccessButton from '@/Components/SuccessButton';
 import WarningButton from '@/Components/WarningButton';
 import DangerButton from '@/Components/DangerButton';
 
-export default function Landing({ preoperationalQuestions = [] }) {
+export default function Landing() {
     const { flash, errors } = usePage().props;
     const [viewState, setViewState] = useState('search'); // search, options, active_lunch
     const [messenger, setMessenger] = useState(null);
@@ -18,17 +17,6 @@ export default function Landing({ preoperationalQuestions = [] }) {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     const [activeLunch, setActiveLunch] = useState(null);
-    const [preoperationalAnswers, setPreoperationalAnswers] = useState({});
-    const [preoperationalObservations, setPreoperationalObservations] = useState('');
-
-    // Grouped questions will be calculated during render if needed or once here
-    const groupedQuestions = React.useMemo(() => {
-        return preoperationalQuestions.reduce((acc, q) => {
-            if (!acc[q.category]) acc[q.category] = [];
-            acc[q.category].push(q);
-            return acc;
-        }, {});
-    }, [preoperationalQuestions]);
 
 
 
@@ -107,52 +95,7 @@ export default function Landing({ preoperationalQuestions = [] }) {
         }
     };
 
-    const handlePreopClick = () => {
-        setViewState('preoperational');
-    };
 
-    const handlePreoperationalSubmit = () => {
-        // Check if all questions are answered
-        const allAnswered = preoperationalQuestions.every(q => {
-            const answer = preoperationalAnswers[q.key];
-            if (q.type === 'text') {
-                return answer && answer.trim().length > 0;
-            }
-            return answer !== undefined;
-        });
-
-        if (!allAnswered) {
-            alert('Por favor responde todas las preguntas antes de enviar.');
-            return;
-        }
-
-        // Submit using router.post directly
-        router.post(route('preoperational.store'), {
-            messenger_id: messenger.id,
-            answers: preoperationalAnswers,
-            observations: preoperationalObservations,
-        }, {
-            onSuccess: () => {
-                setViewState('preop_success');
-                setPreoperationalAnswers({});
-                setPreoperationalObservations('');
-                setMessenger(prev => ({ ...prev, preoperational_submitted: true }));
-            },
-            onError: (errors) => {
-                if (errors.preop_duplicate) {
-                    setViewState('preop_duplicate_error');
-                }
-            },
-            preserveState: true,
-        });
-    };
-
-    const handlePreoperationalAnswer = (key, value) => {
-        setPreoperationalAnswers({
-            ...preoperationalAnswers,
-            [key]: value
-        });
-    };
 
     const resetAll = () => {
         setViewState('search');
@@ -263,168 +206,7 @@ export default function Landing({ preoperationalQuestions = [] }) {
         );
     }
 
-    if (viewState === 'preop_success' && messenger) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-                <Head title="Reporte Enviado" />
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-center border-l-4 border-green-500">
-                    <h1 className="text-3xl font-bold mb-4 text-green-600 dark:text-green-400">✅ ¡Reporte Enviado!</h1>
-                    <p className="text-xl mb-4">
-                        Gracias <strong>{messenger.name}</strong>, tu reporte preoperacional ha sido registrado.
-                    </p>
-                    <p className="text-lg mb-6 text-gray-500">¡Buen viaje y conduce con seguridad!</p>
-                    <PrimaryButton
-                        onClick={() => setViewState('options')}
-                        className="rounded-full mb-4"
-                    >
-                        Volver al Menú
-                    </PrimaryButton>
-                </div>
-            </div>
-        );
-    }
 
-    if (viewState === 'preop_duplicate_error' && messenger) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-                <Head title="Reporte Ya Enviado" />
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-center border-l-4 border-orange-500">
-                    <h1 className="text-2xl font-bold mb-4 text-orange-600 dark:text-orange-400">⚠️ Reporte Ya Enviado</h1>
-                    <p className="text-xl mb-4">
-                        Hola <strong>{messenger.name}</strong>, ya has enviado tu reporte preoperacional hoy.
-                    </p>
-                    <p className="text-lg mb-6 text-gray-500">Solo puedes enviar un reporte por día.</p>
-                    <PrimaryButton
-                        onClick={() => setViewState('options')}
-                        className="rounded-full"
-                    >
-                        Volver al Menú
-                    </PrimaryButton>
-                </div>
-            </div>
-        );
-    }
-
-    if (viewState === 'preoperational' && messenger) {
-        // Use the memoized groupedQuestions from the top level
-
-        const allAnswered = preoperationalQuestions.every(q => {
-            const answer = preoperationalAnswers[q.key];
-            if (q.type === 'text') {
-                return answer && typeof answer === 'string' && answer.trim().length > 0;
-            }
-            return answer !== undefined;
-        });
-        const answeredCount = Object.keys(preoperationalAnswers).length;
-
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300 p-4">
-                <Head title="Reporte Preoperacional" />
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl max-w-2xl w-full">
-                    <div className="mb-6">
-                        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-                            📋 Reporte Preoperacional
-                        </h1>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Hola <strong>{messenger.name}</strong>, verifica el estado de tu vehículo antes de iniciar.
-                        </p>
-                        <div className="mt-2 text-sm text-indigo-600 dark:text-indigo-400 font-semibold">
-                            Progreso: {answeredCount} / {preoperationalQuestions.length}
-                        </div>
-                    </div>
-
-                    <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                        {Object.entries(groupedQuestions).map(([category, questions]) => (
-                            <div key={category}>
-                                <h3 className="text-lg font-bold text-indigo-600 dark:text-indigo-400 mb-3 border-b pb-2">
-                                    {category}
-                                </h3>
-                                <div className="space-y-3">
-                                    {questions.map((question) => (
-                                        <div key={question.id} className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm transition-all">
-                                            <p className="text-sm font-bold mb-4 text-slate-700 dark:text-slate-200">
-                                                {question.label || question.key || 'Pregunta sin enunciado'}
-                                            </p>
-                                            <div className="flex gap-4">
-                                                {question.type === 'text' ? (
-                                                    <TextArea
-                                                        value={preoperationalAnswers[question.key] || ''}
-                                                        onChange={(e) => handlePreoperationalAnswer(question.key, e.target.value)}
-                                                        rows="3"
-                                                        placeholder="Escribe tu respuesta aquí..."
-                                                        className="w-full"
-                                                    />
-                                                ) : (
-                                                    <>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handlePreoperationalAnswer(question.key, true)}
-                                                            className={`flex-1 py-4 px-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-2 ${preoperationalAnswers[question.key] === true
-                                                                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200 dark:shadow-none ring-4 ring-emerald-500/20'
-                                                                : 'bg-white dark:bg-slate-700 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600'
-                                                                }`}
-                                                        >
-                                                            {preoperationalAnswers[question.key] === true && <span>✓</span>}
-                                                            SÍ
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handlePreoperationalAnswer(question.key, false)}
-                                                            className={`flex-1 py-4 px-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-2 ${preoperationalAnswers[question.key] === false
-                                                                ? 'bg-red-600 text-white shadow-lg shadow-red-200 dark:shadow-none ring-4 ring-red-500/20'
-                                                                : 'bg-white dark:bg-slate-700 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600'
-                                                                }`}
-                                                        >
-                                                            {preoperationalAnswers[question.key] === false && <span>✗</span>}
-                                                            NO
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Observaciones Field */}
-                    <div className="mt-6 bg-amber-50 dark:bg-amber-900/10 p-5 rounded-2xl border border-amber-200 dark:border-amber-800">
-                        <label className="block text-sm font-bold mb-2 text-amber-900 dark:text-amber-100">
-                            📝 Observaciones (Opcional)
-                        </label>
-                        <TextArea
-                            value={preoperationalObservations}
-                            onChange={(e) => setPreoperationalObservations(e.target.value)}
-                            rows="3"
-                            placeholder="Agrega cualquier observación adicional sobre el estado del vehículo..."
-                            className="w-full"
-                        />
-                    </div>
-
-                    <div className="mt-6 flex gap-3">
-                        <SecondaryButton
-                            onClick={() => {
-                                setViewState('options');
-                                setPreoperationalAnswers({});
-                                setPreoperationalObservations('');
-                            }}
-                            className="flex-1 justify-center"
-                        >
-                            Cancelar
-                        </SecondaryButton>
-                        <PrimaryButton
-                            onClick={handlePreoperationalSubmit}
-                            disabled={!allAnswered}
-                            className={`flex-1 justify-center rounded-full ${!allAnswered && 'opacity-50'}`}
-                        >
-                            Enviar Reporte
-                        </PrimaryButton>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     if (viewState === 'active_lunch' && messenger && activeLunch) {
         return (
@@ -461,133 +243,94 @@ export default function Landing({ preoperationalQuestions = [] }) {
             <Head title="Registro de Mensajeros" />
 
             <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl max-w-md w-full">
-                {viewState === 'cleaning' ? (
-                    <CleaningForm
-                        messenger={messenger}
-                        onCancel={() => setViewState('options')}
-                        onSuccess={() => {/* Keep in success state of form */ }}
-                    />
-                ) : (
-                    <>
-                        <div className="text-center mb-6">
-                            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Logística LFH</h2>
-                            {viewState === 'search' && <p className="text-gray-500">Ingresa la placa de tu vehículo</p>}
-                            {viewState === 'options' && <p className="text-gray-500">Hola, <span className="font-bold text-indigo-500">{messenger?.name}</span></p>}
-                        </div>
+                <>
+                    <div className="text-center mb-6">
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Logística LFH</h2>
+                        {viewState === 'search' && <p className="text-gray-500">Ingresa la placa de tu vehículo</p>}
+                        {viewState === 'options' && <p className="text-gray-500">Hola, <span className="font-bold text-indigo-500">{messenger?.name}</span></p>}
+                    </div>
 
-                        {viewState === 'search' && (
-                            <form onSubmit={checkPlate} className="space-y-6">
-                                <div>
-                                    <TextInput
-                                        type="text"
-                                        placeholder="Ej: AAA-123"
-                                        value={plate}
-                                        onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                                        className="w-full text-center text-3xl font-mono tracking-widest py-4 uppercase"
-                                        required
-                                        autoFocus
-                                    />
-                                    {error && <p className="text-red-500 text-center mt-2 font-bold text-xs">{error}</p>}
-                                </div>
-
-                                <PrimaryButton
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full justify-center py-4 text-sm"
-                                >
-                                    {loading ? 'Buscando...' : 'BUSCAR VEHÍCULO'}
-                                </PrimaryButton>
-                            </form>
-                        )}
-
-                        {/* Button inside options view */}
-                        {viewState === 'options' && (
-                            <div className="space-y-4">
-                                {messenger?.shift_finished && (
-                                    <div className="bg-gray-100 dark:bg-gray-700 border-l-4 border-gray-500 text-gray-700 dark:text-gray-300 p-4 rounded-md mb-4">
-                                        <p className="font-bold">🏁 Turno Finalizado</p>
-                                        <p className="text-sm">Ya has registrado el fin de tu turno por hoy.</p>
-                                    </div>
-                                )}
-
-                                {messenger?.preoperational_submitted && !messenger?.shift_finished && (
-                                    <div className="bg-green-50 dark:bg-green-900/40 border-l-4 border-green-500 text-green-700 dark:text-green-300 p-4 rounded-md mb-4 shadow-sm">
-                                        <p className="font-bold flex items-center gap-2">
-                                            <span>✅</span> Reporte Preoperacional Completado
-                                        </p>
-                                        <p className="text-sm">Ya has registrado el estado de tu vehículo por hoy.</p>
-                                    </div>
-                                )}
-
-                                <PrimaryButton
-                                    onClick={() => setViewState('shifts_view')}
-                                    className="w-full py-5 flex items-center justify-between text-lg group"
-                                >
-                                    <span className="flex items-center gap-3">
-                                        <span className="text-2xl">📅</span>
-                                        <span>VER MIS HORARIOS</span>
-                                    </span>
-                                    <span className="text-indigo-200 group-hover:text-white">→</span>
-                                </PrimaryButton>
-
-                                <SuccessButton
-                                    onClick={handlePreopClick}
-                                    className="w-full py-5 flex items-center justify-between text-lg group"
-                                    disabled={messenger?.shift_finished || messenger?.preoperational_submitted}
-                                >
-                                    <span className="flex items-center gap-3">
-                                        <span className="text-2xl">📋</span>
-                                        <span>REPORTE PREOPERACIONAL</span>
-                                    </span>
-                                    {(!messenger?.shift_finished && !messenger?.preoperational_submitted) && <span className="text-emerald-200 group-hover:text-white">→</span>}
-                                </SuccessButton>
-
-                                <SuccessButton
-                                    onClick={() => setViewState('cleaning')}
-                                    className="w-full py-5 flex items-center justify-between text-lg group"
-                                    disabled={messenger?.shift_finished}
-                                >
-                                    <span className="flex items-center gap-3">
-                                        <span className="text-2xl">🧹</span>
-                                        <span>REPORTE DE LIMPIEZA</span>
-                                    </span>
-                                    {!messenger?.shift_finished && <span className="text-emerald-200 group-hover:text-white">→</span>}
-                                </SuccessButton>
-
-                                <SuccessButton
-                                    onClick={() => setViewState('lunch_confirm')}
-                                    className="w-full py-5 flex items-center justify-between text-lg group"
-                                    disabled={messenger?.shift_finished}
-                                >
-                                    <span className="flex items-center gap-3">
-                                        <span className="text-2xl">🍽️</span>
-                                        <span>REGISTRAR ALMUERZO</span>
-                                    </span>
-                                    {!messenger?.shift_finished && <span className="text-emerald-200 group-hover:text-white">→</span>}
-                                </SuccessButton>
-
-                                <WarningButton
-                                    onClick={() => setViewState('shift_confirm')}
-                                    className="w-full py-5 flex items-center justify-between text-lg group"
-                                    disabled={messenger?.shift_finished}
-                                >
-                                    <span className="flex items-center gap-3">
-                                        <span className="text-2xl">🏁</span>
-                                        <span>REPORTAR FIN TURNO</span>
-                                    </span>
-                                    {!messenger?.shift_finished && <span className="text-amber-200 group-hover:text-white">→</span>}
-                                </WarningButton>
-
-                                <SecondaryButton
-                                    onClick={resetAll}
-                                    className="w-full justify-center mt-4"
-                                >
-                                    CANCELAR / BUSCAR OTRA PLACA
-                                </SecondaryButton>
+                    {viewState === 'search' && (
+                        <form onSubmit={checkPlate} className="space-y-6">
+                            <div>
+                                <TextInput
+                                    type="text"
+                                    placeholder="Ej: AAA-123"
+                                    value={plate}
+                                    onChange={(e) => setPlate(e.target.value.toUpperCase())}
+                                    className="w-full text-center text-3xl font-mono tracking-widest py-4 uppercase"
+                                    required
+                                    autoFocus
+                                />
+                                {error && <p className="text-red-500 text-center mt-2 font-bold text-xs">{error}</p>}
                             </div>
-                        )}
-                    </>
-                )}
+
+                            <PrimaryButton
+                                type="submit"
+                                disabled={loading}
+                                className="w-full justify-center py-4 text-sm"
+                            >
+                                {loading ? 'Buscando...' : 'BUSCAR VEHÍCULO'}
+                            </PrimaryButton>
+                        </form>
+                    )}
+
+                    {/* Button inside options view */}
+                    {viewState === 'options' && (
+                        <div className="space-y-4">
+                            {messenger?.shift_finished && (
+                                <div className="bg-gray-100 dark:bg-gray-700 border-l-4 border-gray-500 text-gray-700 dark:text-gray-300 p-4 rounded-md mb-4">
+                                    <p className="font-bold">🏁 Turno Finalizado</p>
+                                    <p className="text-sm">Ya has registrado el fin de tu turno por hoy.</p>
+                                </div>
+                            )}
+
+
+
+                            <PrimaryButton
+                                onClick={() => setViewState('shifts_view')}
+                                className="w-full py-5 flex items-center justify-between text-lg group"
+                            >
+                                <span className="flex items-center gap-3">
+                                    <span className="text-2xl">📅</span>
+                                    <span>VER MIS HORARIOS</span>
+                                </span>
+                                <span className="text-indigo-200 group-hover:text-white">→</span>
+                            </PrimaryButton>
+
+                            <SuccessButton
+                                onClick={() => setViewState('lunch_confirm')}
+                                className="w-full py-5 flex items-center justify-between text-lg group"
+                                disabled={messenger?.shift_finished}
+                            >
+                                <span className="flex items-center gap-3">
+                                    <span className="text-2xl">🍽️</span>
+                                    <span>REGISTRAR ALMUERZO</span>
+                                </span>
+                                {!messenger?.shift_finished && <span className="text-emerald-200 group-hover:text-white">→</span>}
+                            </SuccessButton>
+
+                            <WarningButton
+                                onClick={() => setViewState('shift_confirm')}
+                                className="w-full py-5 flex items-center justify-between text-lg group"
+                                disabled={messenger?.shift_finished}
+                            >
+                                <span className="flex items-center gap-3">
+                                    <span className="text-2xl">🏁</span>
+                                    <span>REPORTAR FIN TURNO</span>
+                                </span>
+                                {!messenger?.shift_finished && <span className="text-amber-200 group-hover:text-white">→</span>}
+                            </WarningButton>
+
+                            <SecondaryButton
+                                onClick={resetAll}
+                                className="w-full justify-center mt-4"
+                            >
+                                CANCELAR / BUSCAR OTRA PLACA
+                            </SecondaryButton>
+                        </div>
+                    )}
+                </>
 
                 {/* Shifts View */}
                 {viewState === 'shifts_view' && (
