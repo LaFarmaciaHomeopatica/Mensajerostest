@@ -7,6 +7,8 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import Modal from '@/Components/Modal';
+import { toast } from 'sonner';
+import MapView from '@/Components/MapView';
 
 export default function Dashboard({ messengers, dispatch_locations, beetrack_data }) {
     const { data, setData, submit, processing, errors, reset } = useForm({
@@ -18,6 +20,8 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
     });
 
     const [filter, setFilter] = useState('');
+    const [notificationsHistory, setNotificationsHistory] = useState([]);
+    const [showHistory, setShowHistory] = useState(false);
     const [activeFilters, setActiveFilters] = useState(new Set());
 
     const toggleFilter = (key) => {
@@ -99,16 +103,45 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
             });
     }, [messengers]);
 
-    // --- Real-time Updates with WebSockets & Polling Fallback ---
     useEffect(() => {
+        // Test Toast to verify sonner is working
+        toast.success('Dashboard cargado correctamente 🚀');
+
         // 1. Listen for real-time events
+        // ... inside useEffect for real-time updates
         if (window.Echo) {
             window.Echo.channel('messengers')
                 .listen('.status.updated', (e) => {
-                    console.log('Real-time update received:', e);
+
+                    // Show Notification if trigger exists
+                    if (e.data && e.data.trigger) {
+                        const { name, status } = e.data.trigger;
+                        const icon = status.toLowerCase().includes('almuerzo') ? '🍔' :
+                            status.toLowerCase().includes('finalizado') ? '🏁' : '🛵';
+
+                        const newNote = {
+                            id: Date.now(),
+                            title: name,
+                            description: status,
+                            icon,
+                            time: new Date().toLocaleTimeString()
+                        };
+
+                        setNotificationsHistory(prev => [newNote, ...prev].slice(0, 50));
+
+                        toast(`${icon} ${name}`, {
+                            description: status,
+                        });
+                    }
+
+                    if (e.data && e.data.messenger) {
+                        setLocalMessengers(prev => prev.map(m =>
+                            m.id === e.data.messenger.id ? { ...e.data.messenger, beetrack_info: m.beetrack_info } : m
+                        ));
+                        setLastUpdated(new Date().toLocaleTimeString());
+                    }
+
                     if (e.data && e.data.messengers) {
-                        // NOTE: Real-time updates currently override Beetrack merged state.
-                        // In a full implementation, you'd want to re-merge the existing Beetrack state here.
                         setLocalMessengers(e.data.messengers);
                         setLastUpdated(new Date().toLocaleTimeString());
                     }
@@ -251,12 +284,13 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
     return (
         <LeaderLayout title="Control Center">
             <Head title="Control Center" />
-            {/* Glassmorphism Header */}
-            <div className="sticky top-16 z-20 backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-b border-indigo-100 dark:border-indigo-900/50 shadow-sm transition-all duration-300">
+
+            {/* Sticky Header with Filters and Stats */}
+            <div className="sticky top-16 z-[1000] backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-b border-indigo-100 dark:border-indigo-900/50 shadow-sm transition-all duration-300">
                 <div className="max-w-[1800px] mx-auto p-3 sm:p-4">
-                    <div className="flex flex-col lg:flex-row items-center gap-3 lg:gap-4 w-full">
-                        {/* Brand / Filter */}
-                        <div className="w-full flex flex-col md:flex-row gap-3 items-start md:items-center">
+                    <div className="flex flex-col xl:flex-row items-start xl:items-center gap-4 w-full">
+                        {/* Search and Filters */}
+                        <div className="flex-1 w-full flex flex-col md:flex-row gap-3 items-start md:items-center">
                             <div className="relative w-full lg:max-w-md group shrink-0">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
                                     <svg className="h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -265,7 +299,7 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                                     type="text"
                                     value={filter}
                                     onChange={(e) => setFilter(e.target.value)}
-                                    placeholder="Buscar por nombre, placa o estado..."
+                                    placeholder="Buscar..."
                                     className="pl-10 w-full"
                                 />
                                 {filter && (
@@ -278,32 +312,91 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                                 )}
                             </div>
 
-                            {/* Dynamic Filter Chips */}
-                            <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 w-full no-scrollbar">
-                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1 hidden lg:block shrink-0">Filtros:</span>
-
-                                {/* Location Filters */}
+                            {/* Chips */}
+                            <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1 hidden lg:block shrink-0">Sede:</span>
                                 <FilterBadge active={activeFilters.has('116')} onClick={() => toggleFilter('116')} label="Sede 116" color="blue" />
                                 <FilterBadge active={activeFilters.has('teusaquillo')} onClick={() => toggleFilter('teusaquillo')} label="Teusaquillo" color="teal" />
 
-                                <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block shrink-0"></div>
+                                <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block"></div>
 
-                                {/* Status Filters */}
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1 hidden lg:block shrink-0">Estado:</span>
                                 <FilterBadge active={activeFilters.has('en-ruta')} onClick={() => toggleFilter('en-ruta')} label="En Ruta" color="red" />
                                 <FilterBadge active={activeFilters.has('disponible')} onClick={() => toggleFilter('disponible')} label="Disponible" color="emerald" />
-                                <FilterBadge active={activeFilters.has('almuerzo')} onClick={() => toggleFilter('almuerzo')} label="Almorzando" color="amber" />
+                                <FilterBadge active={activeFilters.has('almuerzo')} onClick={() => toggleFilter('almuerzo')} label="Almuerzo" color="amber" />
                                 <FilterBadge active={activeFilters.has('finalizado')} onClick={() => toggleFilter('finalizado')} label="Finalizado" color="violet" />
 
-                                {/* Clear all button */}
                                 {activeFilters.size > 0 && (
                                     <button
                                         type="button"
                                         onClick={() => setActiveFilters(new Set())}
-                                        className="ml-1 px-2.5 py-1.5 rounded-full text-xs font-bold border border-dashed border-slate-300 dark:border-slate-600 text-slate-400 hover:text-red-500 hover:border-red-300 dark:hover:border-red-700 cursor-pointer transition-all duration-200 whitespace-nowrap flex items-center gap-1"
+                                        className="ml-2 px-2 py-1 rounded-full text-[10px] font-bold border border-dashed border-slate-300 dark:border-slate-600 text-slate-400 hover:text-red-500 hover:border-red-300 dark:hover:border-red-700 cursor-pointer transition-all duration-200 flex items-center gap-1"
                                     >
-                                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                                         Limpiar
                                     </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Stats and Notifications */}
+                        <div className="flex items-center gap-4 w-full xl:w-auto justify-between xl:justify-end border-t xl:border-t-0 pt-3 xl:pt-0 border-slate-100 dark:border-slate-800">
+                            <div className="flex gap-2">
+                                <div className="px-3 py-1.5 bg-white/50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase mr-2">Total:</span>
+                                    <span className="text-sm font-black">{localMessengers.length}</span>
+                                </div>
+                                <div className="px-3 py-1.5 bg-white/50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700 border-l-2 border-l-red-500">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase mr-2">Ruta:</span>
+                                    <span className="text-sm font-black">{localMessengers.filter(m => m.status === 'En Ruta').length}</span>
+                                </div>
+                            </div>
+
+                            {/* Notifications Bell */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowHistory(!showHistory)}
+                                    className="p-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all relative border border-indigo-100 dark:border-indigo-800"
+                                >
+                                    <span className="text-xl">🔔</span>
+                                    {notificationsHistory.length > 0 && (
+                                        <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-black shadow-lg border-2 border-white dark:border-slate-900">
+                                            {notificationsHistory.length}
+                                        </span>
+                                    )}
+                                </button>
+
+                                {showHistory && (
+                                    <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 z-[1100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <div className="p-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                                            <h3 className="font-black text-sm uppercase tracking-wider">Notificaciones</h3>
+                                            <button onClick={() => setNotificationsHistory([])} className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 uppercase tracking-widest">Limpiar</button>
+                                        </div>
+                                        <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                                            {notificationsHistory.length === 0 ? (
+                                                <div className="p-12 text-center text-slate-400">
+                                                    <p className="text-2xl mb-2">📭</p>
+                                                    <p className="text-xs font-medium italic">Sin actividad</p>
+                                                </div>
+                                            ) : (
+                                                notificationsHistory.map(note => (
+                                                    <div key={note.id} className="p-4 border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group">
+                                                        <div className="flex gap-4">
+                                                            <div className="shrink-0 w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xl shadow-inner group-hover:scale-110 transition-transform">
+                                                                {note.icon}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex justify-between items-start mb-0.5">
+                                                                    <p className="text-sm font-black text-slate-800 dark:text-slate-100 truncate">{note.title}</p>
+                                                                    <span className="text-[9px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded uppercase tracking-tighter shrink-0">{note.time}</span>
+                                                                </div>
+                                                                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{note.description}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -311,90 +404,13 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                 </div>
             </div>
 
-            <Modal show={isModalOpen} onClose={() => setIsModalOpen(false)} maxWidth="md">
-                <form onSubmit={handleDispatchSubmit} className="p-6">
-                    <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-4">
-                        Archivo de Ruta
-                    </h2>
-                    <p className="text-sm text-slate-500 mb-6">
-                        Generando ruta para: <span className="font-bold text-slate-700 dark:text-slate-300">
-                            {localMessengers.find(m => m.id === data.messenger_id)?.name}
-                        </span>
-                    </p>
-
-                    <div className="space-y-4">
-                        {/* File Input */}
-                        <div>
-                            <InputLabel value="Planilla Excel (.xlsx, .xls)" />
-                            <input
-                                type="file"
-                                onChange={(e) => setData('file', e.target.files[0])}
-                                accept=".xlsx, .xls"
-                                className="mt-1 block w-full text-sm text-slate-500 bg-slate-50/50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 py-2 px-2
-                                          file:mr-4 file:py-2 file:px-4
-                                          file:rounded-md file:border-0
-                                          file:text-sm file:font-semibold
-                                          file:bg-indigo-50 file:text-indigo-700
-                                          hover:file:bg-indigo-100
-                                          cursor-pointer focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"
-                                required
-                            />
-                        </div>
-
-                        {/* Location */}
-                        <div>
-                            <InputLabel value="Bodega Origen" />
-                            <SelectInput
-                                value={data.location_id}
-                                onChange={(e) => setData('location_id', e.target.value)}
-                                className="mt-1 w-full"
-                                required
-                            >
-                                <option value="">Seleccionar...</option>
-                                {dispatch_locations.map(d => (
-                                    <option key={d.id} value={d.id}>{d.name}</option>
-                                ))}
-                            </SelectInput>
-                        </div>
-
-                        {/* Last Route Checkbox */}
-                        <div className="flex items-center pt-2">
-                            <label className="flex items-center cursor-pointer group">
-                                <div className="relative">
-                                    <input
-                                        type="checkbox"
-                                        checked={data.last_route}
-                                        onChange={(e) => setData('last_route', e.target.checked)}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-500/10 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
-                                </div>
-                                <span className="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 transition-colors">¿Es la última ruta del día?</span>
-                            </label>
-                        </div>
-
-                        {/* Output Name */}
-                        <div className="pt-2">
-                            <InputLabel value="Nombre Archivo Final" />
-                            <TextInput
-                                type="text"
-                                value={data.output_name}
-                                onChange={(e) => setData('output_name', e.target.value)}
-                                placeholder="Nombre archivo..."
-                                className="mt-1 w-full font-mono text-sm"
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    <div className="mt-8 flex justify-end gap-3">
-                        <SecondaryButton type="button" onClick={() => setIsModalOpen(false)}>Cancelar</SecondaryButton>
-                        <PrimaryButton type="submit" disabled={processing}>
-                            Generar y Descargar
-                        </PrimaryButton>
-                    </div>
-                </form>
-            </Modal>
+            {/* Map Prototype */}
+            <div className="max-w-[1800px] mx-auto p-3 sm:p-4 mb-4">
+                <MapView
+                    messengers={localMessengers}
+                    selectedMessengerId={data.messenger_id}
+                />
+            </div>
 
             {/* Main Content */}
             <div className="max-w-[1800px] mx-auto p-3 sm:p-4">
@@ -418,6 +434,68 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                 </div>
             </div>
 
+            {/* Dispatch Modal */}
+            <Modal show={isModalOpen} onClose={() => setIsModalOpen(false)}>
+                <form onSubmit={handleDispatchSubmit} className="p-6">
+                    <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+                        Procesar Ruta
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                        Selecciona el archivo Excel y la sede para generar la ruta.
+                    </p>
+
+                    <div className="mt-6 space-y-4">
+                        <div>
+                            <InputLabel htmlFor="file" value="Archivo Excel" />
+                            <input
+                                type="file"
+                                id="file"
+                                onChange={(e) => setData('file', e.target.files[0])}
+                                className="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="location_id" value="Sede de Despacho" />
+                            <SelectInput
+                                id="location_id"
+                                value={data.location_id}
+                                onChange={(e) => setData('location_id', e.target.value)}
+                                className="mt-1 block w-full"
+                                required
+                            >
+                                <option value="">Selecciona una sede</option>
+                                {dispatch_locations.map((loc) => (
+                                    <option key={loc.id} value={loc.id}>
+                                        {loc.name}
+                                    </option>
+                                ))}
+                            </SelectInput>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="last_route"
+                                checked={data.last_route}
+                                onChange={(e) => setData('last_route', e.target.checked)}
+                                className="rounded border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                            />
+                            <InputLabel htmlFor="last_route" value="¿Es la última ruta?" />
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex justify-end gap-3">
+                        <SecondaryButton onClick={() => setIsModalOpen(false)}>
+                            Cancelar
+                        </SecondaryButton>
+                        <PrimaryButton disabled={processing}>
+                            {processing ? 'Procesando...' : 'Generar Rutero'}
+                        </PrimaryButton>
+                    </div>
+                </form>
+            </Modal>
         </LeaderLayout>
     );
 }
@@ -527,12 +605,32 @@ function MessengerCard({ m, onClick, isSelected }) {
                 </div>
             </div>
 
-            {/* Status Badge */}
-            <div className="hidden sm:flex justify-end min-w-[100px] shrink-0">
+            {/* Status Badge & Action */}
+            <div className="hidden sm:flex flex-col items-end gap-2 min-w-[120px] shrink-0">
                 <StatusBadge status={m.status} color={config.color} />
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onClick(m);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm transition-all active:scale-95 group/btn"
+                >
+                    <svg className="w-3.5 h-3.5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    Asignar
+                </button>
             </div>
-            <div className="flex sm:hidden justify-end w-full absolute top-3 right-3">
+
+            <div className="flex sm:hidden items-center justify-between w-full absolute top-3 right-3 px-3">
                 <StatusBadge status={m.status} color={config.color} />
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onClick(m);
+                    }}
+                    className="p-1.5 bg-indigo-500 text-white rounded-lg shadow-sm active:scale-90 transition-transform"
+                >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                </button>
             </div>
         </div>
     );

@@ -21,7 +21,7 @@ export default function Modal({ children, show = false, maxWidth = '2xl', closea
     }[maxWidth];
 
     return createPortal(
-        <div className="fixed inset-0 z-50 overflow-y-auto px-4 py-6 sm:px-0 flex items-center justify-center">
+        <div className="fixed inset-0 z-[3000] overflow-y-auto px-4 py-6 sm:px-0 flex items-center justify-center">
             <div className="absolute inset-0 transition-opacity" onClick={close}>
                 <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
             </div>

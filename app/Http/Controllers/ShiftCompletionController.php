@@ -42,7 +42,7 @@ class ShiftCompletionController extends Controller
             'finished_at' => now(),
         ]);
 
-        $this->broadcastStatus();
+        $this->broadcastStatus(false, $messenger, 'ha finalizado su turno 🏁');
 
         return back()->with('success', true);
     }

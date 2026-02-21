@@ -405,6 +405,7 @@ export default function Landing() {
                             <p className="font-bold">Advertencia:</p>
                             <p>Al reportar el fin de turno, ya no podrás recibir más despachos ni registrar almuerzos por hoy.</p>
                         </div>
+
                         <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
                             ¿Confirmas que terminaste turno?
                         </h3>

@@ -78,14 +78,14 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Principal',
                 'address' => 'CALLE 116 # 15B-26',
                 'prefix' => 'WH',
-                'current_consecutive' => 537050
+                'current_consecutive' => 100
             ],
             // Teusaquillo -> TE
             [
                 'name' => 'Teusaquillo',
                 'address' => 'CALLE 34 # 16-24',
                 'prefix' => 'TE',
-                'current_consecutive' => 1000
+                'current_consecutive' => 100
             ],
         ];
 

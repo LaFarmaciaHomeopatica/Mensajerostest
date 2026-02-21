@@ -180,7 +180,7 @@ class LunchController extends Controller
             'status' => 'active',
         ]);
 
-        $this->broadcastStatus();
+        $this->broadcastStatus(false, $messenger, 'ha iniciado su almuerzo 🍔');
 
         return back()->with('success', [
             'message' => '¡A disfrutar! 🍔',
