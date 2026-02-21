@@ -98,14 +98,38 @@ export default function LunchReport({ filters }) {
                     </div>
                 </div>
 
-                {/* Table */}
+                {/* Table / Cards */}
                 {loading ? (
                     <div className="flex justify-center py-20">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
                     </div>
                 ) : (
                     <>
-                        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                        {/* ── Mobile Card List (< sm) ── */}
+                        <div className="flex sm:hidden flex-col gap-3 mb-2">
+                            {paginatedRows.length === 0 ? (
+                                <div className="text-center p-12 text-slate-400">
+                                    <p className="text-3xl mb-2">🍽️</p>
+                                    <p className="text-sm font-medium">No hay registros de almuerzo.</p>
+                                </div>
+                            ) : paginatedRows.map((log) => (
+                                <div key={log.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm px-4 py-3 flex items-center gap-3">
+                                    <div className="shrink-0 w-9 h-9 rounded-full bg-amber-400 flex items-center justify-center">
+                                        <span className="text-white text-sm font-black">{log.messenger.slice(0, 2).toUpperCase()}</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">{log.messenger}</p>
+                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">{log.date} &nbsp;·&nbsp; {log.start_time} → {log.end_time}</p>
+                                    </div>
+                                    <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${statusBadge(log.status)}`}>
+                                        {log.status === 'active' ? 'Activo' : 'Completado'}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* ── Desktop Table (sm+) ── */}
+                        <div className="hidden sm:block bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead className="bg-gray-50 dark:bg-gray-700">

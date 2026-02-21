@@ -108,12 +108,13 @@ export default function ShiftModal({ isOpen, onClose, shift, onSave, onDelete, d
                     </div>
                 )}
 
-                <div className="mt-6 flex justify-end space-x-3">
+                <div className="mt-6 flex flex-wrap items-center gap-3">
                     {shift && (
                         <DangerButton type="button" onClick={() => onDelete(shift.id)}>
                             ELIMINAR
                         </DangerButton>
                     )}
+                    <div className="flex-1" />
                     <SecondaryButton onClick={onClose}>Cancelar</SecondaryButton>
                     <PrimaryButton type="submit">Guardar</PrimaryButton>
                 </div>

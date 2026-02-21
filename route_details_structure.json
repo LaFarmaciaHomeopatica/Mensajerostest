@@ -1,0 +1,727 @@
+{
+    "route": {
+        "id": 1294803,
+        "dispatch_date": "21-02-2026",
+        "truck_identifier": "FYO88E",
+        "truck": {
+            "identifier": "FYO88E",
+            "vehicle_type": 3,
+            "groups": []
+        },
+        "driver_identifier": "contrerasj2023",
+        "driver_name": "Jairo Contreras",
+        "driver_app_version": "3.5.61",
+        "dispatches": [
+            {
+                "id": 10715393,
+                "dispatch_id": 25795177,
+                "identifier": "S568601",
+                "mode": 0,
+                "position": 5,
+                "contact_name": "CASTA\u00d1O EDNA",
+                "contact_address": "CL 134 101 C 28, BOGOTA BOGOTA, Cundinamarca, Colombia",
+                "contact_phone": "3115438486",
+                "contact_id": "52162205",
+                "contact_email": "dalgycast@gmail.com",
+                "latitude": null,
+                "longitude": null,
+                "route_id": 1294803,
+                "status": "on_route",
+                "status_id": 1,
+                "substatus": null,
+                "substatus_code": null,
+                "tags": [
+                    {
+                        "name": "INFO",
+                        "value": "PARA EL 21\/02 DE 8 AM A 11 AM YA PAGO "
+                    },
+                    {
+                        "name": "Prioridad",
+                        "value": "Normal"
+                    }
+                ],
+                "is_trunk": false,
+                "is_pickup": false,
+                "delivered_in_client": null,
+                "arrived_at": null,
+                "estimated_at": "2026-02-21 15:15:44+0000",
+                "min_delivery_time": "2026-02-21 08:15:00-0500",
+                "max_delivery_time": "2026-02-21 11:00:00-0500",
+                "beecode": "c4c8362bd44eb9cfae8e9f75",
+                "locked": false,
+                "end_type": 0,
+                "number_of_retries": 0,
+                "min_age_required": null,
+                "address_reference": null,
+                "pickup_address_reference": null,
+                "to_be_payed": false,
+                "priority": null,
+                "amount_to_collect": "0.0",
+                "external_pincode": null,
+                "items": [
+                    {
+                        "id": 29121650,
+                        "name": "LHA FUSOBES AMP 2ML L H A",
+                        "description": "LHA FUSOBES AMP 2ML L H A",
+                        "quantity": 2,
+                        "original_quantity": 2,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121651,
+                        "name": "LHA SCROLYN AMP 2ML L H A",
+                        "description": "LHA SCROLYN AMP 2ML L H A",
+                        "quantity": 3,
+                        "original_quantity": 3,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121652,
+                        "name": "LHA OVAFEM AMP 2ML L H A",
+                        "description": "LHA OVAFEM AMP 2ML L H A",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121653,
+                        "name": "LHA PLAZAR AMP 2ML L H A",
+                        "description": "LHA PLAZAR AMP 2ML L H A",
+                        "quantity": 2,
+                        "original_quantity": 2,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121654,
+                        "name": "LHA CHINOFF AMP 2ML L H A",
+                        "description": "LHA CHINOFF AMP 2ML L H A",
+                        "quantity": 4,
+                        "original_quantity": 4,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121655,
+                        "name": "LHA COLOZYN AMP 2ML L H A",
+                        "description": "LHA COLOZYN AMP 2ML L H A",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121656,
+                        "name": "LHA AGNAMAR MP AMP 2ML L H A",
+                        "description": "LHA AGNAMAR MP AMP 2ML L H A",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121657,
+                        "name": "LHA BERBULL AMP 2ML L H A",
+                        "description": "LHA BERBULL AMP 2ML L H A",
+                        "quantity": 5,
+                        "original_quantity": 5,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121658,
+                        "name": "LHA AZUPHUR AMP 2ML L H A",
+                        "description": "LHA AZUPHUR AMP 2ML L H A",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121659,
+                        "name": "LHA CUTY AMP 2ML L H A",
+                        "description": "LHA CUTY AMP 2ML L H A",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121660,
+                        "name": "LHA CEDRONAL AMP 2ML L H A",
+                        "description": "LHA CEDRONAL AMP 2ML L H A",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121661,
+                        "name": "LHA CERENEX AMP 2ML L H A",
+                        "description": "LHA CERENEX AMP 2ML L H A",
+                        "quantity": 2,
+                        "original_quantity": 2,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121662,
+                        "name": "LHA GALDEPUR AMP 2ML L H A",
+                        "description": "LHA GALDEPUR AMP 2ML L H A",
+                        "quantity": 5,
+                        "original_quantity": 5,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121663,
+                        "name": "LHA EPACHEL AMP 2ML L H A",
+                        "description": "LHA EPACHEL AMP 2ML L H A",
+                        "quantity": 3,
+                        "original_quantity": 3,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121664,
+                        "name": "LHA CALHOSE AMP 2ML L H A",
+                        "description": "LHA CALHOSE AMP 2ML L H A",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121665,
+                        "name": "LHA ECHINAL AMP 2ML L H A",
+                        "description": "LHA ECHINAL AMP 2ML L H A",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121666,
+                        "name": "LHA EMZYM AMP 2ML L H A",
+                        "description": "LHA EMZYM AMP 2ML L H A",
+                        "quantity": 5,
+                        "original_quantity": 5,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121667,
+                        "name": "LHA TRARNIC AMP 2ML L H A",
+                        "description": "LHA TRARNIC AMP 2ML L H A",
+                        "quantity": 3,
+                        "original_quantity": 3,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121668,
+                        "name": "LHA NUXVOM AMP 2ML L H A",
+                        "description": "LHA NUXVOM AMP 2ML L H A",
+                        "quantity": 4,
+                        "original_quantity": 4,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121669,
+                        "name": "LHA BRYONAL AMP 2ML L H A",
+                        "description": "LHA BRYONAL AMP 2ML L H A",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121670,
+                        "name": "LHA PROINA AMP 2ML L H A",
+                        "description": "LHA PROINA AMP 2ML L H A",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121671,
+                        "name": "LHA VINTOX AMP 2ML L H A",
+                        "description": "LHA VINTOX AMP 2ML L H A",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121672,
+                        "name": "LHA HAMADRON AMP 2ML L H A",
+                        "description": "LHA HAMADRON AMP 2ML L H A",
+                        "quantity": 2,
+                        "original_quantity": 2,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121673,
+                        "name": "LHA MUCSAN AMP 2ML L H A",
+                        "description": "LHA MUCSAN AMP 2ML L H A",
+                        "quantity": 2,
+                        "original_quantity": 2,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121674,
+                        "name": "CERECOMP AMP  2,2ML HEEL  CUM19957366-1",
+                        "description": "CERECOMP AMP  2,2ML HEEL  CUM19957366-1",
+                        "quantity": 2,
+                        "original_quantity": 2,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121675,
+                        "name": "CARTILAGO SUIS INJEEL AMP  1,1ML HEEL  CUM19957497-1",
+                        "description": "CARTILAGO SUIS INJEEL AMP  1,1ML HEEL  CUM19957497-1",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121676,
+                        "name": "VERTIGOHEEL AMP  1,1ML HEEL  CUM19957504-1",
+                        "description": "VERTIGOHEEL AMP  1,1ML HEEL  CUM19957504-1",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    }
+                ],
+                "groups": []
+            },
+            {
+                "id": 10715394,
+                "dispatch_id": 25795178,
+                "identifier": "S568558",
+                "mode": 0,
+                "position": 4,
+                "contact_name": "OSORIO BENITEZ LUZ MARINA",
+                "contact_address": "CL 138  72 30, 11001 BOGOT\u00c1 D.C., Cundinamarca, Colombia",
+                "contact_phone": null,
+                "contact_id": "41609207",
+                "contact_email": null,
+                "latitude": null,
+                "longitude": null,
+                "route_id": 1294803,
+                "status": "on_route",
+                "status_id": 1,
+                "substatus": null,
+                "substatus_code": null,
+                "tags": [
+                    {
+                        "name": "INFO",
+                        "value": "SABADO ANT DE 10 AM   RECIBE SRA. LILIANA CONDE"
+                    },
+                    {
+                        "name": "Prioridad",
+                        "value": "Normal"
+                    }
+                ],
+                "is_trunk": false,
+                "is_pickup": false,
+                "delivered_in_client": null,
+                "arrived_at": null,
+                "estimated_at": "2026-02-21 14:55:44+0000",
+                "min_delivery_time": "2026-02-21 08:15:00-0500",
+                "max_delivery_time": "2026-02-21 10:00:00-0500",
+                "beecode": "b403b55819c7e7a5e0dd22aa",
+                "locked": false,
+                "end_type": 0,
+                "number_of_retries": 0,
+                "min_age_required": null,
+                "address_reference": null,
+                "pickup_address_reference": null,
+                "to_be_payed": false,
+                "priority": null,
+                "amount_to_collect": "0.0",
+                "external_pincode": null,
+                "items": [
+                    {
+                        "id": 29121677,
+                        "name": "MULTIESSENS VITAMINAS CAPSULAS 60 NUTRABIOTICS  CUM20049222-4",
+                        "description": "MULTIESSENS VITAMINAS CAPSULAS 60 NUTRABIOTICS  CUM20049222-4",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121678,
+                        "name": "MULTIESSENS MINERALES TABLETAS 60 NUTRABIOTICS  CUM20038922-5",
+                        "description": "MULTIESSENS MINERALES TABLETAS 60 NUTRABIOTICS  CUM20038922-5",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121679,
+                        "name": "COLESSENS FRASCO * 60 CAPSULAS NUTRABIOTICS  CUM20125172-2",
+                        "description": "COLESSENS FRASCO * 60 CAPSULAS NUTRABIOTICS  CUM20125172-2",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    }
+                ],
+                "groups": []
+            },
+            {
+                "id": 10715395,
+                "dispatch_id": 25795179,
+                "identifier": "S568203",
+                "mode": 0,
+                "position": 2,
+                "contact_name": "RAMIREZ MARIA",
+                "contact_address": "CR 54 152 60, 11001 BOGOT\u00c1 D.C., Cundinamarca, Colombia",
+                "contact_phone": null,
+                "contact_id": "41646086",
+                "contact_email": "MR1468100@GMAIL.COM",
+                "latitude": null,
+                "longitude": null,
+                "route_id": 1294803,
+                "status": "on_route",
+                "status_id": 1,
+                "substatus": null,
+                "substatus_code": null,
+                "tags": [
+                    {
+                        "name": "INFO",
+                        "value": "ENTREGA SABADO 21\/02\/ ANTES DE  11 AM "
+                    },
+                    {
+                        "name": "Prioridad",
+                        "value": "Normal"
+                    }
+                ],
+                "is_trunk": false,
+                "is_pickup": false,
+                "delivered_in_client": null,
+                "arrived_at": null,
+                "estimated_at": "2026-02-21 14:15:44+0000",
+                "min_delivery_time": "2026-02-21 08:15:00-0500",
+                "max_delivery_time": "2026-02-21 11:00:00-0500",
+                "beecode": "65c1a3b021f16228b8bfd079",
+                "locked": false,
+                "end_type": 0,
+                "number_of_retries": 0,
+                "min_age_required": null,
+                "address_reference": null,
+                "pickup_address_reference": null,
+                "to_be_payed": false,
+                "priority": null,
+                "amount_to_collect": "0.0",
+                "external_pincode": null,
+                "items": [
+                    {
+                        "id": 29121680,
+                        "name": "DK - MULSION GOTAS 30ML NUTRABIOTICS  CUM20067783-1",
+                        "description": "DK - MULSION GOTAS 30ML NUTRABIOTICS  CUM20067783-1",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    },
+                    {
+                        "id": 29121681,
+                        "name": "MAXDREAM 15ML MERCY",
+                        "description": "MAXDREAM 15ML MERCY",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    }
+                ],
+                "groups": []
+            },
+            {
+                "id": 10715396,
+                "dispatch_id": 25795180,
+                "identifier": "S567907",
+                "mode": 0,
+                "position": 1,
+                "contact_name": "RONCANCIO  ELIZABETH",
+                "contact_address": "CL 130 C 59 B 75, bogota, Bogot\u00e1, Colombia",
+                "contact_phone": null,
+                "contact_id": "51663688",
+                "contact_email": "ELIZABETHRM1809@GMAIL.COM",
+                "latitude": null,
+                "longitude": null,
+                "route_id": 1294803,
+                "status": "on_route",
+                "status_id": 1,
+                "substatus": null,
+                "substatus_code": null,
+                "tags": [
+                    {
+                        "name": "INFO",
+                        "value": "ANTES DE 11 AM \/\/ SABADO 21 DE FEBRERO"
+                    },
+                    {
+                        "name": "Prioridad",
+                        "value": "Normal"
+                    }
+                ],
+                "is_trunk": false,
+                "is_pickup": false,
+                "delivered_in_client": null,
+                "arrived_at": null,
+                "estimated_at": "2026-02-21 13:55:44+0000",
+                "min_delivery_time": "2026-02-21 08:15:00-0500",
+                "max_delivery_time": "2026-02-21 11:00:00-0500",
+                "beecode": "98e465e5a26e50393e5670de",
+                "locked": false,
+                "end_type": 0,
+                "number_of_retries": 0,
+                "min_age_required": null,
+                "address_reference": null,
+                "pickup_address_reference": null,
+                "to_be_payed": false,
+                "priority": null,
+                "amount_to_collect": "0.0",
+                "external_pincode": null,
+                "items": [
+                    {
+                        "id": 29121682,
+                        "name": "KYO-DOPHILOS CAPSULAS 90 MAGNA TRADE CUM20028889-2",
+                        "description": "KYO-DOPHILOS CAPSULAS 90 MAGNA TRADE CUM20028889-2",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    }
+                ],
+                "groups": []
+            },
+            {
+                "id": 10715397,
+                "dispatch_id": 25795181,
+                "identifier": "S568704",
+                "mode": 0,
+                "position": 3,
+                "contact_name": "MORA URIBE GINNA MARCELA",
+                "contact_address": "CR 72 BIS 152 B 32, BOGOTA BOGOTA, Cundinamarca, Colombia",
+                "contact_phone": null,
+                "contact_id": "52829756",
+                "contact_email": "gmorauribe@gmail.com",
+                "latitude": null,
+                "longitude": null,
+                "route_id": 1294803,
+                "status": "on_route",
+                "status_id": 1,
+                "substatus": null,
+                "substatus_code": null,
+                "tags": [
+                    {
+                        "name": "INFO",
+                        "value": "WEB 86324\/\/\/ YA PAGO\/\/\/ANT 12 PM \r\n"
+                    },
+                    {
+                        "name": "Prioridad",
+                        "value": "Normal"
+                    }
+                ],
+                "is_trunk": false,
+                "is_pickup": false,
+                "delivered_in_client": null,
+                "arrived_at": null,
+                "estimated_at": "2026-02-21 14:35:44+0000",
+                "min_delivery_time": "2026-02-21 08:15:00-0500",
+                "max_delivery_time": "2026-02-21 12:00:00-0500",
+                "beecode": "c650ee72bc806d49df264ec8",
+                "locked": false,
+                "end_type": 0,
+                "number_of_retries": 0,
+                "min_age_required": null,
+                "address_reference": null,
+                "pickup_address_reference": null,
+                "to_be_payed": false,
+                "priority": null,
+                "amount_to_collect": "0.0",
+                "external_pincode": null,
+                "items": [
+                    {
+                        "id": 29121683,
+                        "name": "EUPHORBIUM COMPOSITUM GOTAS 30ML HEEL  CUM19956499-1",
+                        "description": "EUPHORBIUM COMPOSITUM GOTAS 30ML HEEL  CUM19956499-1",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    }
+                ],
+                "groups": []
+            },
+            {
+                "id": 10715398,
+                "dispatch_id": 25795182,
+                "identifier": "S568605",
+                "mode": 0,
+                "position": 6,
+                "contact_name": "ESPERANZA MOSQUERA ESCOBAR",
+                "contact_address": "CR 52 122 19 AP 501 ALTILLOS DE LOMBARDIA BRR BATAN, Bogot\u00e1, Colombia",
+                "contact_phone": null,
+                "contact_id": "31876615",
+                "contact_email": "PANCHA87@hotmail.com                              ",
+                "latitude": null,
+                "longitude": null,
+                "route_id": 1294803,
+                "status": "on_route",
+                "status_id": 1,
+                "substatus": null,
+                "substatus_code": null,
+                "tags": [
+                    {
+                        "name": "INFO",
+                        "value": "SABADO 21\/02\/2026 DESP DE 9 AM ANT DE 12 PM  3\/3      P "
+                    },
+                    {
+                        "name": "Prioridad",
+                        "value": "Normal"
+                    }
+                ],
+                "is_trunk": false,
+                "is_pickup": false,
+                "delivered_in_client": null,
+                "arrived_at": null,
+                "estimated_at": "2026-02-21 15:35:44+0000",
+                "min_delivery_time": "2026-02-21 08:15:00-0500",
+                "max_delivery_time": "2026-02-21 12:00:00-0500",
+                "beecode": "92e74335f2e51f7d6b2d59dc",
+                "locked": false,
+                "end_type": 0,
+                "number_of_retries": 0,
+                "min_age_required": null,
+                "address_reference": null,
+                "pickup_address_reference": null,
+                "to_be_payed": false,
+                "priority": null,
+                "amount_to_collect": "0.0",
+                "external_pincode": null,
+                "items": [
+                    {
+                        "id": 29121684,
+                        "name": "TRAUMEEL-UNGUENTO X 50 GR HEEL  CUM19955262-3",
+                        "description": "TRAUMEEL-UNGUENTO X 50 GR HEEL  CUM19955262-3",
+                        "quantity": 2,
+                        "original_quantity": 2,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    }
+                ],
+                "groups": []
+            },
+            {
+                "id": 10715399,
+                "dispatch_id": 25795183,
+                "identifier": "WH100016744",
+                "mode": 0,
+                "position": 7,
+                "contact_name": "LFH",
+                "contact_address": "calle 116 15b  53, bogota, colombia",
+                "contact_phone": null,
+                "contact_id": null,
+                "contact_email": null,
+                "latitude": null,
+                "longitude": null,
+                "route_id": 1294803,
+                "status": "on_route",
+                "status_id": 1,
+                "substatus": null,
+                "substatus_code": null,
+                "tags": [
+                    {
+                        "name": "Prioridad",
+                        "value": "Normal"
+                    }
+                ],
+                "is_trunk": false,
+                "is_pickup": false,
+                "delivered_in_client": null,
+                "arrived_at": null,
+                "estimated_at": "2026-02-21 15:55:44+0000",
+                "min_delivery_time": "2026-02-21 08:15:00-0500",
+                "max_delivery_time": "2026-02-21 23:50:00-0500",
+                "beecode": "a47138775f5cab151945d160",
+                "locked": false,
+                "end_type": 0,
+                "number_of_retries": 0,
+                "min_age_required": null,
+                "address_reference": null,
+                "pickup_address_reference": null,
+                "to_be_payed": false,
+                "priority": null,
+                "amount_to_collect": "0.0",
+                "external_pincode": null,
+                "items": [
+                    {
+                        "id": 29121685,
+                        "name": "bodegaprincipal",
+                        "description": "bodegaprincipal",
+                        "quantity": 1,
+                        "original_quantity": 1,
+                        "delivered_quantity": 0,
+                        "code": null,
+                        "extras": []
+                    }
+                ],
+                "groups": []
+            }
+        ],
+        "start_time": "08:34:00",
+        "end_time": "21:00:00",
+        "started_at": "2026-02-21T08:34:13.000-05:00",
+        "ended_at": null
+    }
+}

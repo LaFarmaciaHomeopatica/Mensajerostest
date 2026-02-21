@@ -8,7 +8,15 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import Modal from '@/Components/Modal';
 import { toast } from 'sonner';
-import MapView from '@/Components/MapView';
+
+const getPriority = (status) => {
+    const s = String(status || '').toLowerCase();
+    if (s.includes('disponible')) return 1;
+    if (s.includes('almuerzo')) return 2;
+    if (s.includes('ruta')) return 3;
+    if (s.includes('finalizado')) return 4;
+    return 10;
+};
 
 export default function Dashboard({ messengers, dispatch_locations, beetrack_data }) {
     const { data, setData, submit, processing, errors, reset } = useForm({
@@ -88,7 +96,7 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                             status: status,
                             class_name: currentClass,
                             beetrack_info: beetrackInfo,
-                            priority: priority,
+                            priority: getPriority(status),
                             lat: beetrackInfo?.lat || m.lat,
                             lng: beetrackInfo?.lng || m.lng,
                         };
@@ -106,8 +114,6 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
     }, [messengers]);
 
     useEffect(() => {
-        // Test Toast to verify sonner is working
-        toast.success('Dashboard cargado correctamente 🚀');
 
         // 1. Listen for real-time events
         // ... inside useEffect for real-time updates
@@ -147,6 +153,50 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                         setLocalMessengers(e.data.messengers);
                         setLastUpdated(new Date().toLocaleTimeString());
                     }
+
+                    if (e.data && e.data.refresh) {
+                        // Trigger a background fetch for BOTH beetrack and local data
+                        setBeetrackLoading(true);
+                        fetch(route('messenger.status.beetrack'))
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.beetrack_data) {
+                                    setLocalMessengers(prev => {
+                                        const normalize = (str) => String(str || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                                        const btData = data.beetrack_data;
+                                        const allBt = [...(btData.activos || []), ...(btData.libres || [])];
+
+                                        return prev.map(m => {
+                                            const btMatch = allBt.find(item => normalize(item.unidad) === normalize(m.vehicle));
+                                            const active = btData.activos?.find(item => normalize(item.unidad) === normalize(m.vehicle));
+
+                                            let status = m.status;
+                                            let currentClass = m.class_name;
+                                            let beetrackInfo = m.beetrack_info;
+
+                                            if (active) {
+                                                status = 'En Ruta';
+                                                currentClass = 'status-en-ruta';
+                                                beetrackInfo = active;
+                                            }
+
+                                            return {
+                                                ...m,
+                                                name: btMatch ? (btMatch.nombre || m.name) : m.name,
+                                                status: status,
+                                                class_name: currentClass,
+                                                beetrack_info: beetrackInfo,
+                                                priority: getPriority(status),
+                                                lat: beetrackInfo?.lat || m.lat,
+                                                lng: beetrackInfo?.lng || m.lng,
+                                            };
+                                        });
+                                    });
+                                }
+                                setBeetrackLoading(false);
+                            })
+                            .catch(() => setBeetrackLoading(false));
+                    }
                 });
         }
 
@@ -159,13 +209,14 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                     setLocalMessengers(prevMessengers => {
                         return data.messengers.map(newM => {
                             const oldM = prevMessengers.find(p => p.id === newM.id);
+                            const status = (oldM?.beetrack_info && !newM.finished_info) ? 'En Ruta' : newM.status;
                             return {
                                 ...newM,
                                 name: oldM ? oldM.name : newM.name,
-                                status: (oldM?.beetrack_info && !newM.finished_info) ? 'En Ruta' : newM.status,
+                                status: status,
                                 class_name: (oldM?.beetrack_info && !newM.finished_info) ? 'status-en-ruta' : newM.class_name,
                                 beetrack_info: oldM ? oldM.beetrack_info : null,
-                                priority: (oldM?.beetrack_info && !newM.finished_info) ? 2 : 1,
+                                priority: getPriority(status),
                                 lat: oldM?.beetrack_info?.lat || newM.lat,
                                 lng: oldM?.beetrack_info?.lng || newM.lng,
                             };
@@ -374,7 +425,7 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                                 </button>
 
                                 {showHistory && (
-                                    <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 z-[1100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <div className="absolute right-0 mt-3 w-[calc(100vw-1.5rem)] sm:w-96 max-w-sm bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 z-[1100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                                         <div className="p-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
                                             <h3 className="font-black text-sm uppercase tracking-wider">Notificaciones</h3>
                                             <button onClick={() => setNotificationsHistory([])} className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 uppercase tracking-widest">Limpiar</button>
@@ -412,20 +463,6 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                 </div>
             </div>
 
-            {/* Map Prototype */}
-            <div className="max-w-[1800px] mx-auto p-3 sm:p-4 mb-4">
-                <MapView
-                    messengers={localMessengers}
-                    locations={dispatch_locations.map(loc => ({
-                        ...loc,
-                        lat: loc.name.includes('Principal') || loc.name.includes('116') ? 4.7001 :
-                            loc.name.includes('Teusaquillo') ? 4.6293 : null,
-                        lng: loc.name.includes('Principal') || loc.name.includes('116') ? -74.0478 :
-                            loc.name.includes('Teusaquillo') ? -74.0720 : null,
-                    }))}
-                    selectedMessengerId={data.messenger_id}
-                />
-            </div>
 
             {/* Main Content */}
             <div className="max-w-[1800px] mx-auto p-3 sm:p-4">
@@ -524,135 +561,151 @@ function MessengerCard({ m, onSelect, onAssign, isSelected }) {
         'pendiente': { color: 'slate', avatar: 'bg-slate-400', rowBg: 'bg-slate-50/80 dark:bg-slate-800', border: 'border-l-4 border-l-slate-300' },
     }[m.class_name] || { color: 'slate', avatar: 'bg-slate-400', rowBg: 'bg-white dark:bg-slate-800', border: 'border-l-4 border-gray-200' };
 
-    // Initials from name
     const initials = m.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
     return (
         <div
             onClick={onSelect}
             className={`
-                flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3 rounded-xl shadow-sm cursor-pointer transition-all duration-200 ease-out
-                ${config.rowBg}
-                ${config.border} border-y border-r border-slate-100 dark:border-slate-700/60
-                hover:shadow-md hover:brightness-[0.97] dark:hover:brightness-110
+                ${config.rowBg} ${config.border}
+                border-y border-r border-slate-100 dark:border-slate-700/60
+                rounded-xl shadow-sm cursor-pointer transition-all duration-200
+                hover:shadow-md active:scale-[0.99]
                 ${isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 dark:ring-offset-slate-900' : ''}
-                group gap-3 sm:gap-4 relative
             `}
         >
-            {/* Avatar + Name */}
-            <div className="flex items-center gap-3 w-full sm:w-1/3 sm:min-w-[220px]">
+            {/* ── Mobile Layout ── */}
+            <div className="flex sm:hidden items-center gap-3 px-3 py-3 min-h-[64px]">
                 {/* Avatar */}
-                <div className={`shrink-0 w-9 h-9 rounded-full ${config.avatar} flex items-center justify-center shadow-sm`}>
-                    <span className="text-white text-xs font-black tracking-tight">{initials}</span>
+                <div className={`shrink-0 w-10 h-10 rounded-full ${config.avatar} flex items-center justify-center shadow-sm`}>
+                    <span className="text-white text-sm font-black tracking-tight">{initials}</span>
                 </div>
-                <div className="flex flex-col gap-0.5 min-w-0">
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate leading-tight">
-                        {m.name}
-                    </h3>
-                    <div className="flex items-center gap-1.5">
+
+                {/* Name + status row */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm truncate leading-tight">
+                            {m.name}
+                        </h3>
+                        <StatusBadge status={m.status} color={config.color} size="sm" />
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
                         {m.location && (
-                            <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded font-bold tracking-wider whitespace-nowrap ${m.location === 'principal' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300'}`}>
+                            <span className={`font-mono text-[9px] px-1.5 py-0.5 rounded font-bold tracking-wider ${m.location === 'principal' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300'}`}>
                                 {m.location === 'principal' ? '116' : m.location.toUpperCase()}
                             </span>
                         )}
-                        <span className="font-mono text-[10px] bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400 font-bold tracking-wider whitespace-nowrap">
+                        <span className="font-mono text-[9px] bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400 font-bold">
                             {m.vehicle}
                         </span>
+                        {m.beetrack_info && (
+                            <span className="text-[9px] font-bold text-red-500">📍 {m.beetrack_info.progreso_str}</span>
+                        )}
+                        {m.finished_info && (
+                            <span className="text-[9px] font-bold text-emerald-600">🏁 {m.finished_info.hora_cierre}</span>
+                        )}
                     </div>
                 </div>
+
+                {/* Assign button */}
+                <button
+                    onClick={(e) => { e.stopPropagation(); onAssign(); }}
+                    className="shrink-0 w-10 h-10 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-sm active:scale-90 transition-all"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                </button>
             </div>
 
-            {/* Middle Columns */}
-            <div className="flex-1 flex flex-row flex-wrap sm:flex-nowrap items-center justify-end sm:justify-between gap-2 sm:gap-4 lg:gap-6 w-full px-1 sm:px-4 lg:px-8 max-w-4xl">
-
-                {/* Turno */}
-                <div className="flex-1 flex flex-col items-center gap-0.5 min-w-[90px] hidden lg:flex shrink-0">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        Turno
-                    </span>
-                    <span className="font-mono text-xs text-slate-600 dark:text-slate-300 font-bold whitespace-nowrap">{m.shift_info}</span>
-                </div>
-
-                {/* Almuerzo */}
-                <div className="flex-1 flex flex-col items-center gap-0.5 min-w-[90px] shrink-0">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hidden xl:flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                        Almuerzo
-                    </span>
-                    <div className="flex items-center gap-1">
-                        <span className="text-slate-300 xl:hidden text-sm">🍽️</span>
-                        <span className="font-mono text-xs text-slate-600 dark:text-slate-300 font-bold whitespace-nowrap">{m.lunch_range}</span>
+            {/* ── Desktop Layout ── */}
+            <div className="hidden sm:flex items-center gap-4 px-4 py-3">
+                {/* Avatar + Name */}
+                <div className="flex items-center gap-3 w-1/3 min-w-[220px]">
+                    <div className={`shrink-0 w-9 h-9 rounded-full ${config.avatar} flex items-center justify-center shadow-sm`}>
+                        <span className="text-white text-xs font-black tracking-tight">{initials}</span>
                     </div>
-                </div>
-
-                {/* Reporte */}
-                <div className="flex-1 flex flex-col items-center gap-0.5 min-w-[90px] shrink-0 hidden sm:flex">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hidden xl:flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        Reporte
-                    </span>
-                    {m.finished_info ? (
-                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-800 flex items-center gap-1 whitespace-nowrap">
-                            🏁 {m.finished_info.hora_cierre}
-                        </span>
-                    ) : (
-                        <span className="text-xs font-bold text-slate-400 bg-slate-50 dark:bg-slate-700/50 px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-slate-600 whitespace-nowrap">
-                            Pendiente
-                        </span>
-                    )}
-                </div>
-
-                {/* Beetrack */}
-                <div className="flex-1 flex items-center justify-end sm:justify-center w-full min-w-[120px] max-w-[200px] shrink-0">
-                    {m.beetrack_info ? (
-                        <div className="w-full flex flex-col gap-1">
-                            <div className="flex items-center justify-between">
-                                <span className="text-[9px] font-bold text-red-500 tracking-wider uppercase">En Ruta</span>
-                                <span className="text-[9px] font-mono font-bold text-slate-500">{m.beetrack_info.progreso_str}</span>
-                            </div>
-                            <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                <div className="h-full bg-gradient-to-r from-red-400 to-red-600 rounded-full transition-all duration-500" style={{ width: `${m.beetrack_info.porcentaje}%` }}></div>
-                            </div>
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm truncate leading-tight">
+                            {m.name}
+                        </h3>
+                        <div className="flex items-center gap-1.5">
+                            {m.location && (
+                                <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded font-bold tracking-wider whitespace-nowrap ${m.location === 'principal' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300'}`}>
+                                    {m.location === 'principal' ? '116' : m.location.toUpperCase()}
+                                </span>
+                            )}
+                            <span className="font-mono text-[10px] bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400 font-bold tracking-wider">
+                                {m.vehicle}
+                            </span>
                         </div>
-                    ) : (
-                        <span className="text-slate-300 dark:text-slate-600 italic text-xs hidden sm:block">Sin actividad</span>
-                    )}
+                    </div>
                 </div>
-            </div>
 
-            {/* Status Badge & Action */}
-            <div className="hidden sm:flex flex-col items-end gap-2 min-w-[120px] shrink-0">
-                <StatusBadge status={m.status} color={config.color} />
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onAssign();
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm transition-all active:scale-95 group/btn"
-                >
-                    <svg className="w-3.5 h-3.5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                    Asignar
-                </button>
-            </div>
+                {/* Middle columns */}
+                <div className="flex-1 flex items-center justify-between gap-4 lg:gap-6 px-4 lg:px-8">
+                    {/* Turno */}
+                    <div className="hidden lg:flex flex-col items-center gap-0.5 min-w-[90px]">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Turno</span>
+                        <span className="font-mono text-xs text-slate-600 dark:text-slate-300 font-bold whitespace-nowrap">{m.shift_info}</span>
+                    </div>
 
-            <div className="flex sm:hidden items-center justify-between w-full absolute top-3 right-3 px-3">
-                <StatusBadge status={m.status} color={config.color} />
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onAssign();
-                    }}
-                    className="p-1.5 bg-indigo-500 text-white rounded-lg shadow-sm active:scale-90 transition-transform"
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                </button>
+                    {/* Almuerzo */}
+                    <div className="flex flex-col items-center gap-0.5 min-w-[90px]">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hidden xl:block">Almuerzo</span>
+                        <div className="flex items-center gap-1">
+                            <span className="text-slate-300 xl:hidden text-sm">🍽️</span>
+                            <span className="font-mono text-xs text-slate-600 dark:text-slate-300 font-bold whitespace-nowrap">{m.lunch_range}</span>
+                        </div>
+                    </div>
+
+                    {/* Reporte */}
+                    <div className="hidden sm:flex flex-col items-center gap-0.5 min-w-[90px]">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hidden xl:block">Reporte</span>
+                        {m.finished_info ? (
+                            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-800 whitespace-nowrap">
+                                🏁 {m.finished_info.hora_cierre}
+                            </span>
+                        ) : (
+                            <span className="text-xs font-bold text-slate-400 bg-slate-50 dark:bg-slate-700/50 px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-slate-600 whitespace-nowrap">
+                                Pendiente
+                            </span>
+                        )}
+                    </div>
+
+                    {/* Beetrack progress */}
+                    <div className="flex items-center justify-center min-w-[120px] max-w-[200px] w-full">
+                        {m.beetrack_info ? (
+                            <div className="w-full flex flex-col gap-1">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[9px] font-bold text-red-500 tracking-wider uppercase">En Ruta</span>
+                                    <span className="text-[9px] font-mono font-bold text-slate-500">{m.beetrack_info.progreso_str}</span>
+                                </div>
+                                <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                    <div className="h-full bg-gradient-to-r from-red-400 to-red-600 rounded-full transition-all duration-500" style={{ width: `${m.beetrack_info.porcentaje}%` }} />
+                                </div>
+                            </div>
+                        ) : (
+                            <span className="text-slate-300 dark:text-slate-600 italic text-xs">Sin actividad</span>
+                        )}
+                    </div>
+                </div>
+
+                {/* Status + Action */}
+                <div className="flex flex-col items-end gap-2 min-w-[120px]">
+                    <StatusBadge status={m.status} color={config.color} />
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onAssign(); }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm transition-all active:scale-95"
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        Asignar
+                    </button>
+                </div>
             </div>
         </div>
     );
 }
 
-function StatusBadge({ status, color }) {
+function StatusBadge({ status, color, size = 'md' }) {
     const colors = {
         red: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
         amber: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800',
@@ -660,23 +713,25 @@ function StatusBadge({ status, color }) {
         slate: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-700 dark:text-slate-400 dark:border-slate-600',
     };
 
+    const sizing = size === 'sm' ? 'px-2 py-0.5 text-[9px]' : 'px-3 py-1 text-[10px]';
+
     return (
-        <span className={`px-3 py-1 rounded-full text-[10px] font-black border ${colors[color]} uppercase tracking-wide`}>
+        <span className={`rounded-full font-black border ${colors[color]} ${sizing} uppercase tracking-wide whitespace-nowrap`}>
             {status}
         </span>
     );
 }
 
 function FilterBadge({ active, onClick, label, color }) {
-    const defaultClasses = "px-3 py-1.5 rounded-full text-xs font-bold border cursor-pointer transition-all duration-200 whitespace-nowrap shadow-sm";
+    const defaultClasses = "px-3 py-2 rounded-full text-xs font-bold border cursor-pointer transition-all duration-200 whitespace-nowrap shadow-sm min-h-[36px] flex items-center";
 
     const colors = {
-        blue: active ? 'bg-blue-500 text-white border-blue-600 shadow-blue-500/30 ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-slate-900' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-slate-700',
-        teal: active ? 'bg-teal-500 text-white border-teal-600 shadow-teal-500/30 ring-2 ring-teal-500 ring-offset-1 dark:ring-offset-slate-900' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-teal-300 hover:bg-teal-50 dark:hover:bg-slate-700',
-        red: active ? 'bg-red-500 text-white border-red-600 shadow-red-500/30 ring-2 ring-red-500 ring-offset-1 dark:ring-offset-slate-900' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-red-300 hover:bg-red-50 dark:hover:bg-slate-700',
-        emerald: active ? 'bg-emerald-500 text-white border-emerald-600 shadow-emerald-500/30 ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-900' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-300 hover:bg-emerald-50 dark:hover:bg-slate-700',
-        amber: active ? 'bg-amber-500 text-white border-amber-600 shadow-amber-500/30 ring-2 ring-amber-500 ring-offset-1 dark:ring-offset-slate-900' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-amber-300 hover:bg-amber-50 dark:hover:bg-slate-700',
-        violet: active ? 'bg-violet-500 text-white border-violet-600 shadow-violet-500/30 ring-2 ring-violet-500 ring-offset-1 dark:ring-offset-slate-900' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-violet-300 hover:bg-violet-50 dark:hover:bg-slate-700',
+        blue: active ? 'bg-blue-500 text-white border-blue-600 shadow-blue-500/30 ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-slate-900' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700',
+        teal: active ? 'bg-teal-500 text-white border-teal-600 shadow-teal-500/30 ring-2 ring-teal-500 ring-offset-1 dark:ring-offset-slate-900' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700',
+        red: active ? 'bg-red-500 text-white border-red-600 shadow-red-500/30 ring-2 ring-red-500 ring-offset-1 dark:ring-offset-slate-900' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700',
+        emerald: active ? 'bg-emerald-500 text-white border-emerald-600 shadow-emerald-500/30 ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-900' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700',
+        amber: active ? 'bg-amber-500 text-white border-amber-600 shadow-amber-500/30 ring-2 ring-amber-500 ring-offset-1 dark:ring-offset-slate-900' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700',
+        violet: active ? 'bg-violet-500 text-white border-violet-600 shadow-violet-500/30 ring-2 ring-violet-500 ring-offset-1 dark:ring-offset-slate-900' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700',
     };
 
     return (

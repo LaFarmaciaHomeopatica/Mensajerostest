@@ -1,0 +1,9 @@
+Script started at 2026-02-21 13:50:44
+SUCCESS: Found 7 active messengers.
+Messenger: Jairo Contreras | Unit: FYO88E | Lat: NULL | Lng: NULL
+Messenger: Javier Prieto | Unit: HUA90E | Lat: NULL | Lng: NULL
+Messenger: Yeison Cuesta | Unit: RQK23H | Lat: NULL | Lng: NULL
+Messenger: Geinson Alvarez | Unit: ZCO85G | Lat: NULL | Lng: NULL
+Messenger: Jose Calderon | Unit: FYA04H | Lat: NULL | Lng: NULL
+Messenger: Daniel Yara | Unit: LTZ36E | Lat: NULL | Lng: NULL
+Messenger: Juan Castro | Unit: BC0002 | Lat: NULL | Lng: NULL

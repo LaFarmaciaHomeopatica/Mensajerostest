@@ -26,7 +26,7 @@ export default function Modal({ children, show = false, maxWidth = '2xl', closea
                 <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
             </div>
 
-            <div className={`mb-6 bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-xl transform transition-all sm:w-full sm:mx-auto relative z-50 ${maxWidthClass}`}>
+            <div className={`mb-6 bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-xl transform transition-all w-full sm:mx-auto relative z-50 ${maxWidthClass}`}>
                 {children}
             </div>
         </div>,

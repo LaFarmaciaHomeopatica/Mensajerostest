@@ -109,6 +109,17 @@ class MessengerStatusService
             $shift_info = $start . ' - ' . $end;
         }
 
+        $priority = 10;
+        $s = strtolower($status);
+        if (str_contains($s, 'disponible'))
+            $priority = 1;
+        elseif (str_contains($s, 'almuerzo'))
+            $priority = 2;
+        elseif (str_contains($s, 'ruta'))
+            $priority = 3;
+        elseif (str_contains($s, 'finalizado'))
+            $priority = 4;
+
         return [
             'id' => $m->id,
             'name' => $m->name,
@@ -120,7 +131,7 @@ class MessengerStatusService
             'shift_info' => $shift_info,
             'finished_info' => $finished,
             'beetrack_info' => null, // Placeholder for async load
-            'priority' => 1,
+            'priority' => $priority,
             'lat' => null,
             'lng' => null,
         ];

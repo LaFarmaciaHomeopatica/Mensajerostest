@@ -131,7 +131,31 @@ export default function Exit({ messengers, filters }) {
 
                     return (
                         <>
-                            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                            {/* ── Mobile Card List (< sm) ── */}
+                            <div className="flex sm:hidden flex-col gap-3 mb-2">
+                                {paginatedRows.length === 0 ? (
+                                    <div className="text-center p-12 text-slate-400">
+                                        <p className="text-3xl mb-2">🏁</p>
+                                        <p className="text-sm font-medium">No hay registros para el período.</p>
+                                    </div>
+                                ) : paginatedRows.map((h, i) => (
+                                    <div key={i} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm px-4 py-3">
+                                        <div className="flex items-center justify-between gap-2 mb-2">
+                                            <p className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">{h.messenger}</p>
+                                            <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${diffColor(h.status)}`}>
+                                                {Math.round(h.diff_minutes) > 0 ? `+${Math.round(h.diff_minutes)}` : Math.round(h.diff_minutes)} min · {diffLabel(h.status)}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-4 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                                            <span>📅 {h.date}</span>
+                                            <span>⏱ {h.scheduled_end} → {h.actual_end}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* ── Desktop Table (sm+) ── */}
+                            <div className="hidden sm:block bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                                 <div className="overflow-x-auto">
                                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                         <thead className="bg-gray-50 dark:bg-gray-700">

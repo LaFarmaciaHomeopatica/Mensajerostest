@@ -24,6 +24,13 @@ export default function ShiftsIndex({ auth, messengers, weekStart, weekEnd }) {
     const [showExportModal, setShowExportModal] = useState(false);
     const [exportDates, setExportDates] = useState({ start: '', end: '' });
     const [messengerSearch, setMessengerSearch] = useState('');
+    // Mobile: which day column is active (0 = Mon … 6 = Sun)
+    const [selectedDayIdx, setSelectedDayIdx] = useState(() => {
+        const todayDow = new Date().getDay(); // 0=Sun
+        const weekStartDow = new Date(weekStart).getDay();
+        const diff = (todayDow - weekStartDow + 7) % 7;
+        return diff < 7 ? diff : 0;
+    });
 
     const { data, setData, post, delete: destroy, reset } = useForm({});
 
@@ -161,7 +168,92 @@ export default function ShiftsIndex({ auth, messengers, weekStart, weekEnd }) {
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg overflow-x-auto">
+                    {/* ── Mobile: Day Picker + Vertical List (< sm) ── */}
+                    <div className="sm:hidden">
+                        {/* Day chip selector */}
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-3 px-1">
+                            {days.map((d, idx) => {
+                                const isToday = d.format('YYYY-MM-DD') === dayjs().format('YYYY-MM-DD');
+                                return (
+                                    <button
+                                        key={idx}
+                                        onClick={() => setSelectedDayIdx(idx)}
+                                        className={`shrink-0 flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-95
+                                            ${selectedDayIdx === idx
+                                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none'
+                                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}
+                                    >
+                                        <span className="uppercase text-[9px] tracking-wider">{d.format('ddd')}</span>
+                                        <span className={`text-base leading-none font-black ${isToday && selectedDayIdx !== idx ? 'text-indigo-500 dark:text-indigo-400' : ''}`}>{d.format('D')}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Messenger list for selected day */}
+                        <div className="flex flex-col gap-2">
+                            {(() => {
+                                const selectedDay = days[selectedDayIdx];
+                                const dateStr = selectedDay.format('YYYY-MM-DD');
+                                const filteredMs = messengers.filter(m => !messengerSearch || m.name.toLowerCase().includes(messengerSearch.toLowerCase()));
+
+                                return filteredMs.length === 0 ? (
+                                    <div className="text-center p-12 text-slate-400">
+                                        <p className="text-sm font-medium">Sin mensajeros</p>
+                                    </div>
+                                ) : filteredMs.map(messenger => {
+                                    const shift = messenger.shifts.find(s => s.date === dateStr);
+                                    const isAbsent = shift?.status === 'absent';
+                                    const isTeusa = shift?.location === 'teusaquillo';
+
+                                    return (
+                                        <button
+                                            key={messenger.id}
+                                            onClick={() => handleCellClick(messenger, dateStr, shift)}
+                                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border text-left transition-all active:scale-[0.98]
+                                                ${isAbsent
+                                                    ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                                                    : isTeusa
+                                                        ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800'
+                                                        : shift
+                                                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                                                            : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'}`}
+                                        >
+                                            {/* Avatar */}
+                                            <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center
+                                                ${isAbsent ? 'bg-red-400' : isTeusa ? 'bg-emerald-500' : shift ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'}`}>
+                                                <span className="text-white text-xs font-black">
+                                                    {messenger.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()}
+                                                </span>
+                                            </div>
+                                            {/* Info */}
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">{messenger.name}</p>
+                                                <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400">{messenger.vehicle}</p>
+                                            </div>
+                                            {/* Shift info */}
+                                            <div className="shrink-0 text-right">
+                                                {isAbsent ? (
+                                                    <span className="text-[10px] font-black text-red-600 dark:text-red-400 uppercase">No Asiste</span>
+                                                ) : shift ? (
+                                                    <div className="flex flex-col items-end font-mono text-[11px] font-bold">
+                                                        <span className={isTeusa ? 'text-emerald-700 dark:text-emerald-300' : 'text-blue-700 dark:text-blue-300'}>{shift.start_time?.substring(0, 5)}</span>
+                                                        <span className="text-slate-300 dark:text-slate-600 text-[9px]">↓</span>
+                                                        <span className={isTeusa ? 'text-emerald-700 dark:text-emerald-300' : 'text-blue-700 dark:text-blue-300'}>{shift.end_time?.substring(0, 5)}</span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xl text-slate-300 dark:text-slate-600">+</span>
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                });
+                            })()}
+                        </div>
+                    </div>
+
+                    {/* ── Desktop: Full Weekly Table (sm+) ── */}
+                    <div className="hidden sm:block bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg overflow-x-auto">
                         <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
                             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
@@ -187,7 +279,6 @@ export default function ShiftsIndex({ auth, messengers, weekStart, weekEnd }) {
                                                 const dateStr = d.format('YYYY-MM-DD');
                                                 const shift = messenger.shifts.find(s => s.date === dateStr);
 
-                                                // Determine cell style
                                                 let cellClass = "px-2 py-4 text-center cursor-pointer transition border border-gray-100 dark:border-gray-700 ";
                                                 if (shift) {
                                                     if (shift.status === 'absent') {

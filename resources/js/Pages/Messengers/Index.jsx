@@ -48,7 +48,7 @@ export default function Index({ messengers, filters }) {
 
                         <Link
                             href={route('messengers.create')}
-                            className="px-5 py-2 bg-indigo-600 text-white rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 flex items-center justify-center gap-2"
+                            className="px-5 py-3 bg-indigo-600 text-white rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 flex items-center justify-center gap-2"
                         >
                             <span>➕</span> Nuevo Mensajero
                         </Link>
@@ -56,12 +56,78 @@ export default function Index({ messengers, filters }) {
                 </div>
 
                 {flash.success && (
-                    <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
+                    <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-xl" role="alert">
                         <p>{flash.success}</p>
                     </div>
                 )}
 
-                <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                {/* ── Mobile Card List (< sm) ── */}
+                <div className="flex sm:hidden flex-col gap-3 mb-6">
+                    {messengers.data.map((messenger) => (
+                        <div
+                            key={messenger.id}
+                            className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden"
+                        >
+                            {/* Card header */}
+                            <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+                                {/* Avatar */}
+                                <div className="shrink-0 w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center shadow-sm">
+                                    <span className="text-white text-sm font-black">
+                                        {messenger.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()}
+                                    </span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-slate-800 dark:text-slate-100 text-sm truncate">{messenger.name}</p>
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">{messenger.vehicle}</p>
+                                </div>
+                                <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${messenger.is_active
+                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                                    : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                                    }`}>
+                                    {messenger.is_active ? 'Activo' : 'Inactivo'}
+                                </span>
+                            </div>
+
+                            {/* Card body */}
+                            <div className="flex items-center justify-between px-4 py-3 gap-3">
+                                <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                                    <span className="flex items-center gap-1">
+                                        <span className="text-slate-300 dark:text-slate-600">🕒</span>
+                                        <span className="font-medium">{messenger.lunch_duration} min</span>
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                        <span className="text-slate-300 dark:text-slate-600">📍</span>
+                                        <span className="font-medium capitalize">{messenger.location}</span>
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Link
+                                        href={route('messengers.edit', messenger.id)}
+                                        className="px-3 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors hover:bg-indigo-100 dark:hover:bg-indigo-900/50 active:scale-95"
+                                    >
+                                        Editar
+                                    </Link>
+                                    <button
+                                        onClick={() => handleDelete(messenger.id)}
+                                        className="px-3 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors hover:bg-red-100 dark:hover:bg-red-900/40 active:scale-95"
+                                    >
+                                        Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+
+                    {messengers.data.length === 0 && (
+                        <div className="text-center p-12 text-slate-400">
+                            <p className="text-3xl mb-2">🛵</p>
+                            <p className="text-sm font-medium">No hay mensajeros registrados</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* ── Desktop Table (sm+) ── */}
+                <div className="hidden sm:block bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead className="bg-gray-50 dark:bg-gray-700">
@@ -129,8 +195,8 @@ export default function Index({ messengers, filters }) {
                                 className={`px-4 py-2 rounded-xl border text-xs font-bold transition-all
                                     ${link.active
                                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100'
-                                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50'}
-                                `}
+                                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50'}`
+                                }
                             />
                         ) : (
                             <span

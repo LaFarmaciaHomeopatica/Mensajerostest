@@ -99,8 +99,8 @@ class BeetrackService
                         'hora_cierre' => ($r['ended_at'] ?? null) ? substr($r['ended_at'], 11, 5) : '',
                         'progreso_str' => "{$gestionadas}/{$total}",
                         'porcentaje' => $porcentaje,
-                        'lat' => $r['latitude'] ?? $r['truck']['latitude'] ?? null,
-                        'lng' => $r['longitude'] ?? $r['truck']['longitude'] ?? null,
+                        'lat' => $this->getPosition($r, 'lat'),
+                        'lng' => $this->getPosition($r, 'lng'),
                         'metrics' => [
                             'total' => $total,
                             'completed' => $gestionadas,
@@ -257,7 +257,43 @@ class BeetrackService
 
     public function clearCache()
     {
-        \Illuminate\Support\Facades\Cache::forget('beetrack_status_v3');
+        \Illuminate\Support\Facades\Cache::forget('beetrack_status_v4');
         \Illuminate\Support\Facades\Log::info('BeetrackService: Cache cleared manually');
+    }
+
+    /**
+     * Helper to extract coordinates from multiple potential Beetrack fields
+     */
+    private function getPosition($data, $type)
+    {
+        $keys = $type === 'lat'
+            ? ['latitude', 'lat', 'latitude_last', 'last_latitude']
+            : ['longitude', 'lng', 'longitude_last', 'last_longitude'];
+
+        // 1. Check root level
+        foreach ($keys as $key) {
+            if (!empty($data[$key]))
+                return $data[$key];
+        }
+
+        // 2. Check truck object if exists
+        if (isset($data['truck'])) {
+            foreach ($keys as $key) {
+                if (!empty($data['truck'][$key]))
+                    return $data['truck'][$key];
+            }
+        }
+
+        // 3. Check inside dispatches (last one usually has the vehicle position if updated)
+        if (isset($data['dispatches']) && is_array($data['dispatches'])) {
+            foreach (array_reverse($data['dispatches']) as $dispatch) {
+                foreach ($keys as $key) {
+                    if (!empty($dispatch[$key]))
+                        return $dispatch[$key];
+                }
+            }
+        }
+
+        return null;
     }
 }
