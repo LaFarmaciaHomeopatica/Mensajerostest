@@ -192,6 +192,7 @@ export default function UserIndex({ users }) {
                                 required
                             >
                                 <option value="administrador">Administrador</option>
+                                <option value="desarrollador">Desarrollador</option>
                             </SelectInput>
                             <InputError message={errors.role} className="mt-2" />
                         </div>

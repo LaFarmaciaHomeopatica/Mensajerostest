@@ -7,7 +7,6 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import Modal from '@/Components/Modal';
-import DataPurgeModal from '@/Components/DataPurgeModal';
 
 export default function Dashboard({ messengers, dispatch_locations, beetrack_data }) {
     const { data, setData, submit, processing, errors, reset } = useForm({
@@ -33,7 +32,6 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
     const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleTimeString());
     const [beetrackLoading, setBeetrackLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [showPurgeModal, setShowPurgeModal] = useState(false);
 
     // --- Fast/Async Data Loading ---
     useEffect(() => {
@@ -251,7 +249,7 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
     };
 
     return (
-        <LeaderLayout title="Control Center" onPurgeClick={() => setShowPurgeModal(true)}>
+        <LeaderLayout title="Control Center">
             <Head title="Control Center" />
             {/* Glassmorphism Header */}
             <div className="sticky top-16 z-20 backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-b border-indigo-100 dark:border-indigo-900/50 shadow-sm transition-all duration-300">
@@ -420,7 +418,6 @@ export default function Dashboard({ messengers, dispatch_locations, beetrack_dat
                 </div>
             </div>
 
-            <DataPurgeModal show={showPurgeModal} onClose={() => setShowPurgeModal(false)} />
         </LeaderLayout>
     );
 }

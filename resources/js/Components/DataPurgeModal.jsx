@@ -3,6 +3,7 @@ import Modal from '@/Components/Modal';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import SecondaryButton from '@/Components/SecondaryButton';
+import axios from 'axios';
 
 const TABLES = [
     { key: 'lunch_logs', label: '🍽️ Registros de Almuerzo', desc: 'Registros de inicio/fin de almuerzo por fecha de inicio' },
@@ -59,31 +60,29 @@ export default function DataPurgeModal({ show, onClose }) {
     const handleDownloadBackup = async () => {
         setDownloadingBackup(true);
         try {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = route('admin.purge.backup');
-            form.style.display = 'none';
+            const response = await axios.post(route('admin.purge.backup'), {
+                start_date: startDate,
+                end_date: endDate,
+                tables: tables,
+            }, {
+                responseType: 'blob',
+            });
 
-            const addField = (name, value) => {
-                const input = document.createElement('input');
-                input.type = 'hidden'; input.name = name; input.value = value;
-                form.appendChild(input);
-            };
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `respaldo_depuracion_${new Date().toISOString().slice(0, 10)}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
 
-            const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
-            addField('_token', csrf);
-            addField('start_date', startDate);
-            addField('end_date', endDate);
-            tables.forEach((t, i) => addField(`tables[${i}]`, t));
-
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
-
-            setTimeout(() => { setBackupDownloaded(true); setDownloadingBackup(false); }, 1500);
+            setBackupDownloaded(true);
+            setDownloadingBackup(false);
         } catch (e) {
             setDownloadingBackup(false);
-            alert('Error al generar el respaldo.');
+            console.error('Download error:', e);
+            alert('Error al generar el respaldo. Verifique que la sesión no haya expirado.');
         }
     };
 

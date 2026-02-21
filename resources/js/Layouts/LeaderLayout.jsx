@@ -1,15 +1,17 @@
 import React from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
+import DataPurgeModal from '@/Components/DataPurgeModal';
 
 export default function LeaderLayout({ children, title, onPurgeClick }) {
     const { auth } = usePage().props;
 
     const menuItems = [
-        { label: 'Dashboard', route: 'dashboard', active: route().current('dashboard'), roles: ['administrador'] },
-        { label: 'Horarios', route: 'shifts.index', active: route().current('shifts.*'), roles: ['administrador'] },
-        { label: 'Almuerzo', route: 'reports.lunch', active: route().current('reports.lunch'), roles: ['administrador'] },
-        { label: 'Salida', route: 'reports.exit', active: route().current('reports.exit'), roles: ['administrador'] },
-        { label: 'Mensajeros', route: 'messengers.index', active: route().current('messengers.*'), roles: ['administrador'] },
+        { label: 'Dashboard', route: 'dashboard', active: route().current('dashboard'), roles: ['administrador', 'desarrollador'] },
+        { label: 'Horarios', route: 'shifts.index', active: route().current('shifts.*'), roles: ['administrador', 'desarrollador'] },
+        { label: 'Almuerzo', route: 'reports.lunch', active: route().current('reports.lunch'), roles: ['administrador', 'desarrollador'] },
+        { label: 'Salida', route: 'reports.exit', active: route().current('reports.exit'), roles: ['administrador', 'desarrollador'] },
+        { label: 'Mensajeros', route: 'messengers.index', active: route().current('messengers.*'), roles: ['administrador', 'desarrollador'] },
+        { label: 'Usuarios', route: 'users.index', active: route().current('users.*'), roles: ['desarrollador'] },
     ].filter(item => item.roles.includes(auth.user.role));
 
     const logout = (e) => {
@@ -18,6 +20,7 @@ export default function LeaderLayout({ children, title, onPurgeClick }) {
     };
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+    const [showPurgeModal, setShowPurgeModal] = React.useState(false);
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans text-sm selection:bg-indigo-100 dark:selection:bg-indigo-900">
@@ -55,9 +58,9 @@ export default function LeaderLayout({ children, title, onPurgeClick }) {
                             <span className="text-xs font-bold text-white">{auth.user.name}</span>
                         </div>
 
-                        {onPurgeClick && (
+                        {auth.user.role === 'desarrollador' && (
                             <button
-                                onClick={onPurgeClick}
+                                onClick={() => setShowPurgeModal(true)}
                                 className="hidden md:flex items-center gap-1.5 bg-slate-800 hover:bg-red-900/60 border border-red-800/40 text-red-400 hover:text-red-300 px-3 py-2 rounded-lg text-xs font-bold transition-colors duration-200"
                                 title="Depurar base de datos"
                             >
@@ -127,6 +130,8 @@ export default function LeaderLayout({ children, title, onPurgeClick }) {
             <main>
                 {children}
             </main>
+
+            <DataPurgeModal show={showPurgeModal} onClose={() => setShowPurgeModal(false)} />
         </div>
     );
 }
