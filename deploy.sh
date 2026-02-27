@@ -8,11 +8,18 @@ echo "📦 Instalando dependencias de Composer..."
 composer install --no-dev --optimize-autoloader
 
 # 2. Instalar dependencias de JS y generar build
-echo "🔨 Construyendo assets con Vite..."
-npm install
-npm run build
+echo "✅ Assets ya compilados en local (carpeta public/build), saltando Vite."
+# npm install
+# npm run build
 
-# 3. Ejecutar migraciones (sin seeders por seguridad, a menos que se fuerce)
+# 3. Crear carpetas de cache temporales (requerido por Laravel)
+echo "📁 Verificando carpetas temporales..."
+mkdir -p storage/framework/views
+mkdir -p storage/framework/cache/data
+mkdir -p storage/framework/sessions
+chmod -R 775 storage bootstrap/cache
+
+# 4. Ejecutar migraciones (sin seeders por seguridad, a menos que se fuerce)
 echo "📂 Ejecutando migraciones..."
 php artisan migrate --force
 

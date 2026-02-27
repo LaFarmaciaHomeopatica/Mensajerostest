@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import React, { useEffect, useState } from 'react';
+import { Head, useForm, Link } from '@inertiajs/react';
 
 export default function Login({ status }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -8,10 +8,30 @@ export default function Login({ status }) {
         remember: false,
     });
 
+    // PWA install prompt
+    const [installPrompt, setInstallPrompt] = useState(null);
+    const [showInstall, setShowInstall] = useState(false);
+
     useEffect(() => {
-        return () => {
-            reset('password');
+        const handler = (e) => {
+            e.preventDefault();
+            setInstallPrompt(e);
+            setShowInstall(true);
         };
+        window.addEventListener('beforeinstallprompt', handler);
+        return () => window.removeEventListener('beforeinstallprompt', handler);
+    }, []);
+
+    const handleInstall = async () => {
+        if (!installPrompt) return;
+        installPrompt.prompt();
+        const { outcome } = await installPrompt.userChoice;
+        if (outcome === 'accepted') setShowInstall(false);
+        setInstallPrompt(null);
+    };
+
+    useEffect(() => {
+        return () => { reset('password'); };
     }, []);
 
     const submit = (e) => {
@@ -21,7 +41,37 @@ export default function Login({ status }) {
 
     return (
         <div className="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-slate-50 dark:bg-slate-900">
-            <Head title="Log in" />
+            <Head title="Ingresar" />
+
+            {/* PWA Install Banner */}
+            {showInstall && (
+                <div className="fixed bottom-0 inset-x-0 z-50 p-4 sm:p-6 flex justify-center">
+                    <div className="w-full max-w-md bg-indigo-600 text-white rounded-2xl shadow-2xl flex items-center gap-4 px-5 py-4">
+                        <span className="text-3xl shrink-0">📲</span>
+                        <div className="flex-1 min-w-0">
+                            <p className="font-black text-sm">Instalar Logística LFH</p>
+                            <p className="text-indigo-200 text-xs">Accede más rápido desde tu pantalla de inicio</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <button
+                                onClick={handleInstall}
+                                className="bg-white text-indigo-600 font-black text-xs uppercase tracking-wider px-4 py-2 rounded-xl hover:bg-indigo-50 active:scale-95 transition-all"
+                            >
+                                Instalar
+                            </button>
+                            <button
+                                onClick={() => setShowInstall(false)}
+                                className="text-indigo-200 hover:text-white p-1 transition-colors"
+                                aria-label="Cerrar"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="w-full sm:max-w-md mt-6 px-10 py-12 bg-white dark:bg-slate-800 shadow-2xl rounded-2xl border border-slate-100 dark:border-slate-700">
                 <div className="mb-8 text-center">
@@ -86,6 +136,26 @@ export default function Login({ status }) {
                         </button>
                     </div>
                 </form>
+
+                <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700 text-center flex flex-col gap-3">
+                    <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider font-bold mb-1">Accesos Rápidos</p>
+                    <Link
+                        href={route('landing')}
+                        className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 bg-slate-900 dark:bg-slate-700 text-white rounded-xl font-bold text-sm uppercase tracking-wider hover:bg-slate-800 dark:hover:bg-slate-600 active:scale-95 transition-all duration-150 shadow-md"
+                    >
+                        <span className="text-lg leading-none">🛵</span>
+                        Soy Mensajero
+                    </Link>
+                    <a
+                        href="https://lib.bibliotecalfh.com"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-xl font-bold text-sm uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition-all duration-150 shadow-sm"
+                    >
+                        <span className="text-lg leading-none">📚</span>
+                        Biblioteca LFH
+                    </a>
+                </div>
             </div>
         </div>
     );

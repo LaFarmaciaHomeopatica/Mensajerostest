@@ -81,7 +81,21 @@ class DispatchController extends Controller
                 'latitud' => '',
                 'longitud' => '',
                 'horainicio' => now()->format('Y/m/d H:i'),
-                'horafinal' => ($row[8] ?? null) ? \Carbon\Carbon::parse($row[8])->format('Y/m/d H:i') : '',
+                'horafinal' => (function () use ($row) {
+                    $val = $row[8] ?? null;
+                    if (!$val)
+                        return '';
+                    try {
+                        if (is_numeric($val)) {
+                            $dt = \Carbon\Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($val));
+                        } else {
+                            $dt = \Carbon\Carbon::parse($val);
+                        }
+                        return ($dt->year < 2000 ? $dt->setDateFrom(now()) : $dt)->format('Y/m/d H:i');
+                    } catch (\Exception $e) {
+                        return '';
+                    }
+                })(),
                 'ctdestino' => '',
                 'prioridad' => ($row[9] ?? '') ?: 'Normal',
                 'info' => $currentInfo, // Propagated
