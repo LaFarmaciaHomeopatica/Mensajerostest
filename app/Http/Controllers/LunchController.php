@@ -59,22 +59,24 @@ class LunchController extends Controller
             ];
         }
 
-        // Fetch shifts for the entire current week
+        // Fetch shifts for the entire current week and the next week
         $startOfWeek = now()->startOfWeek();
-        $endOfWeek = now()->endOfWeek();
+        $endOfTwoWeeks = now()->addWeek()->endOfWeek();
 
         $dbShifts = $messenger->shifts()
             ->whereDate('date', '>=', $startOfWeek)
-            ->whereDate('date', '<=', $endOfWeek)
+            ->whereDate('date', '<=', $endOfTwoWeeks)
             ->get()
             ->keyBy('date');
 
         $shifts = collect();
         $currentDate = $startOfWeek->copy();
 
-        while ($currentDate <= $endOfWeek) {
+        while ($currentDate <= $endOfTwoWeeks) {
             $dateStr = $currentDate->format('Y-m-d');
             $shift = $dbShifts->get($dateStr);
+            $isToday = $dateStr === today()->format('Y-m-d');
+            $isNextWeek = $currentDate->isAfter(now()->endOfWeek());
 
             $shifts->push([
                 'date' => $currentDate->locale('es')->isoFormat('dddd D [de] MMMM'),
@@ -82,7 +84,8 @@ class LunchController extends Controller
                 'end_time' => $shift ? ($shift->end_time ? substr($shift->end_time, 0, 5) : null) : null,
                 'status' => $shift ? $shift->status : 'no_shift',
                 'location' => $shift ? ucfirst($shift->location) : 'Sin Programación',
-                'is_today' => $dateStr === today()->format('Y-m-d'),
+                'is_today' => $isToday,
+                'is_next_week' => $isNextWeek,
             ]);
 
             $currentDate->addDay();

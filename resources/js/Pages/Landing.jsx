@@ -17,6 +17,7 @@ export default function Landing() {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     const [activeLunch, setActiveLunch] = useState(null);
+    const [selectedWeek, setSelectedWeek] = useState('esta'); // esta, proxima
 
 
 
@@ -339,51 +340,74 @@ export default function Landing() {
                             Mis Próximos Turnos
                         </h3>
 
+                        <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-xl">
+                            <button
+                                onClick={() => setSelectedWeek('esta')}
+                                className={`flex-1 py-2 px-4 rounded-lg font-bold text-sm transition-all ${selectedWeek === 'esta'
+                                        ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                                    }`}
+                            >
+                                ESTA SEMANA
+                            </button>
+                            <button
+                                onClick={() => setSelectedWeek('proxima')}
+                                className={`flex-1 py-2 px-4 rounded-lg font-bold text-sm transition-all ${selectedWeek === 'proxima'
+                                        ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                                    }`}
+                            >
+                                PRÓX. SEMANA
+                            </button>
+                        </div>
+
                         <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
                             {messenger?.shifts && messenger.shifts.length > 0 ? (
-                                messenger.shifts.map((shift, index) => (
-                                    <div
-                                        key={index}
-                                        className={`p-4 rounded-lg border-l-4 shadow-sm ${shift.status === 'absent'
-                                            ? 'bg-red-50 border-red-500'
-                                            : shift.status === 'no_shift'
-                                                ? 'bg-gray-50 border-gray-300 opacity-75'
-                                                : shift.is_today
-                                                    ? 'bg-indigo-50 border-indigo-500 ring-1 ring-indigo-200'
-                                                    : 'bg-white dark:bg-gray-700 border-gray-300'
-                                            }`}
-                                    >
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="font-bold text-gray-800 dark:text-gray-100 capitalize">
-                                                    {shift.date}
-                                                </p>
-                                                {shift.status === 'absent' ? (
-                                                    <span className="text-red-600 font-bold text-sm">NO ASISTE</span>
-                                                ) : shift.status === 'no_shift' ? (
-                                                    <span className="text-gray-500 text-sm italic">Sin Turno</span>
-                                                ) : (
-                                                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                                                        {shift.start_time} - {shift.end_time}
+                                messenger.shifts
+                                    .filter(s => selectedWeek === 'esta' ? !s.is_next_week : s.is_next_week)
+                                    .map((shift, index) => (
+                                        <div
+                                            key={index}
+                                            className={`p-4 rounded-lg border-l-4 shadow-sm ${shift.status === 'absent'
+                                                ? 'bg-red-50 border-red-500'
+                                                : shift.status === 'no_shift'
+                                                    ? 'bg-gray-50 border-gray-300 opacity-75'
+                                                    : shift.is_today
+                                                        ? 'bg-indigo-50 border-indigo-500 ring-1 ring-indigo-200'
+                                                        : 'bg-white dark:bg-gray-700 border-gray-300'
+                                                }`}
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <p className="font-bold text-gray-800 dark:text-gray-100 capitalize">
+                                                        {shift.date}
                                                     </p>
-                                                )}
-                                            </div>
-                                            <div className="text-right">
-                                                {shift.status !== 'no_shift' && (
-                                                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${shift.location === 'Principal'
-                                                        ? 'bg-blue-100 text-blue-800'
-                                                        : 'bg-emerald-100 text-emerald-800'
-                                                        }`}>
-                                                        {shift.location}
-                                                    </span>
-                                                )}
-                                                {shift.is_today && (
-                                                    <div className="mt-1 text-xs font-bold text-indigo-600">HOY</div>
-                                                )}
+                                                    {shift.status === 'absent' ? (
+                                                        <span className="text-red-600 font-bold text-sm">NO ASISTE</span>
+                                                    ) : shift.status === 'no_shift' ? (
+                                                        <span className="text-gray-500 text-sm italic">Sin Turno</span>
+                                                    ) : (
+                                                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                                                            {shift.start_time} - {shift.end_time}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="text-right">
+                                                    {shift.status !== 'no_shift' && (
+                                                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${shift.location === 'Principal'
+                                                            ? 'bg-blue-100 text-blue-800'
+                                                            : 'bg-emerald-100 text-emerald-800'
+                                                            }`}>
+                                                            {shift.location}
+                                                        </span>
+                                                    )}
+                                                    {shift.is_today && (
+                                                        <div className="mt-1 text-xs font-bold text-indigo-600">HOY</div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))
+                                    ))
                             ) : (
                                 <p className="text-center text-gray-500 py-4">No tienes turnos asignados para los próximos días.</p>
                             )}
