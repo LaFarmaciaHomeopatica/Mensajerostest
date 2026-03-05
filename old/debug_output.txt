@@ -1,12 +1,9 @@
-Debug script started.
-------------------------------------------------
-Messenger: John Gonzalez (ID: 12)
-Today: 2026-02-04
-Report Created At (Raw): 2026-02-04 20:09:05
-Report Created At (Carbon): 2026-02-04 20:09:05 (America/Bogota)
-Report Created At (Format H:i): 20:09
-Shift Date: 2026-02-04
-Shift Start Time: 08:00
-Calculated Shift Start: 2026-02-04 08:00:00 (America/Bogota)
-Compliant (Is 2026-02-04 20:09:05 < 2026-02-04 08:00:00?): NO
-Debug script finished.
+Script started at 2026-02-21 13:50:44
+SUCCESS: Found 7 active messengers.
+Messenger: Jairo Contreras | Unit: FYO88E | Lat: NULL | Lng: NULL
+Messenger: Javier Prieto | Unit: HUA90E | Lat: NULL | Lng: NULL
+Messenger: Yeison Cuesta | Unit: RQK23H | Lat: NULL | Lng: NULL
+Messenger: Geinson Alvarez | Unit: ZCO85G | Lat: NULL | Lng: NULL
+Messenger: Jose Calderon | Unit: FYA04H | Lat: NULL | Lng: NULL
+Messenger: Daniel Yara | Unit: LTZ36E | Lat: NULL | Lng: NULL
+Messenger: Juan Castro | Unit: BC0002 | Lat: NULL | Lng: NULL
