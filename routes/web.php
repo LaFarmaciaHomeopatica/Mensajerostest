@@ -49,6 +49,7 @@ Route::middleware(['auth', 'role:administrador,desarrollador'])->group(function 
     Route::resource('shifts', \App\Http\Controllers\ShiftController::class)->only(['index', 'store', 'destroy']);
     // Rutas de Admin
     Route::resource('messengers', \App\Http\Controllers\MessengerController::class);
+    Route::resource('external-forms', \App\Http\Controllers\ExternalFormController::class)->only(['index', 'store', 'destroy']);
     Route::post('/update-location/{messenger}', [UnifiedController::class, 'updateLocation'])->name('messenger.update-location');
     Route::post('/dispatch', [DispatchController::class, 'store'])->name('dispatch.store');
     Route::post('/dispatch', [DispatchController::class, 'store'])->name('dispatch.store');

@@ -92,6 +92,7 @@ class LunchController extends Controller
         }
 
         $response['shifts'] = $shifts;
+        $response['external_forms'] = \App\Models\ExternalForm::where('is_active', true)->get(['title', 'url']);
 
         return response()->json($response);
     }

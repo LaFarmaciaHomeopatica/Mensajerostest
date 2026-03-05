@@ -299,6 +299,17 @@ export default function Landing() {
                                 <span className="text-indigo-200 group-hover:text-white">→</span>
                             </PrimaryButton>
 
+                            <PrimaryButton
+                                onClick={() => setViewState('forms_view')}
+                                className="w-full py-5 flex items-center justify-between text-lg group bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 border-slate-700"
+                            >
+                                <span className="flex items-center gap-3">
+                                    <span className="text-2xl">📝</span>
+                                    <span>FORMULARIOS</span>
+                                </span>
+                                <span className="text-slate-400 group-hover:text-white">→</span>
+                            </PrimaryButton>
+
                             <SuccessButton
                                 onClick={() => setViewState('lunch_confirm')}
                                 className="w-full py-5 flex items-center justify-between text-lg group"
@@ -333,6 +344,52 @@ export default function Landing() {
                     )}
                 </>
 
+                {/* Forms View */}
+                {viewState === 'forms_view' && (
+                    <div className="space-y-6">
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 text-center flex items-center justify-center gap-2">
+                            <span>📝</span> Formularios Externos
+                        </h3>
+
+                        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                            {messenger?.external_forms && messenger.external_forms.length > 0 ? (
+                                messenger.external_forms.map((form, index) => (
+                                    <a
+                                        key={index}
+                                        href={form.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block p-5 bg-white dark:bg-gray-700 rounded-2xl border-2 border-slate-100 dark:border-slate-600 shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500 transition-all group"
+                                    >
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <h4 className="font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">
+                                                    {form.title}
+                                                </h4>
+                                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                                    Toca para abrir el formulario
+                                                </p>
+                                            </div>
+                                            <span className="text-2xl group-hover:translate-x-1 transition-transform">→</span>
+                                        </div>
+                                    </a>
+                                ))
+                            ) : (
+                                <div className="text-center py-10 text-slate-400 italic bg-slate-50 dark:bg-slate-900/50 rounded-2xl">
+                                    No hay formularios disponibles en este momento.
+                                </div>
+                            )}
+                        </div>
+
+                        <SecondaryButton
+                            onClick={() => setViewState('options')}
+                            className="w-full justify-center py-4"
+                        >
+                            Volver al Menú
+                        </SecondaryButton>
+                    </div>
+                )}
+
                 {/* Shifts View */}
                 {viewState === 'shifts_view' && (
                     <div className="space-y-6">
@@ -344,8 +401,8 @@ export default function Landing() {
                             <button
                                 onClick={() => setSelectedWeek('esta')}
                                 className={`flex-1 py-2 px-4 rounded-lg font-bold text-sm transition-all ${selectedWeek === 'esta'
-                                        ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                                    ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                                     }`}
                             >
                                 ESTA SEMANA
@@ -353,8 +410,8 @@ export default function Landing() {
                             <button
                                 onClick={() => setSelectedWeek('proxima')}
                                 className={`flex-1 py-2 px-4 rounded-lg font-bold text-sm transition-all ${selectedWeek === 'proxima'
-                                        ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                                    ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                                     }`}
                             >
                                 PRÓX. SEMANA

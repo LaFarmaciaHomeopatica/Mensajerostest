@@ -11,6 +11,7 @@ export default function LeaderLayout({ children, title, onPurgeClick }) {
         { label: 'Almuerzo', icon: '🍽️', route: 'reports.lunch', active: route().current('reports.lunch'), roles: ['administrador', 'desarrollador'] },
         { label: 'Salida', icon: '🏁', route: 'reports.exit', active: route().current('reports.exit'), roles: ['administrador', 'desarrollador'] },
         { label: 'Mensajeros', icon: '🛵', route: 'messengers.index', active: route().current('messengers.*'), roles: ['administrador', 'desarrollador'] },
+        { label: 'Formularios', icon: '📝', route: 'external-forms.index', active: route().current('external-forms.*'), roles: ['administrador', 'desarrollador'] },
         { label: 'Usuarios', icon: '👤', route: 'users.index', active: route().current('users.*'), roles: ['desarrollador'] },
     ].filter(item => item.roles.includes(auth.user.role));
 
