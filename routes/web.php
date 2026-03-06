@@ -8,6 +8,7 @@ use App\Http\Controllers\UnifiedController;
 use App\Http\Controllers\DispatchController;
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PreoperationalController;
 
 Route::get('/', [AuthController::class, 'loginView'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
@@ -18,12 +19,29 @@ Route::post('/messenger/check-plate', [LunchController::class, 'checkPlate'])->n
 Route::post('/lunch', [LunchController::class, 'store'])->name('lunch.store');
 Route::post('/shift-completion', [\App\Http\Controllers\ShiftCompletionController::class, 'store'])->name('shift-completion.store');
 
+// Preoperacional Frontend Routes
+Route::get('/preoperacional/questions', [PreoperationalController::class, 'getQuestions'])->name('preoperational.questions');
+Route::post('/preoperacional/store', [PreoperationalController::class, 'store'])->name('preoperational.store');
+
 Route::middleware(['auth', 'role:administrador,desarrollador'])->group(function () {
     // Rutas de Dashboard y Operación
     Route::get('/dashboard', [UnifiedController::class, 'index'])->name('dashboard');
     Route::get('/reports/lunch', [LunchController::class, 'report'])->name('reports.lunch');
     Route::get('/reports/lunch/data', [LunchController::class, 'data'])->name('reports.lunch.data');
     Route::get('/reports/lunch/export', [LunchController::class, 'export'])->name('reports.lunch.export');
+
+    // Preoperational Reports
+    Route::get('/reports/preoperational', [PreoperationalController::class, 'report'])->name('reports.preoperational');
+    Route::get('/reports/preoperational/data', [PreoperationalController::class, 'data'])->name('reports.preoperational.data');
+    Route::get('/reports/preoperational/export', [PreoperationalController::class, 'export'])->name('reports.preoperational.export');
+    Route::get('/reports/preoperational/stats', [PreoperationalController::class, 'statsView'])->name('reports.preoperational.stats');
+    Route::get('/reports/preoperational/stats/data', [PreoperationalController::class, 'statsData'])->name('reports.preoperational.stats.data');
+
+    // Configuración de Preguntas
+    Route::get('/reports/preoperational/questions', [PreoperationalController::class, 'questionsView'])->name('reports.preoperational.questions');
+    Route::post('/reports/preoperational/questions', [PreoperationalController::class, 'storeQuestion'])->name('reports.preoperational.questions.store');
+    Route::put('/reports/preoperational/questions/{id}', [PreoperationalController::class, 'updateQuestion'])->name('reports.preoperational.questions.update');
+    Route::delete('/reports/preoperational/questions/{id}', [PreoperationalController::class, 'destroyQuestion'])->name('reports.preoperational.questions.destroy');
 
     // Reporte de Salida
     Route::get('/reports/exit', [\App\Http\Controllers\ShiftCompletionController::class, 'index'])->name('reports.exit');
@@ -52,5 +70,26 @@ Route::middleware(['auth', 'role:administrador,desarrollador'])->group(function 
     Route::resource('external-forms', \App\Http\Controllers\ExternalFormController::class)->only(['index', 'store', 'destroy']);
     Route::post('/update-location/{messenger}', [UnifiedController::class, 'updateLocation'])->name('messenger.update-location');
     Route::post('/dispatch', [DispatchController::class, 'store'])->name('dispatch.store');
-    Route::post('/dispatch', [DispatchController::class, 'store'])->name('dispatch.store');
+
+    Route::get('/seed-preops', function () {
+        $messengers = \App\Models\Messenger::where('is_active', true)->inRandomOrder()->limit(10)->get();
+        $keys = ['estado_llantas', 'estado_frenos', 'luces', 'kit_carretera', 'documentos', 'limpieza'];
+        $count = 0;
+        foreach ($messengers as $m) {
+            $answers = [];
+            foreach ($keys as $k) {
+                $answers[$k] = rand(1, 100) <= 80 ? true : false;
+            }
+            $time = \Carbon\Carbon::today()->addHours(rand(6, 12))->addMinutes(rand(0, 59));
+            \App\Models\PreoperationalReport::create([
+                'messenger_id' => $m->id,
+                'answers' => $answers,
+                'observations' => rand(0, 1) ? 'Inspección generada automáticamente.' : null,
+                'created_at' => $time,
+                'updated_at' => $time
+            ]);
+            $count++;
+        }
+        return "Se agregaron {$count} registros.";
+    });
 });

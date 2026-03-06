@@ -10,6 +10,7 @@ export default function LeaderLayout({ children, title, onPurgeClick }) {
         { label: 'Horarios', icon: '🕒', route: 'shifts.index', active: route().current('shifts.*'), roles: ['administrador', 'desarrollador'] },
         { label: 'Almuerzo', icon: '🍽️', route: 'reports.lunch', active: route().current('reports.lunch'), roles: ['administrador', 'desarrollador'] },
         { label: 'Salida', icon: '🏁', route: 'reports.exit', active: route().current('reports.exit'), roles: ['administrador', 'desarrollador'] },
+        { label: 'Preoperacional', icon: '📋', route: 'reports.preoperational', active: route().current('reports.preoperational'), roles: ['administrador', 'desarrollador'] },
         { label: 'Mensajeros', icon: '🛵', route: 'messengers.index', active: route().current('messengers.*'), roles: ['administrador', 'desarrollador'] },
         { label: 'Formularios', icon: '📝', route: 'external-forms.index', active: route().current('external-forms.*'), roles: ['administrador', 'desarrollador'] },
         { label: 'Usuarios', icon: '👤', route: 'users.index', active: route().current('users.*'), roles: ['desarrollador'] },

@@ -44,12 +44,17 @@ class LunchController extends Controller
             ->latest()
             ->first();
 
+        $preopFinished = $messenger->preoperationalReports()
+            ->whereDate('created_at', today())
+            ->exists();
+
         // Initialize response with basic info
         $response = [
             'id' => $messenger->id,
             'name' => $messenger->name,
             'vehicle' => $messenger->vehicle,
             'shift_finished' => $shiftFinished,
+            'preop_finished' => $preopFinished,
         ];
 
         if ($activeLunch) {

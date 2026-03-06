@@ -19,6 +19,12 @@ export default function Landing() {
     const [activeLunch, setActiveLunch] = useState(null);
     const [selectedWeek, setSelectedWeek] = useState('esta'); // esta, proxima
 
+    // Preoperational State
+    const [preopQuestions, setPreopQuestions] = useState([]);
+    const [preopAnswers, setPreopAnswers] = useState({});
+    const [preopObservations, setPreopObservations] = useState('');
+    const [loadingQuestions, setLoadingQuestions] = useState(false);
+
 
 
     // Lunch Form
@@ -54,6 +60,50 @@ export default function Landing() {
                 }
             }
         });
+    };
+
+    const loadPreopQuestions = async () => {
+        setLoadingQuestions(true);
+        setViewState('preop_form');
+        try {
+            const res = await axios.get(route('preoperational.questions'));
+            setPreopQuestions(res.data.questions || []);
+
+            // Initialize answers state
+            const initialAnswers = {};
+            (res.data.questions || []).forEach(q => {
+                initialAnswers[q.key] = ''; // empty string forces user to select
+            });
+            setPreopAnswers(initialAnswers);
+            setPreopObservations('');
+        } catch (err) {
+            console.error('Error loading questions', err);
+        } finally {
+            setLoadingQuestions(false);
+        }
+    };
+
+    const handlePreopSubmit = async (e) => {
+        e.preventDefault();
+
+        // Validate all questions answered
+        const unanswered = preopQuestions.filter(q => preopAnswers[q.key] === '');
+        if (unanswered.length > 0) {
+            alert('Por favor responde todas las preguntas del checklist.');
+            return;
+        }
+
+        try {
+            await axios.post(route('preoperational.store'), {
+                messenger_id: messenger.id,
+                answers: preopAnswers,
+                observations: preopObservations
+            });
+            setViewState('success_preop');
+        } catch (error) {
+            alert(error.response?.data?.error || 'Ocurrió un error guardando el reporte.');
+            console.error(error);
+        }
     };
 
     const checkPlate = async (e) => {
@@ -152,6 +202,33 @@ export default function Landing() {
                     </PrimaryButton>
                     <button
                         onClick={() => { resetAll(); window.location.reload(); }}
+                        className="block w-full text-gray-600 dark:text-gray-400 font-bold hover:underline"
+                    >
+                        Salir
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (viewState === 'success_preop') {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+                <Head title="Inspección Completada" />
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-center border-l-4 border-green-500">
+                    <h1 className="text-3xl font-bold mb-4 text-green-600 dark:text-green-400">¡Inspección Enviada! ✅</h1>
+                    <p className="text-xl mb-4">
+                        Gracias por completar tu inspección preoperacional de hoy.
+                    </p>
+                    <p className="text-lg mb-6">Maneja con precaución.</p>
+                    <PrimaryButton
+                        onClick={() => setViewState('options')}
+                        className="rounded-full mb-4"
+                    >
+                        Volver al Menú
+                    </PrimaryButton>
+                    <button
+                        onClick={resetAll}
                         className="block w-full text-gray-600 dark:text-gray-400 font-bold hover:underline"
                     >
                         Salir
@@ -297,6 +374,18 @@ export default function Landing() {
                                     <span>VER MIS HORARIOS</span>
                                 </span>
                                 <span className="text-indigo-200 group-hover:text-white">→</span>
+                            </PrimaryButton>
+
+                            <PrimaryButton
+                                onClick={loadPreopQuestions}
+                                disabled={messenger?.preop_finished}
+                                className={`w-full py-5 flex items-center justify-between text-lg group ${messenger?.preop_finished ? 'bg-gray-400 border-gray-400 cursor-not-allowed hover:bg-gray-400 text-gray-700' : 'bg-cyan-700 hover:bg-cyan-800 border-cyan-800'}`}
+                            >
+                                <span className="flex items-center gap-3">
+                                    <span className="text-2xl">📋</span>
+                                    <span>{messenger?.preop_finished ? 'PREOPERACIONAL LISTO ✅' : 'PREOPERACIONAL'}</span>
+                                </span>
+                                {!messenger?.preop_finished && <span className="text-cyan-200 group-hover:text-white">→</span>}
                             </PrimaryButton>
 
                             <PrimaryButton
@@ -533,6 +622,79 @@ export default function Landing() {
                                 {processing ? 'Registrando...' : 'Sí, confirmar'}
                             </SuccessButton>
                         </div>
+                    </div>
+                )}
+                {viewState === 'preop_form' && (
+                    <div className="space-y-6">
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 text-center flex items-center justify-center gap-2 mb-2">
+                            <span>📋</span> Inspección Preoperacional
+                        </h3>
+
+                        <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-3 rounded-lg text-sm border border-blue-100 dark:border-blue-800 font-medium mb-4 text-center">
+                            Vehículo: <span className="font-bold">{messenger?.vehicle}</span>
+                        </div>
+
+                        {loadingQuestions ? (
+                            <div className="flex justify-center py-10">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                            </div>
+                        ) : (
+                            <form onSubmit={handlePreopSubmit} className="space-y-6">
+                                <div className="max-h-[50vh] overflow-y-auto pr-2 space-y-6">
+                                    {/* Group Questions by Category */}
+                                    {Object.entries(preopQuestions.reduce((acc, q) => {
+                                        if (!acc[q.category]) acc[q.category] = [];
+                                        acc[q.category].push(q);
+                                        return acc;
+                                    }, {})).map(([category, questions]) => (
+                                        <div key={category} className="bg-white dark:bg-gray-800 rounded-xl border-2 border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+                                            <div className="bg-slate-50 dark:bg-slate-700 px-4 py-2 border-b-2 border-slate-100 dark:border-slate-600">
+                                                <h4 className="font-black text-slate-700 dark:text-slate-200 uppercase tracking-wide text-sm">{category}</h4>
+                                            </div>
+                                            <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                                                {questions.map((q) => (
+                                                    <div key={q.id} className="p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                                                        <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{q.label}</span>
+                                                        <div className="flex bg-slate-100 dark:bg-slate-900 rounded-lg p-1 shrink-0 w-full sm:w-auto">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setPreopAnswers({ ...preopAnswers, [q.key]: true })}
+                                                                className={`flex-1 sm:px-4 py-2 rounded-md font-bold text-sm transition-colors ${preopAnswers[q.key] === true ? 'bg-green-500 text-white shadow' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
+                                                            >
+                                                                SÍ
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setPreopAnswers({ ...preopAnswers, [q.key]: false })}
+                                                                className={`flex-1 sm:px-4 py-2 rounded-md font-bold text-sm transition-colors ${preopAnswers[q.key] === false ? 'bg-red-500 text-white shadow' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
+                                                            >
+                                                                NO
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-slate-100 dark:border-slate-700 p-4">
+                                        <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">📝 Observaciones Adicionales (Opcional)</label>
+                                        <TextArea
+                                            value={preopObservations}
+                                            onChange={(e) => setPreopObservations(e.target.value)}
+                                            placeholder="Detalla cualquier anomalía aquí..."
+                                            className="w-full text-sm"
+                                            rows="3"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4 mt-4">
+                                    <SecondaryButton onClick={() => setViewState('options')} className="justify-center">Cancelar</SecondaryButton>
+                                    <PrimaryButton type="submit" className="justify-center">Enviar Reporte</PrimaryButton>
+                                </div>
+                            </form>
+                        )}
                     </div>
                 )}
             </div>
