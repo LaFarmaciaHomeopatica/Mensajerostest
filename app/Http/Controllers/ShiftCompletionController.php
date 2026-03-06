@@ -57,7 +57,7 @@ class ShiftCompletionController extends Controller
 
     public function getExitAnalysis(Request $request)
     {
-        $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : now()->subDays(30);
+        $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : now();
         $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : now();
         $messengerId = $request->input('messenger_id');
 

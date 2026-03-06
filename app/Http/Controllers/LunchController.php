@@ -102,7 +102,7 @@ class LunchController extends Controller
         $date = $request->input('date', today()->toDateString());
 
         return Inertia::render('Reports/Lunch', [
-            'filters' => ['date' => $date],
+            'filters' => ['start_date' => $date, 'end_date' => $date],
             'messengers' => Messenger::where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
     }

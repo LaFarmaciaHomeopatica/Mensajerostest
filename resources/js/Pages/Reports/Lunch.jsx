@@ -11,6 +11,7 @@ export default function LunchReport({ filters }) {
     const [startDate, setStartDate] = useState(filters?.start_date || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
     const [endDate, setEndDate] = useState(filters?.end_date || new Date().toISOString().split('T')[0]);
     const [messengerSearch, setMessengerSearch] = useState('');
+    const [sortConfig, setSortConfig] = useState({ key: 'start_time', direction: 'desc' });
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -43,14 +44,43 @@ export default function LunchReport({ filters }) {
         setShowExportModal(false);
     };
 
-    const filteredRows = logs.filter(l => !messengerSearch || l.messenger.toLowerCase().includes(messengerSearch.toLowerCase()));
-    const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+    let filteredRows = logs.filter(l => !messengerSearch || l.messenger.toLowerCase().includes(messengerSearch.toLowerCase()));
+
+    if (sortConfig.key) {
+        filteredRows.sort((a, b) => {
+            let aVal = a[sortConfig.key];
+            let bVal = b[sortConfig.key];
+
+            if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+            if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }
+
+    const isSingleDay = startDate === endDate;
+    const effectivePageSize = isSingleDay ? Math.max(1, filteredRows.length) : PAGE_SIZE;
+
+    const totalPages = Math.max(1, Math.ceil(filteredRows.length / effectivePageSize));
     const safePage = Math.min(currentPage, totalPages);
-    const paginatedRows = filteredRows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+    const paginatedRows = filteredRows.slice((safePage - 1) * effectivePageSize, safePage * effectivePageSize);
 
     const statusBadge = (status) => status === 'active'
         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
         : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+
+    const requestSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const getSortIcon = (name) => {
+        if (sortConfig.key !== name) return <span className="text-gray-300 dark:text-gray-600 ml-1">↕</span>;
+        if (sortConfig.direction === 'asc') return <span className="text-indigo-500 ml-1">↑</span>;
+        return <span className="text-indigo-500 ml-1">↓</span>;
+    };
 
     return (
         <LeaderLayout title="Reporte de Almuerzos">
@@ -134,11 +164,21 @@ export default function LunchReport({ filters }) {
                                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead className="bg-gray-50 dark:bg-gray-700">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Mensajero</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fecha</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Inicio</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fin (Estimado)</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Estado</th>
+                                            <th onClick={() => requestSort('messenger')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                                Mensajero {getSortIcon('messenger')}
+                                            </th>
+                                            <th onClick={() => requestSort('date')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                                Fecha {getSortIcon('date')}
+                                            </th>
+                                            <th onClick={() => requestSort('start_time')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                                Inicio {getSortIcon('start_time')}
+                                            </th>
+                                            <th onClick={() => requestSort('end_time')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                                Fin (Estimado) {getSortIcon('end_time')}
+                                            </th>
+                                            <th onClick={() => requestSort('status')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                                Estado {getSortIcon('status')}
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -164,10 +204,10 @@ export default function LunchReport({ filters }) {
                         </div>
 
                         {/* Pagination */}
-                        {totalPages > 1 && (
+                        {totalPages > 1 && !isSingleDay && (
                             <div className="mt-6 flex items-center justify-between">
                                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    Mostrando {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filteredRows.length)} de {filteredRows.length} registros
+                                    Mostrando {(safePage - 1) * effectivePageSize + 1}–{Math.min(safePage * effectivePageSize, filteredRows.length)} de {filteredRows.length} registros
                                 </span>
                                 <div className="flex gap-1">
                                     <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safePage === 1}
