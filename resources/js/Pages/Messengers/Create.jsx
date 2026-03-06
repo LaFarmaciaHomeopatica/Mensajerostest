@@ -62,7 +62,7 @@ export default function Create() {
 
                             {/* Location */}
                             <div>
-                                <InputLabel value="Ubicación Base" />
+                                <InputLabel value="Sede" />
                                 <SelectInput
                                     value={data.location}
                                     onChange={e => setData('location', e.target.value)}

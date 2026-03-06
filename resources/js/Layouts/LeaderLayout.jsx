@@ -6,18 +6,27 @@ export default function LeaderLayout({ children, title, onPurgeClick }) {
     const { auth } = usePage().props;
 
     const menuItems = [
-        { label: 'Dashboard', icon: '🏠', route: 'dashboard', active: route().current('dashboard'), roles: ['administrador', 'desarrollador'] },
+        { label: 'Dashboard', icon: '🏠', route: 'dashboard', active: route().current('dashboard'), roles: ['administrador', 'desarrollador', 'lider'] },
         { label: 'Horarios', icon: '🕒', route: 'shifts.index', active: route().current('shifts.*'), roles: ['administrador', 'desarrollador'] },
-        { label: 'Almuerzo', icon: '🍽️', route: 'reports.lunch', active: route().current('reports.lunch'), roles: ['administrador', 'desarrollador'] },
+        { label: 'Preoperacional', icon: '📋', route: 'reports.preoperational', active: route().current('reports.preoperational'), roles: ['administrador', 'desarrollador', 'regente'] },
+        { label: 'Almuerzo', icon: '🍽️', route: 'reports.lunch', active: route().current('reports.lunch'), roles: ['administrador', 'desarrollador', 'lider'] },
         { label: 'Salida', icon: '🏁', route: 'reports.exit', active: route().current('reports.exit'), roles: ['administrador', 'desarrollador'] },
-        { label: 'Preoperacional', icon: '📋', route: 'reports.preoperational', active: route().current('reports.preoperational'), roles: ['administrador', 'desarrollador'] },
-        { label: 'Mensajeros', icon: '🛵', route: 'messengers.index', active: route().current('messengers.*'), roles: ['administrador', 'desarrollador'] },
         { label: 'Formularios', icon: '📝', route: 'external-forms.index', active: route().current('external-forms.*'), roles: ['administrador', 'desarrollador'] },
-        { label: 'Usuarios', icon: '👤', route: 'users.index', active: route().current('users.*'), roles: ['desarrollador'] },
+        { label: 'Mensajeros', icon: '🛵', route: 'messengers.index', active: route().current('messengers.*'), roles: ['administrador', 'desarrollador'] },
+        { label: 'Usuarios', icon: '👤', route: 'users.index', active: route().current('users.*'), roles: ['administrador', 'desarrollador'] },
     ].filter(item => item.roles.includes(auth.user.role));
 
-    // Bottom nav shows first 4 items (most used)
-    const bottomNavItems = menuItems.slice(0, 4);
+    // Customize bottom nav items based on role
+    let bottomNavItems = [];
+    if (auth.user.role === 'administrador' || auth.user.role === 'desarrollador') {
+        bottomNavItems = [
+            menuItems.find(i => i.route === 'dashboard'),
+            menuItems.find(i => i.route === 'shifts.index'),
+            menuItems.find(i => i.route === 'messengers.index'),
+        ].filter(Boolean);
+    } else {
+        bottomNavItems = menuItems.slice(0, 4);
+    }
 
     const logout = (e) => {
         e.preventDefault();
@@ -144,15 +153,14 @@ export default function LeaderLayout({ children, title, onPurgeClick }) {
                             </span>
                             <span>{nav.label}</span>
                             {nav.active && (
-                                <span className="absolute bottom-0 w-6 h-0.5 bg-indigo-400 rounded-t-full" />
+                                <span className="absolute top-1 w-1 h-1 bg-indigo-400 rounded-full shadow-[0_0_8px_rgba(129,140,248,0.8)]" />
                             )}
                         </Link>
                     ))}
-
-                    {/* Logout button in bottom nav */}
+                    {/* Botón Salir para móvil */}
                     <button
                         onClick={logout}
-                        className="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold tracking-wide text-slate-500 hover:text-red-400 transition-colors active:scale-95"
+                        className="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold tracking-wide transition-all duration-200 active:scale-95 text-slate-500 hover:text-red-400"
                     >
                         <span className="text-lg leading-none">🚪</span>
                         <span>Salir</span>

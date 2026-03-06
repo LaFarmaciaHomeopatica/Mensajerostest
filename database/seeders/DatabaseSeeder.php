@@ -17,12 +17,24 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::firstOrCreate(
+        User::updateOrCreate(
             ['email' => 'admin@example.com'],
-            [
-                'name' => 'Admin User',
-                'password' => bcrypt('password'),
-            ]
+            ['name' => 'Admin User', 'password' => bcrypt('password'), 'role' => 'administrador']
+        );
+
+        User::updateOrCreate(
+            ['email' => 'dev@example.com'],
+            ['name' => 'Developer User', 'password' => bcrypt('password'), 'role' => 'desarrollador']
+        );
+
+        User::updateOrCreate(
+            ['email' => 'lider@example.com'],
+            ['name' => 'Lider User', 'password' => bcrypt('password'), 'role' => 'lider']
+        );
+
+        User::updateOrCreate(
+            ['email' => 'regente@example.com'],
+            ['name' => 'Regente User', 'password' => bcrypt('password'), 'role' => 'regente']
         );
 
         $messengers = [

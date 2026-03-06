@@ -62,7 +62,7 @@ export default function PreoperationalQuestions({ auth, questions }) {
             <Head title="Configuración de Preguntas" />
 
             <div className="py-8">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div className="w-full max-w-[1800px] mx-auto sm:px-6 lg:px-8">
 
                     {/* Header */}
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 mb-6 flex justify-between items-center">
