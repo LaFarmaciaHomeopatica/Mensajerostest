@@ -23,12 +23,16 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             \Log::info('Login Success');
-            if (Auth::user()->role === 'administrador' || Auth::user()->role === 'desarrollador') {
-                return redirect()->intended('dashboard');
+            if (in_array(Auth::user()->role, ['administrador', 'desarrollador', 'lider'])) {
+                return redirect()->intended(route('dashboard'));
             }
 
-            // Fallback for anyone else (though there shouldn't be anyone else)
-            return redirect()->intended('messenger');
+            if (Auth::user()->role === 'regente') {
+                return redirect()->intended(route('reports.preoperational'));
+            }
+
+            // Fallback for anyone else
+            return redirect()->intended(route('landing'));
         }
 
         return back()->withErrors([
