@@ -19,6 +19,7 @@ class UserController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
+                    'modules' => $user->modules ?: [],
                 ];
             }),
         ]);
@@ -30,7 +31,8 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
-            'role' => ['required', Rule::in(['administrador', 'desarrollador'])],
+            'role' => ['required', Rule::in(['administrador', 'desarrollador', 'lider', 'regente'])],
+            'modules' => 'nullable|array',
         ]);
 
         User::create([
@@ -38,6 +40,7 @@ class UserController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
+            'modules' => $validated['modules'] ?? [],
         ]);
 
         return redirect()->back()->with('success', 'Usuario creado correctamente.');
@@ -49,13 +52,15 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:6',
-            'role' => ['required', Rule::in(['administrador', 'desarrollador'])],
+            'role' => ['required', Rule::in(['administrador', 'desarrollador', 'lider', 'regente'])],
+            'modules' => 'nullable|array',
         ]);
 
         $data = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
+            'modules' => $validated['modules'] ?? [],
         ];
 
         if (!empty($validated['password'])) {

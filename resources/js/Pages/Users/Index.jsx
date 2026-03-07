@@ -17,8 +17,20 @@ export default function UserIndex({ users }) {
         name: '',
         email: '',
         password: '',
-        role: 'administrador',
+        role: 'lider',
+        modules: [],
     });
+
+    const AVAILABLE_MODULES = [
+        { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
+        { id: 'shifts.index', label: 'Horarios', icon: '🕒' },
+        { id: 'reports.preoperational', label: 'Preoperacional', icon: '📋' },
+        { id: 'reports.lunch', label: 'Almuerzo', icon: '🍽️' },
+        { id: 'reports.exit', label: 'Salida', icon: '🏁' },
+        { id: 'external-forms.index', label: 'Formularios', icon: '📝' },
+        { id: 'messengers.index', label: 'Mensajeros', icon: '🛵' },
+        { id: 'users.index', label: 'Usuarios', icon: '👤' },
+    ];
 
     const openModal = (user = null) => {
         if (user) {
@@ -28,6 +40,7 @@ export default function UserIndex({ users }) {
                 email: user.email,
                 password: '',
                 role: user.role,
+                modules: user.modules || [],
             });
         } else {
             setEditingUser(null);
@@ -35,11 +48,21 @@ export default function UserIndex({ users }) {
                 name: '',
                 email: '',
                 password: '',
-                role: 'administrador',
+                role: 'lider',
+                modules: [],
             });
         }
         setErrors({});
         setShowModal(true);
+    };
+
+    const handleModuleToggle = (moduleId) => {
+        const currentModules = [...form.modules];
+        if (currentModules.includes(moduleId)) {
+            setForm({ ...form, modules: currentModules.filter(id => id !== moduleId) });
+        } else {
+            setForm({ ...form, modules: [...currentModules, moduleId] });
+        }
     };
 
     const submit = (e) => {
@@ -92,6 +115,9 @@ export default function UserIndex({ users }) {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Rol
                                     </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Módulos
+                                    </th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Acciones
                                     </th>
@@ -110,6 +136,22 @@ export default function UserIndex({ users }) {
                                             <span className="px-2 inline-flex text-[10px] leading-5 font-black uppercase tracking-widest rounded-full border bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-800">
                                                 {user.role}
                                             </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm">
+                                            <div className="flex flex-wrap gap-1 max-w-xs">
+                                                {user.modules && user.modules.length > 0 ? (
+                                                    user.modules.map(modId => {
+                                                        const mod = AVAILABLE_MODULES.find(m => m.id === modId);
+                                                        return mod ? (
+                                                            <span key={modId} className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded text-[9px] font-bold uppercase tracking-tighter" title={mod.label}>
+                                                                {mod.icon}
+                                                            </span>
+                                                        ) : null;
+                                                    })
+                                                ) : (
+                                                    <span className="text-gray-400 italic text-[10px]">Por defecto</span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div className="flex justify-end gap-3">
@@ -137,64 +179,102 @@ export default function UserIndex({ users }) {
                 </div>
             </div>
 
-            <Modal show={showModal} onClose={() => setShowModal(false)}>
+            <Modal show={showModal} onClose={() => setShowModal(false)} maxWidth="2xl">
                 <div className="p-6">
                     <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6 uppercase tracking-tight">
                         {editingUser ? 'Actualizar Usuario' : 'Crear Nuevo Usuario'}
                     </h2>
 
-                    <form onSubmit={submit} className="space-y-4">
-                        <div>
-                            <InputLabel htmlFor="name" value="Nombre" />
-                            <TextInput
-                                id="name"
-                                className="mt-1 block w-full"
-                                value={form.name}
-                                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                required
-                            />
-                            <InputError message={errors.name} className="mt-2" />
+                    <form onSubmit={submit} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <InputLabel htmlFor="name" value="Nombre" />
+                                <TextInput
+                                    id="name"
+                                    className="mt-1 block w-full"
+                                    value={form.name}
+                                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                    required
+                                />
+                                <InputError message={errors.name} className="mt-2" />
+                            </div>
+
+                            <div>
+                                <InputLabel htmlFor="email" value="Email" />
+                                <TextInput
+                                    id="email"
+                                    type="email"
+                                    className="mt-1 block w-full"
+                                    value={form.email}
+                                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                                    required
+                                />
+                                <InputError message={errors.email} className="mt-2" />
+                            </div>
                         </div>
 
-                        <div>
-                            <InputLabel htmlFor="email" value="Email" />
-                            <TextInput
-                                id="email"
-                                type="email"
-                                className="mt-1 block w-full"
-                                value={form.email}
-                                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                                required
-                            />
-                            <InputError message={errors.email} className="mt-2" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <InputLabel htmlFor="password" value={editingUser ? 'Contraseña (Opcional)' : 'Contraseña'} />
+                                <TextInput
+                                    id="password"
+                                    type="password"
+                                    className="mt-1 block w-full"
+                                    value={form.password}
+                                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                                    required={!editingUser}
+                                />
+                                <InputError message={errors.password} className="mt-2" />
+                            </div>
+
+                            <div>
+                                <InputLabel htmlFor="role" value="Rol Base" />
+                                <SelectInput
+                                    id="role"
+                                    className="mt-1 block w-full"
+                                    value={form.role}
+                                    onChange={(e) => setForm({ ...form, role: e.target.value })}
+                                    required
+                                >
+                                    <option value="administrador">Administrador</option>
+                                    <option value="desarrollador">Desarrollador</option>
+                                    <option value="lider">Líder</option>
+                                    <option value="regente">Regente</option>
+                                </SelectInput>
+                                <InputError message={errors.role} className="mt-2" />
+                            </div>
                         </div>
 
-                        <div>
-                            <InputLabel htmlFor="password" value={editingUser ? 'Contraseña (dejar en blanco para no cambiar)' : 'Contraseña'} />
-                            <TextInput
-                                id="password"
-                                type="password"
-                                className="mt-1 block w-full"
-                                value={form.password}
-                                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                                required={!editingUser}
-                            />
-                            <InputError message={errors.password} className="mt-2" />
-                        </div>
-
-                        <div>
-                            <InputLabel htmlFor="role" value="Rol" />
-                            <SelectInput
-                                id="role"
-                                className="mt-1 block w-full"
-                                value={form.role}
-                                onChange={(e) => setForm({ ...form, role: e.target.value })}
-                                required
-                            >
-                                <option value="administrador">Administrador</option>
-                                <option value="desarrollador">Desarrollador</option>
-                            </SelectInput>
-                            <InputError message={errors.role} className="mt-2" />
+                        <div className="border-t border-gray-100 dark:border-gray-700 pt-6">
+                            <InputLabel value="Habilitar Accesos Manuales" className="mb-4" />
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                {AVAILABLE_MODULES.map((mod) => (
+                                    <button
+                                        key={mod.id}
+                                        type="button"
+                                        onClick={() => handleModuleToggle(mod.id)}
+                                        className={`
+                                            flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all group
+                                            ${form.modules.includes(mod.id)
+                                                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                                                : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 text-slate-400'}
+                                        `}
+                                    >
+                                        <span className={`text-xl mb-1 transition-transform ${form.modules.includes(mod.id) ? 'scale-110' : 'group-hover:scale-110'}`}>
+                                            {mod.icon}
+                                        </span>
+                                        <span className="text-[9px] font-black uppercase tracking-tight text-center leading-none">
+                                            {mod.label}
+                                        </span>
+                                        {form.modules.includes(mod.id) && (
+                                            <div className="absolute top-1 right-1 w-2 h-2 bg-indigo-500 rounded-full" />
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                            <p className="mt-3 text-[10px] text-slate-400 italic">
+                                * Nota: Si selecciona módulos aquí, estos serán los únicos accesibles para el usuario, ignorando los permisos por defecto de su rol.
+                            </p>
                         </div>
 
                         <div className="flex items-center justify-end mt-6 gap-3">

@@ -14,14 +14,7 @@ export default function LeaderLayout({ children, title, onPurgeClick }) {
         { label: 'Formularios', icon: '📝', route: 'external-forms.index', active: route().current('external-forms.*'), roles: ['administrador', 'desarrollador'] },
         { label: 'Mensajeros', icon: '🛵', route: 'messengers.index', active: route().current('messengers.*'), roles: ['administrador', 'desarrollador'] },
         { label: 'Usuarios', icon: '👤', route: 'users.index', active: route().current('users.*'), roles: ['administrador', 'desarrollador'] },
-    ].filter(item => {
-        // Habilitar acceso manual por módulo si el usuario tiene una lista definida
-        if (auth.user.modules && auth.user.modules.length > 0) {
-            return auth.user.modules.includes(item.route);
-        }
-        // De lo contrario, usar la lógica basada en roles predeterminada
-        return item.roles.includes(auth.user.role);
-    });
+    ].filter(item => item.roles.includes(auth.user.role));
 
     // Customize bottom nav items based on role
     let bottomNavItems = [];
