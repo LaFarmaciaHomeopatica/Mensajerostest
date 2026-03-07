@@ -13,6 +13,7 @@ use App\Http\Controllers\MessengerController;
 use App\Http\Controllers\ExternalFormController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PurgeController;
+use App\Http\Controllers\CleaningController;
 
 // Públicas / Login
 Route::get('/', [AuthController::class, 'loginView'])->name('login');
@@ -29,6 +30,9 @@ Route::post('/shift-completion', [ShiftCompletionController::class, 'store'])->n
 Route::get('/preoperacional/questions', [PreoperationalController::class, 'getQuestions'])->name('preoperational.questions');
 Route::post('/preoperacional/store', [PreoperationalController::class, 'store'])->name('preoperational.store');
 
+// Aseo Frontend Routes
+Route::post('/cleaning/store', [CleaningController::class, 'store'])->name('cleaning.store');
+
 // Rutas Protegidas por Login
 Route::middleware(['auth'])->group(function () {
 
@@ -40,13 +44,18 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports/lunch/export', [LunchController::class, 'export'])->name('reports.lunch.export');
     });
 
-    // 2. Preoperacional (Reportes y Stats): Admin, Dev, Regente
+    // 2. Preoperacional e Inspección de Aseo: Admin, Dev, Regente
     Route::middleware(['role:administrador,desarrollador,regente'])->group(function () {
         Route::get('/reports/preoperational', [PreoperationalController::class, 'report'])->name('reports.preoperational');
         Route::get('/reports/preoperational/data', [PreoperationalController::class, 'data'])->name('reports.preoperational.data');
         Route::get('/reports/preoperational/export', [PreoperationalController::class, 'export'])->name('reports.preoperational.export');
         Route::get('/reports/preoperational/stats', [PreoperationalController::class, 'statsView'])->name('reports.preoperational.stats');
         Route::get('/reports/preoperational/stats/data', [PreoperationalController::class, 'statsData'])->name('reports.preoperational.stats.data');
+
+        // Aseo
+        Route::get('/reports/cleaning', [CleaningController::class, 'index'])->name('reports.cleaning');
+        Route::get('/reports/cleaning/data', [CleaningController::class, 'data'])->name('reports.cleaning.data');
+        Route::get('/reports/cleaning/export', [CleaningController::class, 'export'])->name('reports.cleaning.export');
     });
 
     // 3. Todo lo demás: Solo Admin y Dev

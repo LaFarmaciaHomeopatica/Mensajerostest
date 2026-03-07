@@ -13,9 +13,8 @@ return new class extends Migration {
         Schema::create('cleaning_reports', function (Blueprint $table) {
             $table->id();
             $table->foreignId('messenger_id')->constrained()->onDelete('cascade');
-            $table->enum('type', ['maletas_semanal', 'maletas_mensual', 'motos_semanal', 'motos_mensual']);
-            $table->json('answers');
-            $table->string('evidence_path');
+            $table->enum('item', ['maleta', 'moto']);
+            $table->enum('type', ['semanal_superficial', 'mensual_profunda']);
             $table->text('observations')->nullable();
             $table->timestamps();
         });

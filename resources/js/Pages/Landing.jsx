@@ -10,8 +10,8 @@ import WarningButton from '@/Components/WarningButton';
 import DangerButton from '@/Components/DangerButton';
 
 export default function Landing() {
-    const { flash, errors } = usePage().props;
-    const [viewState, setViewState] = useState('search'); // search, options, active_lunch
+    const { flash, errors: pageErrors } = usePage().props;
+    const [viewState, setViewState] = useState('search'); // search, options, active_lunch, preop_form, cleaning_form, etc.
     const [messenger, setMessenger] = useState(null);
     const [plate, setPlate] = useState('');
     const [error, setError] = useState(null);
@@ -25,7 +25,11 @@ export default function Landing() {
     const [preopObservations, setPreopObservations] = useState('');
     const [loadingQuestions, setLoadingQuestions] = useState(false);
 
-
+    // Cleaning State
+    const [cleaningItem, setCleaningItem] = useState(''); // maleta, moto
+    const [cleaningType, setCleaningType] = useState(''); // semanal_superficial, mensual_profunda
+    const [cleaningObservations, setCleaningObservations] = useState('');
+    const [submittingCleaning, setSubmittingCleaning] = useState(false);
 
     // Lunch Form
     const { data, setData, post, processing, reset: resetForm } = useForm({
@@ -35,7 +39,6 @@ export default function Landing() {
     const handleLunchSubmit = () => {
         post(route('lunch.store'), {
             onSuccess: (page) => {
-                // Set active lunch data from success response
                 if (page.props.flash.success) {
                     setActiveLunch({
                         end: page.props.flash.success.return_time
@@ -68,11 +71,9 @@ export default function Landing() {
         try {
             const res = await axios.get(route('preoperational.questions'));
             setPreopQuestions(res.data.questions || []);
-
-            // Initialize answers state
             const initialAnswers = {};
             (res.data.questions || []).forEach(q => {
-                initialAnswers[q.key] = ''; // empty string forces user to select
+                initialAnswers[q.key] = '';
             });
             setPreopAnswers(initialAnswers);
             setPreopObservations('');
@@ -85,8 +86,6 @@ export default function Landing() {
 
     const handlePreopSubmit = async (e) => {
         e.preventDefault();
-
-        // Validate all questions answered
         const unanswered = preopQuestions.filter(q => preopAnswers[q.key] === '');
         if (unanswered.length > 0) {
             alert('Por favor responde todas las preguntas del checklist.');
@@ -106,6 +105,30 @@ export default function Landing() {
         }
     };
 
+    const handleCleaningSubmit = async (e) => {
+        e.preventDefault();
+        if (!cleaningItem || !cleaningType) {
+            alert('Por favor selecciona el elemento y el tipo de aseo.');
+            return;
+        }
+
+        setSubmittingCleaning(true);
+        try {
+            await axios.post(route('cleaning.store'), {
+                messenger_id: messenger.id,
+                item: cleaningItem,
+                type: cleaningType,
+                observations: cleaningObservations
+            });
+            setViewState('success_cleaning');
+        } catch (error) {
+            alert(error.response?.data?.error || 'Ocurrió un error guardando el reporte.');
+            console.error(error);
+        } finally {
+            setSubmittingCleaning(false);
+        }
+    };
+
     const checkPlate = async (e) => {
         e.preventDefault();
         setError(null);
@@ -117,7 +140,6 @@ export default function Landing() {
             setMessenger(mData);
             setData('messenger_id', mData.id);
 
-            // Handle Active Lunch
             if (mData.active_lunch) {
                 setActiveLunch({
                     start: mData.active_lunch.start,
@@ -127,16 +149,11 @@ export default function Landing() {
                 return;
             }
 
-            // Handle Shift Finished (Optional: redirect to finished view or options)
             if (mData.shift_finished) {
-                // We can either go to options (which shows finished banner) or redirect to finished view
-                // Let's stick to options as it gives more context but maybe highlight it?
-                // Actually, if they are done, maybe show the finished screen directly?
                 setViewState('shift_finished');
                 return;
             }
 
-            // Default to options menu
             setViewState('options');
         } catch (err) {
             setError('Placa no encontrada o error en el sistema.');
@@ -146,66 +163,28 @@ export default function Landing() {
         }
     };
 
-
-
     const resetAll = () => {
         setViewState('search');
         setMessenger(null);
         setPlate('');
         setError(null);
         setActiveLunch(null);
+        setCleaningItem('');
+        setCleaningType('');
+        setCleaningObservations('');
         resetForm();
     };
 
-    if (viewState === 'shift_finished' && messenger) {
+    // Success views
+    if (viewState === 'success_cleaning') {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-                <Head title="Turno Finalizado" />
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-center border-l-4 border-gray-500">
-                    <h1 className="text-2xl font-bold mb-4 text-gray-600 dark:text-gray-400">Turno Finalizado 🏁</h1>
-                    <p className="text-xl mb-4">
-                        Hola <strong>{messenger.name}</strong>, ya registraste el fin de tu turno por hoy.
-                    </p>
-                    <p className="text-lg mb-6 text-gray-500">¡Nos vemos mañana!</p>
-                    <PrimaryButton
-                        onClick={() => setViewState('options')}
-                        className="rounded-full mb-4"
-                    >
-                        Menú
-                    </PrimaryButton>
-                    <button
-                        onClick={resetAll}
-                        className="block w-full text-gray-600 dark:text-gray-400 font-bold hover:underline"
-                    >
-                        Salir
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    if (flash.success && viewState === 'success_shift') {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-                <Head title="Buen descanso" />
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-center border-l-4 border-indigo-500">
-                    <h1 className="text-3xl font-bold mb-4 text-indigo-600 dark:text-indigo-400">¡Buen descanso! 🌙</h1>
-                    <p className="text-xl mb-4">
-                        Has finalizado tu turno correctamente.
-                    </p>
-                    <p className="text-lg mb-6">Gracias por tu trabajo hoy.</p>
-                    <PrimaryButton
-                        onClick={() => setViewState('options')}
-                        className="rounded-full mb-4"
-                    >
-                        Menú
-                    </PrimaryButton>
-                    <button
-                        onClick={() => { resetAll(); window.location.reload(); }}
-                        className="block w-full text-gray-600 dark:text-gray-400 font-bold hover:underline"
-                    >
-                        Salir
-                    </button>
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300 p-4">
+                <Head title="Reporte de Aseo Enviado" />
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl max-w-md w-full text-center border-l-4 border-blue-500">
+                    <h1 className="text-3xl font-bold mb-4 text-blue-600 dark:text-blue-400">¡Aseo Reportado! ✨</h1>
+                    <p className="text-xl mb-4">Gracias por mantener tus implementos de trabajo limpios y en buen estado.</p>
+                    <PrimaryButton onClick={() => setViewState('options')} className="rounded-full mb-4 w-full">Volver al Menú</PrimaryButton>
+                    <button onClick={resetAll} className="block w-full text-gray-600 dark:text-gray-400 font-bold hover:underline">Salir</button>
                 </div>
             </div>
         );
@@ -213,26 +192,27 @@ export default function Landing() {
 
     if (viewState === 'success_preop') {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300 p-4">
                 <Head title="Inspección Completada" />
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-center border-l-4 border-green-500">
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl max-w-md w-full text-center border-l-4 border-green-500">
                     <h1 className="text-3xl font-bold mb-4 text-green-600 dark:text-green-400">¡Inspección Enviada! ✅</h1>
-                    <p className="text-xl mb-4">
-                        Gracias por completar tu inspección preoperacional de hoy.
-                    </p>
-                    <p className="text-lg mb-6">Maneja con precaución.</p>
-                    <PrimaryButton
-                        onClick={() => setViewState('options')}
-                        className="rounded-full mb-4"
-                    >
-                        Volver al Menú
-                    </PrimaryButton>
-                    <button
-                        onClick={resetAll}
-                        className="block w-full text-gray-600 dark:text-gray-400 font-bold hover:underline"
-                    >
-                        Salir
-                    </button>
+                    <p className="text-xl mb-4">Gracias por completar tu inspección preoperacional de hoy.</p>
+                    <PrimaryButton onClick={() => setViewState('options')} className="rounded-full mb-4 w-full">Volver al Menú</PrimaryButton>
+                    <button onClick={resetAll} className="block w-full text-gray-600 dark:text-gray-400 font-bold hover:underline">Salir</button>
+                </div>
+            </div>
+        );
+    }
+
+    if (viewState === 'success_shift' && flash.success) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300 p-4">
+                <Head title="Buen descanso" />
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl max-w-md w-full text-center border-l-4 border-indigo-500">
+                    <h1 className="text-3xl font-bold mb-4 text-indigo-600 dark:text-indigo-400">¡Buen descanso! 🌙</h1>
+                    <p className="text-xl mb-4">Has finalizado tu turno correctamente. Gracias por tu trabajo hoy.</p>
+                    <PrimaryButton onClick={() => setViewState('options')} className="rounded-full mb-4 w-full">Volver al Menú</PrimaryButton>
+                    <button onClick={() => { resetAll(); window.location.reload(); }} className="block w-full text-gray-600 dark:text-gray-400 font-bold hover:underline">Salir</button>
                 </div>
             </div>
         );
@@ -240,24 +220,13 @@ export default function Landing() {
 
     if (viewState === 'lunch_duplicate_error' && messenger) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300 p-4">
                 <Head title="Almuerzo Ya Registrado" />
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-center border-l-4 border-orange-500">
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl max-w-md w-full text-center border-l-4 border-orange-500">
                     <h1 className="text-2xl font-bold mb-4 text-orange-600 dark:text-orange-400">⚠️ Almuerzo Ya Registrado</h1>
-                    <p className="text-xl mb-4">
-                        Hola <strong>{messenger.name}</strong>, ya has registrado tu almuerzo hoy.
-                    </p>
-                    <p className="text-lg mb-2">Debes regresar a las:</p>
-                    <div className="text-5xl font-mono font-bold mb-6 text-indigo-600 dark:text-indigo-400">
-                        {errors.lunch_end_time || '--:--'}
-                    </div>
-                    <p className="text-sm mb-6 text-gray-500">No puedes registrar más de un almuerzo por día.</p>
-                    <PrimaryButton
-                        onClick={() => setViewState('options')}
-                        className="rounded-full"
-                    >
-                        Volver al Menú
-                    </PrimaryButton>
+                    <p className="text-xl mb-4 italic text-sm">Ya has reportado tu almuerzo el día de hoy.</p>
+                    <PrimaryButton onClick={() => setViewState('options')} className="rounded-full mb-4 w-full mt-4">Regresar al Menú</PrimaryButton>
+                    <button onClick={resetAll} className="block w-full text-gray-600 dark:text-gray-400 font-bold hover:underline">Salir</button>
                 </div>
             </div>
         );
@@ -265,52 +234,28 @@ export default function Landing() {
 
     if (viewState === 'shift_duplicate_error' && messenger) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300 p-4">
                 <Head title="Turno Ya Finalizado" />
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-center border-l-4 border-orange-500">
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl max-w-md w-full text-center border-l-4 border-orange-500">
                     <h1 className="text-2xl font-bold mb-4 text-orange-600 dark:text-orange-400">⚠️ Turno Ya Finalizado</h1>
-                    <p className="text-xl mb-4">
-                        Hola <strong>{messenger.name}</strong>, ya has reportado el fin de tu turno hoy.
-                    </p>
-                    <p className="text-lg mb-6 text-gray-500">No puedes finalizar el turno más de una vez por día.</p>
-                    <PrimaryButton
-                        onClick={() => setViewState('options')}
-                        className="rounded-full"
-                    >
-                        Volver al Menú
-                    </PrimaryButton>
+                    <p className="text-xl mb-4 italic text-sm">Ya has reportado tu fin de turno el día de hoy.</p>
+                    <PrimaryButton onClick={() => setViewState('options')} className="rounded-full mb-4 w-full mt-4">Regresar al Menú</PrimaryButton>
+                    <button onClick={resetAll} className="block w-full text-gray-600 dark:text-gray-400 font-bold hover:underline">Salir</button>
                 </div>
             </div>
         );
     }
 
-
-
-    if (viewState === 'active_lunch' && messenger && activeLunch) {
+    // Other views (active_lunch, errors, etc.) handled in the main return or as conditional returns
+    if (viewState === 'shift_finished' && messenger) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-                <Head title="En Almuerzo" />
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-center border-l-4 border-green-500">
-                    <h1 className="text-2xl font-bold mb-4 text-green-600 dark:text-green-400">¡A disfrutar tu almuerzo! 🍔</h1>
-                    <p className="text-xl mb-4">
-                        ¡Hola <strong>{messenger.name}</strong>! Recarga baterías 🔋
-                    </p>
-                    <p className="text-lg mb-6">Debes regresar a las:</p>
-                    <div className="text-5xl font-mono font-bold mb-8 text-indigo-600 dark:text-indigo-400">
-                        {activeLunch.end}
-                    </div>
-                    <button
-                        onClick={() => setViewState('options')}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-semibold hover:opacity-90 transition-all mb-4"
-                    >
-                        Menú
-                    </button>
-                    <button
-                        onClick={resetAll}
-                        className="block w-full text-gray-600 dark:text-gray-400 font-bold hover:underline"
-                    >
-                        Salir
-                    </button>
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300 p-4">
+                <Head title="Turno Finalizado" />
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl max-w-md w-full text-center border-l-4 border-gray-500">
+                    <h1 className="text-2xl font-bold mb-4 text-gray-600 dark:text-gray-400">Turno Finalizado 🏁</h1>
+                    <p className="text-xl mb-4">Hola <strong>{messenger.name}</strong>, ya registraste el fin de tu turno por hoy.</p>
+                    <PrimaryButton onClick={() => setViewState('options')} className="rounded-full mb-4 w-full">Menú</PrimaryButton>
+                    <button onClick={resetAll} className="block w-full text-gray-600 dark:text-gray-400 font-bold hover:underline">Salir</button>
                 </div>
             </div>
         );
@@ -321,380 +266,265 @@ export default function Landing() {
             <Head title="Registro de Mensajeros" />
 
             <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl max-w-md w-full">
-                <>
-                    <div className="text-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Logística LFH</h2>
-                        {viewState === 'search' && <p className="text-gray-500">Ingresa la placa de tu vehículo</p>}
-                        {viewState === 'options' && <p className="text-gray-500">Hola, <span className="font-bold text-indigo-500">{messenger?.name}</span></p>}
-                    </div>
+                <div className="text-center mb-6">
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2 font-black tracking-tight">Logística LFH</h2>
+                    {viewState === 'search' && <p className="text-gray-500 text-sm">Ingresa la placa de tu vehículo</p>}
+                    {viewState === 'options' && <p className="text-gray-500 text-sm">Hola, <span className="font-bold text-indigo-500">{messenger?.name}</span></p>}
+                </div>
 
-                    {viewState === 'search' && (
-                        <form onSubmit={checkPlate} className="space-y-6">
-                            <div>
-                                <TextInput
-                                    type="text"
-                                    placeholder="Ej: AAA-123"
-                                    value={plate}
-                                    onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                                    className="w-full text-center text-3xl font-mono tracking-widest py-4 uppercase"
-                                    required
-                                    autoFocus
-                                />
-                                {error && <p className="text-red-500 text-center mt-2 font-bold text-xs">{error}</p>}
-                            </div>
+                {/* Back Link for sub-views */}
+                {viewState !== 'search' && viewState !== 'options' && (
+                    <button
+                        onClick={() => setViewState('options')}
+                        className="mb-6 flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-black text-[10px] uppercase hover:underline"
+                    >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
+                        Regresar al Menú
+                    </button>
+                )}
 
-                            <PrimaryButton
-                                type="submit"
-                                disabled={loading}
-                                className="w-full justify-center py-4 text-sm"
-                            >
-                                {loading ? 'Buscando...' : 'BUSCAR VEHÍCULO'}
-                            </PrimaryButton>
-                        </form>
-                    )}
-
-                    {/* Button inside options view */}
-                    {viewState === 'options' && (
-                        <div className="space-y-4">
-                            {messenger?.shift_finished && (
-                                <div className="bg-gray-100 dark:bg-gray-700 border-l-4 border-gray-500 text-gray-700 dark:text-gray-300 p-4 rounded-md mb-4">
-                                    <p className="font-bold">🏁 Turno Finalizado</p>
-                                    <p className="text-sm">Ya has registrado el fin de tu turno por hoy.</p>
-                                </div>
-                            )}
-
-
-
-                            <PrimaryButton
-                                onClick={() => setViewState('shifts_view')}
-                                className="w-full py-5 flex items-center justify-between text-lg group"
-                            >
-                                <span className="flex items-center gap-3">
-                                    <span className="text-2xl">📅</span>
-                                    <span>VER MIS HORARIOS</span>
-                                </span>
-                                <span className="text-indigo-200 group-hover:text-white">→</span>
-                            </PrimaryButton>
-
-                            <PrimaryButton
-                                onClick={loadPreopQuestions}
-                                disabled={messenger?.preop_finished}
-                                className={`w-full py-5 flex items-center justify-between text-lg group ${messenger?.preop_finished ? 'bg-gray-400 border-gray-400 cursor-not-allowed hover:bg-gray-400 text-gray-700' : 'bg-cyan-700 hover:bg-cyan-800 border-cyan-800'}`}
-                            >
-                                <span className="flex items-center gap-3">
-                                    <span className="text-2xl">📋</span>
-                                    <span>{messenger?.preop_finished ? 'PREOPERACIONAL LISTO ✅' : 'PREOPERACIONAL'}</span>
-                                </span>
-                                {!messenger?.preop_finished && <span className="text-cyan-200 group-hover:text-white">→</span>}
-                            </PrimaryButton>
-
-                            <PrimaryButton
-                                onClick={() => setViewState('forms_view')}
-                                className="w-full py-5 flex items-center justify-between text-lg group bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 border-slate-700"
-                            >
-                                <span className="flex items-center gap-3">
-                                    <span className="text-2xl">📝</span>
-                                    <span>FORMULARIOS</span>
-                                </span>
-                                <span className="text-slate-400 group-hover:text-white">→</span>
-                            </PrimaryButton>
-
-                            <SuccessButton
-                                onClick={() => setViewState('lunch_confirm')}
-                                className="w-full py-5 flex items-center justify-between text-lg group"
-                                disabled={messenger?.shift_finished}
-                            >
-                                <span className="flex items-center gap-3">
-                                    <span className="text-2xl">🍽️</span>
-                                    <span>REGISTRAR ALMUERZO</span>
-                                </span>
-                                {!messenger?.shift_finished && <span className="text-emerald-200 group-hover:text-white">→</span>}
-                            </SuccessButton>
-
-                            <WarningButton
-                                onClick={() => setViewState('shift_confirm')}
-                                className="w-full py-5 flex items-center justify-between text-lg group"
-                                disabled={messenger?.shift_finished}
-                            >
-                                <span className="flex items-center gap-3">
-                                    <span className="text-2xl">🏁</span>
-                                    <span>REPORTAR FIN TURNO</span>
-                                </span>
-                                {!messenger?.shift_finished && <span className="text-amber-200 group-hover:text-white">→</span>}
-                            </WarningButton>
-
-                            <SecondaryButton
-                                onClick={resetAll}
-                                className="w-full justify-center mt-4"
-                            >
-                                CANCELAR / BUSCAR OTRA PLACA
-                            </SecondaryButton>
+                {viewState === 'search' && (
+                    <form onSubmit={checkPlate} className="space-y-6">
+                        <div>
+                            <TextInput
+                                type="text"
+                                placeholder="Ej: AAA-123"
+                                value={plate}
+                                onChange={(e) => setPlate(e.target.value.toUpperCase())}
+                                className="w-full text-center text-3xl font-mono tracking-widest py-4 uppercase"
+                                required
+                                autoFocus
+                            />
+                            {error && <p className="text-red-500 text-center mt-2 font-bold text-xs">{error}</p>}
                         </div>
-                    )}
-                </>
+                        <PrimaryButton type="submit" disabled={loading} className="w-full justify-center py-4 text-sm">
+                            {loading ? 'Buscando...' : 'BUSCAR VEHÍCULO'}
+                        </PrimaryButton>
+                    </form>
+                )}
 
-                {/* Forms View */}
-                {viewState === 'forms_view' && (
-                    <div className="space-y-6">
-                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 text-center flex items-center justify-center gap-2">
-                            <span>📝</span> Formularios Externos
-                        </h3>
+                {viewState === 'options' && (
+                    <div className="space-y-4">
+                        <PrimaryButton onClick={() => setViewState('shifts_view')} className="w-full py-5 flex items-center justify-between text-lg group">
+                            <span className="flex items-center gap-3"><span className="text-2xl">📅</span><span>VER MIS HORARIOS</span></span>
+                            <span className="text-indigo-200 group-hover:text-white">→</span>
+                        </PrimaryButton>
 
-                        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-                            {messenger?.external_forms && messenger.external_forms.length > 0 ? (
-                                messenger.external_forms.map((form, index) => (
-                                    <a
-                                        key={index}
-                                        href={form.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="block p-5 bg-white dark:bg-gray-700 rounded-2xl border-2 border-slate-100 dark:border-slate-600 shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500 transition-all group"
-                                    >
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <h4 className="font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">
-                                                    {form.title}
-                                                </h4>
-                                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                                                    Toca para abrir el formulario
-                                                </p>
-                                            </div>
-                                            <span className="text-2xl group-hover:translate-x-1 transition-transform">→</span>
-                                        </div>
-                                    </a>
-                                ))
-                            ) : (
-                                <div className="text-center py-10 text-slate-400 italic bg-slate-50 dark:bg-slate-900/50 rounded-2xl">
-                                    No hay formularios disponibles en este momento.
-                                </div>
-                            )}
-                        </div>
-
-                        <SecondaryButton
-                            onClick={() => setViewState('options')}
-                            className="w-full justify-center py-4"
+                        <PrimaryButton
+                            onClick={loadPreopQuestions}
+                            disabled={messenger?.preop_finished}
+                            className={`w-full py-5 flex items-center justify-between text-lg group ${messenger?.preop_finished ? 'bg-gray-400 border-gray-400 cursor-not-allowed text-gray-700' : 'bg-cyan-700 hover:bg-cyan-800 border-cyan-800'}`}
                         >
-                            Volver al Menú
-                        </SecondaryButton>
-                    </div>
-                )}
+                            <span className="flex items-center gap-3"><span className="text-2xl">📋</span><span>{messenger?.preop_finished ? 'PREOPERACIONAL LISTO ✅' : 'PREOPERACIONAL'}</span></span>
+                            {!messenger?.preop_finished && <span className="text-cyan-200 group-hover:text-white">→</span>}
+                        </PrimaryButton>
 
-                {/* Shifts View */}
-                {viewState === 'shifts_view' && (
-                    <div className="space-y-6">
-                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 text-center">
-                            Mis Próximos Turnos
-                        </h3>
-
-                        <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-xl">
-                            <button
-                                onClick={() => setSelectedWeek('esta')}
-                                className={`flex-1 py-2 px-4 rounded-lg font-bold text-sm transition-all ${selectedWeek === 'esta'
-                                    ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-                                    }`}
-                            >
-                                ESTA SEMANA
-                            </button>
-                            <button
-                                onClick={() => setSelectedWeek('proxima')}
-                                className={`flex-1 py-2 px-4 rounded-lg font-bold text-sm transition-all ${selectedWeek === 'proxima'
-                                    ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-                                    }`}
-                            >
-                                PRÓX. SEMANA
-                            </button>
-                        </div>
-
-                        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-                            {messenger?.shifts && messenger.shifts.length > 0 ? (
-                                messenger.shifts
-                                    .filter(s => selectedWeek === 'esta' ? !s.is_next_week : s.is_next_week)
-                                    .map((shift, index) => (
-                                        <div
-                                            key={index}
-                                            className={`p-4 rounded-lg border-l-4 shadow-sm ${shift.status === 'absent'
-                                                ? 'bg-red-50 border-red-500'
-                                                : shift.status === 'no_shift'
-                                                    ? 'bg-gray-50 border-gray-300 opacity-75'
-                                                    : shift.is_today
-                                                        ? 'bg-indigo-50 border-indigo-500 ring-1 ring-indigo-200'
-                                                        : 'bg-white dark:bg-gray-700 border-gray-300'
-                                                }`}
-                                        >
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <p className="font-bold text-gray-800 dark:text-gray-100 capitalize">
-                                                        {shift.date}
-                                                    </p>
-                                                    {shift.status === 'absent' ? (
-                                                        <span className="text-red-600 font-bold text-sm">NO ASISTE</span>
-                                                    ) : shift.status === 'no_shift' ? (
-                                                        <span className="text-gray-500 text-sm italic">Sin Turno</span>
-                                                    ) : (
-                                                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                                                            {shift.start_time} - {shift.end_time}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <div className="text-right">
-                                                    {shift.status !== 'no_shift' && (
-                                                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${shift.location === 'Principal'
-                                                            ? 'bg-blue-100 text-blue-800'
-                                                            : 'bg-emerald-100 text-emerald-800'
-                                                            }`}>
-                                                            {shift.location}
-                                                        </span>
-                                                    )}
-                                                    {shift.is_today && (
-                                                        <div className="mt-1 text-xs font-bold text-indigo-600">HOY</div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
-                            ) : (
-                                <p className="text-center text-gray-500 py-4">No tienes turnos asignados para los próximos días.</p>
-                            )}
-                        </div>
-
-                        <SecondaryButton
-                            onClick={() => setViewState('options')}
-                            className="w-full justify-center"
+                        <PrimaryButton
+                            onClick={() => setViewState('cleaning_form')}
+                            className="w-full py-5 flex items-center justify-between text-lg group bg-blue-600 hover:bg-blue-700 border-blue-700"
                         >
-                            Volver
-                        </SecondaryButton>
+                            <span className="flex items-center gap-3"><span className="text-2xl">✨</span><span>INSPECCIÓN DE ASEO</span></span>
+                            <span className="text-blue-200 group-hover:text-white">→</span>
+                        </PrimaryButton>
+
+                        <PrimaryButton onClick={() => setViewState('forms_view')} className="w-full py-5 flex items-center justify-between text-lg group bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 border-slate-700">
+                            <span className="flex items-center gap-3"><span className="text-2xl">📝</span><span>FORMULARIOS</span></span>
+                            <span className="text-slate-400 group-hover:text-white">→</span>
+                        </PrimaryButton>
+
+                        <SuccessButton onClick={() => setViewState('lunch_confirm')} className="w-full py-5 flex items-center justify-between text-lg group" disabled={messenger?.shift_finished}>
+                            <span className="flex items-center gap-3"><span className="text-2xl">🍽️</span><span>REGISTRAR ALMUERZO</span></span>
+                            {!messenger?.shift_finished && <span className="text-emerald-200 group-hover:text-white">→</span>}
+                        </SuccessButton>
+
+                        <WarningButton onClick={() => setViewState('shift_confirm')} className="w-full py-5 flex items-center justify-between text-lg group" disabled={messenger?.shift_finished}>
+                            <span className="flex items-center gap-3"><span className="text-2xl">🏁</span><span>REPORTAR FIN TURNO</span></span>
+                            {!messenger?.shift_finished && <span className="text-amber-200 group-hover:text-white">→</span>}
+                        </WarningButton>
+
+                        <SecondaryButton onClick={resetAll} className="w-full justify-center mt-4">CANCELAR / SALIR</SecondaryButton>
                     </div>
                 )}
 
-                {/* Shift Confirmation View */}
-                {viewState === 'shift_confirm' && (
-                    <div className="space-y-6 text-center">
-                        <div className="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4 mb-4 text-left text-sm">
-                            <p className="font-bold">Advertencia:</p>
-                            <p>Al reportar el fin de turno, ya no podrás recibir más despachos ni registrar almuerzos por hoy.</p>
-                        </div>
-
-                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-                            ¿Confirmas que terminaste turno?
-                        </h3>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <SecondaryButton
-                                onClick={() => setViewState('options')}
-                                className="justify-center"
-                            >
-                                Cancelar
-                            </SecondaryButton>
-                            <WarningButton
-                                onClick={handleShiftSubmit}
-                                disabled={processing}
-                                className="justify-center"
-                            >
-                                {processing ? 'Finalizando...' : 'Sí, Finalizar'}
-                            </WarningButton>
-                        </div>
-                    </div>
-                )}
-
-                {viewState === 'lunch_confirm' && (
-                    <div className="space-y-6 text-center">
-                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-                            ¿Confirmas el inicio de tu almuerzo?
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-400">
-                            Mensajero: <span className="font-bold">{messenger?.name}</span>
-                        </p>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <SecondaryButton
-                                onClick={() => setViewState('options')}
-                                className="justify-center"
-                            >
-                                Cancelar
-                            </SecondaryButton>
-                            <SuccessButton
-                                onClick={handleLunchSubmit}
-                                disabled={processing}
-                                className="justify-center"
-                            >
-                                {processing ? 'Registrando...' : 'Sí, confirmar'}
-                            </SuccessButton>
-                        </div>
-                    </div>
-                )}
-                {viewState === 'preop_form' && (
+                {viewState === 'cleaning_form' && (
                     <div className="space-y-6">
                         <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 text-center flex items-center justify-center gap-2 mb-2">
-                            <span>📋</span> Inspección Preoperacional
+                            <span>✨</span> Seguimiento de Aseo
                         </h3>
 
-                        <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-3 rounded-lg text-sm border border-blue-100 dark:border-blue-800 font-medium mb-4 text-center">
-                            Vehículo: <span className="font-bold">{messenger?.vehicle}</span>
+                        <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-3 rounded-lg text-sm border border-blue-100 dark:border-blue-800 font-medium mb-4 text-center text-xs uppercase">
+                            Vehículo: <span className="font-bold">{messenger?.vehicle}</span> | {messenger?.name}
                         </div>
 
-                        {loadingQuestions ? (
-                            <div className="flex justify-center py-10">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                        <form onSubmit={handleCleaningSubmit} className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase">1. ¿Qué limpiaste?</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setCleaningItem('maleta')}
+                                        className={`p-4 rounded-xl border-2 transition-all font-bold text-sm ${cleaningItem === 'maleta' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-100 text-slate-400'}`}
+                                    >
+                                        🎒 MALETA
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCleaningItem('moto')}
+                                        className={`p-4 rounded-xl border-2 transition-all font-bold text-sm ${cleaningItem === 'moto' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-100 text-slate-400'}`}
+                                    >
+                                        🛵 MOTO
+                                    </button>
+                                </div>
                             </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase">2. Tipo de Limpieza</label>
+                                <div className="grid grid-cols-1 gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setCleaningType('semanal_superficial')}
+                                        className={`p-4 rounded-xl border-2 transition-all text-left flex items-center justify-between ${cleaningType === 'semanal_superficial' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-100 text-slate-400'}`}
+                                    >
+                                        <div>
+                                            <p className="font-bold text-sm">SEMANAL</p>
+                                            <p className="text-[10px] opacity-70">Aseo superficial obligatorio</p>
+                                        </div>
+                                        {cleaningType === 'semanal_superficial' && <span>✅</span>}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCleaningType('mensual_profunda')}
+                                        className={`p-4 rounded-xl border-2 transition-all text-left flex items-center justify-between ${cleaningType === 'mensual_profunda' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-100 text-slate-400'}`}
+                                    >
+                                        <div>
+                                            <p className="font-bold text-sm">MENSUAL</p>
+                                            <p className="text-[10px] opacity-70">Desinfección y aseo profundo</p>
+                                        </div>
+                                        {cleaningType === 'mensual_profunda' && <span>✅</span>}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase">3. Observaciones (Opcional)</label>
+                                <TextArea
+                                    value={cleaningObservations}
+                                    onChange={(e) => setCleaningObservations(e.target.value)}
+                                    placeholder="Comentarios adicionales..."
+                                    className="w-full text-xs"
+                                    rows="2"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <SecondaryButton onClick={() => setViewState('options')} className="justify-center">Cancelar</SecondaryButton>
+                                <PrimaryButton type="submit" disabled={submittingCleaning} className="justify-center bg-indigo-600">
+                                    {submittingCleaning ? 'Enviando...' : 'Enviar Reporte'}
+                                </PrimaryButton>
+                            </div>
+                        </form>
+                    </div>
+                )}
+
+                {viewState === 'preop_form' && (
+                    <div className="space-y-6">
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 text-center mb-2">📋 Inspección Preoperacional</h3>
+                        <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-3 rounded-lg text-sm border border-blue-100 dark:border-blue-800 font-medium mb-4 text-center">Vehículo: <span className="font-bold">{messenger?.vehicle}</span></div>
+                        {loadingQuestions ? (
+                            <div className="flex justify-center py-10"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div></div>
                         ) : (
                             <form onSubmit={handlePreopSubmit} className="space-y-6">
                                 <div className="max-h-[50vh] overflow-y-auto pr-2 space-y-6">
-                                    {/* Group Questions by Category */}
                                     {Object.entries(preopQuestions.reduce((acc, q) => {
                                         if (!acc[q.category]) acc[q.category] = [];
                                         acc[q.category].push(q);
                                         return acc;
                                     }, {})).map(([category, questions]) => (
                                         <div key={category} className="bg-white dark:bg-gray-800 rounded-xl border-2 border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
-                                            <div className="bg-slate-50 dark:bg-slate-700 px-4 py-2 border-b-2 border-slate-100 dark:border-slate-600">
-                                                <h4 className="font-black text-slate-700 dark:text-slate-200 uppercase tracking-wide text-sm">{category}</h4>
-                                            </div>
+                                            <div className="bg-slate-50 dark:bg-slate-700 px-4 py-2 border-b-2 border-slate-100 dark:border-slate-600 text-xs font-black uppercase">{category}</div>
                                             <div className="divide-y divide-slate-100 dark:divide-slate-700">
                                                 {questions.map((q) => (
-                                                    <div key={q.id} className="p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                                                    <div key={q.id} className="p-4 flex flex-col justify-between gap-3">
                                                         <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{q.label}</span>
-                                                        <div className="flex bg-slate-100 dark:bg-slate-900 rounded-lg p-1 shrink-0 w-full sm:w-auto">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setPreopAnswers({ ...preopAnswers, [q.key]: true })}
-                                                                className={`flex-1 sm:px-4 py-2 rounded-md font-bold text-sm transition-colors ${preopAnswers[q.key] === true ? 'bg-green-500 text-white shadow' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
-                                                            >
-                                                                SÍ
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setPreopAnswers({ ...preopAnswers, [q.key]: false })}
-                                                                className={`flex-1 sm:px-4 py-2 rounded-md font-bold text-sm transition-colors ${preopAnswers[q.key] === false ? 'bg-red-500 text-white shadow' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
-                                                            >
-                                                                NO
-                                                            </button>
+                                                        <div className="flex bg-slate-100 dark:bg-slate-900 rounded-lg p-1">
+                                                            <button type="button" onClick={() => setPreopAnswers({ ...preopAnswers, [q.key]: true })} className={`flex-1 py-2 rounded-md font-bold text-sm transition-colors ${preopAnswers[q.key] === true ? 'bg-green-500 text-white shadow' : 'text-slate-500'}`}>SÍ</button>
+                                                            <button type="button" onClick={() => setPreopAnswers({ ...preopAnswers, [q.key]: false })} className={`flex-1 py-2 rounded-md font-bold text-sm transition-colors ${preopAnswers[q.key] === false ? 'bg-red-500 text-white shadow' : 'text-slate-500'}`}>NO</button>
                                                         </div>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
                                     ))}
-
-                                    <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-slate-100 dark:border-slate-700 p-4">
-                                        <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">📝 Observaciones Adicionales (Opcional)</label>
-                                        <TextArea
-                                            value={preopObservations}
-                                            onChange={(e) => setPreopObservations(e.target.value)}
-                                            placeholder="Detalla cualquier anomalía aquí..."
-                                            className="w-full text-sm"
-                                            rows="3"
-                                        />
-                                    </div>
+                                    <TextArea value={preopObservations} onChange={(e) => setPreopObservations(e.target.value)} placeholder="Observaciones adicionales..." className="w-full text-xs" rows="2" />
                                 </div>
-
                                 <div className="grid grid-cols-2 gap-4 mt-4">
                                     <SecondaryButton onClick={() => setViewState('options')} className="justify-center">Cancelar</SecondaryButton>
                                     <PrimaryButton type="submit" className="justify-center">Enviar Reporte</PrimaryButton>
                                 </div>
                             </form>
                         )}
+                    </div>
+                )}
+
+                {viewState === 'forms_view' && (
+                    <div className="space-y-6">
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 text-center">📝 Formularios</h3>
+                        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                            {messenger?.external_forms?.length > 0 ? messenger.external_forms.map((form, i) => (
+                                <a key={i} href={form.url} target="_blank" rel="noopener noreferrer" className="block p-5 bg-white dark:bg-gray-700 rounded-2xl border-2 border-slate-100 hover:border-indigo-500 transition-all group">
+                                    <div className="flex justify-between items-center"><h4 className="font-bold text-slate-800 dark:text-slate-100 uppercase">{form.title}</h4><span>→</span></div>
+                                </a>
+                            )) : <div className="text-center py-10 text-slate-400 italic">No hay formularios disponibles.</div>}
+                        </div>
+                        <SecondaryButton onClick={() => setViewState('options')} className="w-full justify-center py-4">Volver</SecondaryButton>
+                    </div>
+                )}
+
+                {viewState === 'shifts_view' && (
+                    <div className="space-y-6">
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 text-center">Mis Turnos</h3>
+                        <div className="flex bg-gray-100 p-1 rounded-xl">
+                            <button onClick={() => setSelectedWeek('esta')} className={`flex-1 py-2 px-4 rounded-lg font-bold text-xs ${selectedWeek === 'esta' ? 'bg-white shadow' : 'text-gray-500'}`}>ESTA SEMANA</button>
+                            <button onClick={() => setSelectedWeek('proxima')} className={`flex-1 py-2 px-4 rounded-lg font-bold text-xs ${selectedWeek === 'proxima' ? 'bg-white shadow' : 'text-gray-500'}`}>PRÓX. SEMANA</button>
+                        </div>
+                        <div className="space-y-3 max-h-[50vh] overflow-y-auto">
+                            {messenger?.shifts?.filter(s => selectedWeek === 'esta' ? !s.is_next_week : s.is_next_week).map((shift, i) => (
+                                <div key={i} className={`p-4 rounded-lg border-l-4 ${shift.is_today ? 'bg-indigo-50 border-indigo-500' : 'bg-white border-gray-300'}`}>
+                                    <p className="font-bold text-xs uppercase">{shift.date}</p>
+                                    <p className="text-xs">{shift.start_time} - {shift.end_time} | <span className="font-bold">{shift.location}</span></p>
+                                </div>
+                            )) || <p className="text-center text-gray-500">Sin turnos.</p>}
+                        </div>
+                        <SecondaryButton onClick={() => setViewState('options')} className="w-full justify-center">Volver</SecondaryButton>
+                    </div>
+                )}
+
+                {viewState === 'lunch_confirm' && (
+                    <div className="space-y-6 text-center">
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">¿Iniciar Almuerzo?</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <SecondaryButton onClick={() => setViewState('options')} className="justify-center">No</SecondaryButton>
+                            <SuccessButton onClick={handleLunchSubmit} disabled={processing} className="justify-center">Si</SuccessButton>
+                        </div>
+                    </div>
+                )}
+
+                {viewState === 'shift_confirm' && (
+                    <div className="space-y-6 text-center">
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">¿Finalizar Turno?</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <SecondaryButton onClick={() => setViewState('options')} className="justify-center">No</SecondaryButton>
+                            <WarningButton onClick={handleShiftSubmit} disabled={processing} className="justify-center">Si</WarningButton>
+                        </div>
+                    </div>
+                )}
+
+                {viewState === 'active_lunch' && messenger && activeLunch && (
+                    <div className="space-y-6 text-center">
+                        <h1 className="text-2xl font-black text-green-600">¡A almorzar! 🍔</h1>
+                        <p className="text-lg">Debes regresar a las:</p>
+                        <div className="text-5xl font-mono font-black text-indigo-600">{activeLunch.end}</div>
+                        <button onClick={resetAll} className="block w-full text-gray-500 font-bold hover:underline">Salir</button>
                     </div>
                 )}
             </div>

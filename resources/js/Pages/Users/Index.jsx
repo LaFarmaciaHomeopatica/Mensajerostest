@@ -25,6 +25,7 @@ export default function UserIndex({ users }) {
         { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
         { id: 'shifts.index', label: 'Horarios', icon: '🕒' },
         { id: 'reports.preoperational', label: 'Preoperacional', icon: '📋' },
+        { id: 'reports.cleaning', label: 'Aseo', icon: '✨' },
         { id: 'reports.lunch', label: 'Almuerzo', icon: '🍽️' },
         { id: 'reports.exit', label: 'Salida', icon: '🏁' },
         { id: 'external-forms.index', label: 'Formularios', icon: '📝' },
