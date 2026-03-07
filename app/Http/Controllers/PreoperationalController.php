@@ -72,7 +72,10 @@ class PreoperationalController extends Controller
 
         return Inertia::render('Reports/Preoperational', [
             'filters' => ['start_date' => $date, 'end_date' => $date],
-            'messengers' => Messenger::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'messengers' => Messenger::where('is_active', true)
+                ->where('exclude_from_analytics', false)
+                ->orderBy('name')
+                ->get(['id', 'name']),
         ]);
     }
 
@@ -82,7 +85,7 @@ class PreoperationalController extends Controller
     public function data(Request $request)
     {
         $query = PreoperationalReport::with('messenger')
-            ->whereHas('messenger', fn($q) => $q->where('is_active', true))
+            ->whereHas('messenger', fn($q) => $q->where('is_active', true)->where('exclude_from_analytics', false))
             ->orderBy('created_at', 'desc');
 
         if ($request->start_date) {
@@ -170,7 +173,10 @@ class PreoperationalController extends Controller
                 'end_date' => $date,
                 'messenger_id' => $request->input('messenger_id', '')
             ],
-            'messengers' => Messenger::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'messengers' => Messenger::where('is_active', true)
+                ->where('exclude_from_analytics', false)
+                ->orderBy('name')
+                ->get(['id', 'name']),
         ]);
     }
 
@@ -180,7 +186,7 @@ class PreoperationalController extends Controller
     public function statsData(Request $request)
     {
         $query = PreoperationalReport::with('messenger')
-            ->whereHas('messenger', fn($q) => $q->where('is_active', true));
+            ->whereHas('messenger', fn($q) => $q->where('is_active', true)->where('exclude_from_analytics', false));
 
         $shiftsQuery = \App\Models\Shift::where('status', '!=', 'absent')
             ->where('status', '!=', 'no_shift');
@@ -197,7 +203,7 @@ class PreoperationalController extends Controller
             $query->where('messenger_id', $request->messenger_id);
             $shiftsQuery->where('messenger_id', $request->messenger_id);
         } else {
-            $shiftsQuery->whereHas('messenger', fn($q) => $q->where('is_active', true));
+            $shiftsQuery->whereHas('messenger', fn($q) => $q->where('is_active', true)->where('exclude_from_analytics', false));
         }
 
         $reports = $query->get();

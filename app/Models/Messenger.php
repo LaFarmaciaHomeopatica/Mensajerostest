@@ -27,4 +27,9 @@ class Messenger extends Model
     {
         return $this->hasMany(PreoperationalReport::class);
     }
+
+    public function cleaningReports()
+    {
+        return $this->hasMany(CleaningReport::class);
+    }
 }

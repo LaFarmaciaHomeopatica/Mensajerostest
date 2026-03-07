@@ -14,6 +14,7 @@ use App\Http\Controllers\ExternalFormController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PurgeController;
 use App\Http\Controllers\CleaningController;
+use App\Http\Controllers\GlobalStatsController;
 
 // Públicas / Login
 Route::get('/', [AuthController::class, 'loginView'])->name('login');
@@ -56,6 +57,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports/cleaning', [CleaningController::class, 'index'])->name('reports.cleaning');
         Route::get('/reports/cleaning/data', [CleaningController::class, 'data'])->name('reports.cleaning.data');
         Route::get('/reports/cleaning/export', [CleaningController::class, 'export'])->name('reports.cleaning.export');
+
+        // Estadísticas Globales
+        Route::get('/reports/global-stats', [GlobalStatsController::class, 'index'])->name('reports.global-stats');
+        Route::get('/reports/global-stats/data', [GlobalStatsController::class, 'data'])->name('reports.global-stats.data');
+        Route::get('/reports/global-stats/export', [GlobalStatsController::class, 'export'])->name('reports.global-stats.export');
     });
 
     // 3. Todo lo demás: Solo Admin y Dev
