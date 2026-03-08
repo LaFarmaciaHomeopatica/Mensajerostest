@@ -17,12 +17,11 @@ export default function LeaderLayout({ children, title, onPurgeClick }) {
         { label: 'Mensajeros', icon: '🛵', route: 'messengers.index', active: route().current('messengers.*'), roles: ['administrador', 'desarrollador'] },
         { label: 'Usuarios', icon: '👤', route: 'users.index', active: route().current('users.*'), roles: ['administrador', 'desarrollador'] },
     ].filter(item => {
-        // Habilitar acceso manual por módulo si el usuario tiene una lista definida
-        if (auth.user.modules && auth.user.modules.length > 0) {
-            return auth.user.modules.includes(item.route);
-        }
-        // De lo contrario, usar la lógica basada en roles predeterminada
-        return item.roles.includes(auth.user.role);
+        // El Desarrollador siempre tiene acceso a todo
+        if (auth.user.role === 'desarrollador') return true;
+
+        // Para los demás roles, el acceso es dinámico por módulos asignados
+        return auth.user.modules && auth.user.modules.includes(item.route);
     });
 
     // Customize bottom nav items based on role

@@ -145,8 +145,6 @@ export default function Landing() {
                     start: mData.active_lunch.start,
                     end: mData.active_lunch.end
                 });
-                setViewState('active_lunch');
-                return;
             }
 
             if (mData.shift_finished) {
@@ -332,8 +330,16 @@ export default function Landing() {
                             <span className="text-slate-400 group-hover:text-white">→</span>
                         </PrimaryButton>
 
-                        <SuccessButton onClick={() => setViewState('lunch_confirm')} className="w-full py-5 flex items-center justify-between text-lg group" disabled={messenger?.shift_finished}>
-                            <span className="flex items-center gap-3"><span className="text-2xl">🍽️</span><span>REGISTRAR ALMUERZO</span></span>
+                        <SuccessButton
+                            onClick={() => activeLunch ? setViewState('active_lunch') : setViewState('lunch_confirm')}
+                            className="w-full py-5 flex items-center justify-between text-lg group"
+                            disabled={messenger?.shift_finished}
+                        >
+                            <span className="flex items-center gap-3">
+                                <span className="text-2xl">🍽️</span>
+                                <span>{activeLunch ? 'HORARIO DE ALMUERZO' : 'REGISTRAR ALMUERZO'}</span>
+                                {activeLunch && <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full ml-1">EN CURSO</span>}
+                            </span>
                             {!messenger?.shift_finished && <span className="text-emerald-200 group-hover:text-white">→</span>}
                         </SuccessButton>
 
