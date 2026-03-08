@@ -12,6 +12,7 @@ use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\MessengerController;
 use App\Http\Controllers\ExternalFormController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProcedureController;
 use App\Http\Controllers\PurgeController;
 use App\Http\Controllers\CleaningController;
 use App\Http\Controllers\GlobalStatsController;
@@ -119,5 +120,12 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/admin/purge/verify', [PurgeController::class, 'verifyPassword'])->name('admin.purge.verify');
             Route::post('/admin/purge/execute', [PurgeController::class, 'execute'])->name('admin.purge.execute');
         });
+    });
+
+    // 11. Trámites
+    Route::middleware(['module:procedures.index'])->group(function () {
+        Route::get('/procedures/export', [ProcedureController::class, 'export'])->name('procedures.export');
+        Route::post('/procedures/bulk-update', [ProcedureController::class, 'bulkUpdate'])->name('procedures.bulk-update');
+        Route::resource('procedures', ProcedureController::class)->except(['create', 'edit', 'show']);
     });
 });

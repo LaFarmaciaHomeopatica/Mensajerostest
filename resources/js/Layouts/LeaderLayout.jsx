@@ -16,6 +16,7 @@ export default function LeaderLayout({ children, title, onPurgeClick }) {
         { label: 'Formularios', icon: '📝', route: 'external-forms.index', active: route().current('external-forms.*'), roles: ['administrador', 'desarrollador'] },
         { label: 'Mensajeros', icon: '🛵', route: 'messengers.index', active: route().current('messengers.*'), roles: ['administrador', 'desarrollador'] },
         { label: 'Usuarios', icon: '👤', route: 'users.index', active: route().current('users.*'), roles: ['administrador', 'desarrollador'] },
+        { label: 'Trámites', icon: '💼', route: 'procedures.index', active: route().current('procedures.*'), roles: ['administrador', 'desarrollador'] },
     ].filter(item => {
         // El Desarrollador siempre tiene acceso a todo
         if (auth.user.role === 'desarrollador') return true;

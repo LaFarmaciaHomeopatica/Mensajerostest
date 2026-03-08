@@ -32,6 +32,7 @@ export default function UserIndex({ users }) {
         { id: 'external-forms.index', label: 'Formularios', icon: '📝' },
         { id: 'messengers.index', label: 'Mensajeros', icon: '🛵' },
         { id: 'users.index', label: 'Usuarios', icon: '👤' },
+        { id: 'procedures.index', label: 'Trámites', icon: '💼' },
     ];
 
     const openModal = (user = null) => {
