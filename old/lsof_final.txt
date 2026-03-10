@@ -1,6 +1,0 @@
-COMMAND   PID   USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
-firefox 64308 carlos  134u  IPv4 371520      0t0  TCP localhost:58436->localhost:webcache (ESTABLISHED)
-brave   75849 carlos   22u  IPv4 371519      0t0  TCP localhost:53404->localhost:webcache (ESTABLISHED)
-php     82902 carlos    5u  IPv4 372649      0t0  TCP *:webcache (LISTEN)
-php     82902 carlos    8u  IPv4 372699      0t0  TCP localhost:webcache->localhost:53404 (ESTABLISHED)
-php     82902 carlos    9u  IPv4 368306      0t0  TCP localhost:webcache->localhost:58436 (ESTABLISHED)

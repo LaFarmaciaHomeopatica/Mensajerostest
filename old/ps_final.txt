@@ -1,2 +1,0 @@
-carlos     82902  0.1  0.4 376380 64384 pts/2    S    01:41   0:00 php artisan reverb:start
-carlos     83651  0.0  0.0 231272  2588 pts/2    S+   01:44   0:00 grep --color=auto reverb
