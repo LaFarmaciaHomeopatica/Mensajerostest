@@ -161,10 +161,12 @@ class ProcedureController extends Controller
             private $data;
             public function __construct($data)
             {
-                $this->data = collect($data); }
+                $this->data = collect($data);
+            }
             public function collection()
             {
-                return $this->data; }
+                return $this->data;
+            }
             public function headings(): array
             {
                 return ['guia', 'vehiculo', 'producto', 'cantidad', 'codigop', 'identificacion', 'contacto', 'telefono', 'email', 'direccion', 'latitud', 'longitud', 'horainicio', 'horafinal', 'ctdestino', 'prioridad', 'info'];

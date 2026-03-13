@@ -23,7 +23,7 @@ class ShiftsImport implements ToModel, WithHeadingRow
             $messenger = Messenger::where('name', 'LIKE', '%' . trim($row['nombre_mensajero']) . '%')->first();
 
             if (!$messenger) {
-                // Log or skip if messenger not found
+                \Log::warning("ShiftsImport: Messenger not found for row: " . json_encode($row));
                 return null;
             }
 
@@ -31,11 +31,13 @@ class ShiftsImport implements ToModel, WithHeadingRow
             $date = $this->transformDate($row['fecha']);
 
             if (!$date) {
+                \Log::warning("ShiftsImport: Invalid date for row: " . json_encode($row));
                 return null;
             }
 
             // Status handling
-            $status = strtolower(trim($row['estado'] ?? 'presente')) === 'ausente' ? 'absent' : 'present';
+            $statusValue = strtolower(trim($row['estado'] ?? 'presente'));
+            $status = ($statusValue === 'ausente' || $statusValue === 'no asiste') ? 'absent' : 'present';
             $location = strtolower(trim($row['ubicacion'] ?? 'principal')) === 'teusaquillo' ? 'teusaquillo' : 'principal';
 
             // Time parsing
