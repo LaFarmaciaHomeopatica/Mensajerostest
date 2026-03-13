@@ -85,10 +85,10 @@ class LunchController extends Controller
 
             $shifts->push([
                 'date' => $currentDate->locale('es')->isoFormat('dddd D [de] MMMM'),
-                'start_time' => $shift ? ($shift->start_time ? substr($shift->start_time, 0, 5) : null) : null,
-                'end_time' => $shift ? ($shift->end_time ? substr($shift->end_time, 0, 5) : null) : null,
+                'start_time' => $shift ? ($shift->status === 'absent' ? 'NO ASISTE' : ($shift->start_time ? substr($shift->start_time, 0, 5) : '-')) : 'SIN TURNO',
+                'end_time' => $shift ? ($shift->status === 'absent' ? '-' : ($shift->end_time ? substr($shift->end_time, 0, 5) : '-')) : '-',
                 'status' => $shift ? $shift->status : 'no_shift',
-                'location' => $shift ? ucfirst($shift->location) : 'Sin Programación',
+                'location' => $shift ? ucfirst($shift->location) : '-',
                 'is_today' => $isToday,
                 'is_next_week' => $isNextWeek,
             ]);

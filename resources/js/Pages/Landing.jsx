@@ -507,7 +507,14 @@ export default function Landing() {
                             {messenger?.shifts?.filter(s => selectedWeek === 'esta' ? !s.is_next_week : s.is_next_week).map((shift, i) => (
                                 <div key={i} className={`p-4 rounded-lg border-l-4 ${shift.is_today ? 'bg-indigo-50 border-indigo-500' : 'bg-white border-gray-300'}`}>
                                     <p className="font-bold text-xs uppercase">{shift.date}</p>
-                                    <p className="text-xs">{shift.start_time} - {shift.end_time} | <span className="font-bold">{shift.location}</span></p>
+                                    <p className="text-xs">
+                                        {shift.start_time === 'NO ASISTE' || shift.start_time === 'SIN TURNO'
+                                            ? <span className="font-black text-red-500">{shift.start_time}</span>
+                                            : `${shift.start_time} - ${shift.end_time}`
+                                        }
+                                        {shift.location !== '-' && ` | `}
+                                        <span className="font-bold">{shift.location !== '-' ? shift.location : ''}</span>
+                                    </p>
                                 </div>
                             )) || <p className="text-center text-gray-500">Sin turnos.</p>}
                         </div>
