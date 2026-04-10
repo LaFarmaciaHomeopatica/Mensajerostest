@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; //esto 10/04/2026 14:50
 import { Head, router, usePage } from '@inertiajs/react';
 import LeaderLayout from '@/Layouts/LeaderLayout';
 import Modal from '@/Components/Modal';
@@ -27,7 +27,22 @@ export default function ProcedureIndex({ procedures, messengers, filters, stats 
     const [statusFilter, setStatusFilter] = useState(filters.status || '');
     const [dateFilter, setDateFilter] = useState(filters.date || '');
     const [perPage, setPerPage] = useState(filters.per_page || 30);
+    const isFirstRender = useRef(true);
+    //esto 10/04/2026 14:50
+    useEffect(() => {
+        // Si es la primera vez que se carga el componente, no hace nada
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
 
+        const timer = setTimeout(() => {
+            handleFilterChange();
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [search, statusFilter, dateFilter, perPage]);
+    // --------------------
     const [form, setForm] = useState({
         guide: '',
         product: '',
@@ -148,19 +163,20 @@ export default function ProcedureIndex({ procedures, messengers, filters, stats 
             status: statusFilter,
             date: dateFilter,
             per_page: perPage
+            // Al omitir 'page' aquí, la búsqueda siempre vuelve a la 1, lo cual es correcto.
         }, {
             preserveState: true,
             replace: true
         });
     };
-
+    //esto 10/04/2026 14:50
     // Trigger filter change on input debouncing might be better but let's do direct for now
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            handleFilterChange();
-        }, 300);
-        return () => clearTimeout(timer);
-    }, [search, statusFilter, dateFilter, perPage]);
+    //useEffect(() => {
+    //  const timer = setTimeout(() => {
+    //    handleFilterChange();
+    //}, 300);
+    //return () => clearTimeout(timer);
+    //}, [search, statusFilter, dateFilter, perPage]);
 
     const handleSelectAll = (e) => {
         if (e.target.checked) {

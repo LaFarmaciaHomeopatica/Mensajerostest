@@ -1,3 +1,4 @@
+shhufheihfiejfjewofjowfoewfowefowe
 import React, { useState, useEffect } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import LeaderLayout from '@/Layouts/LeaderLayout';
@@ -155,12 +156,12 @@ export default function ProcedureIndex({ procedures, messengers, filters, stats 
     };
 
     // Trigger filter change on input debouncing might be better but let's do direct for now
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            handleFilterChange();
-        }, 300);
-        return () => clearTimeout(timer);
-    }, [search, statusFilter, dateFilter, perPage]);
+    //useEffect(() => {
+    //  const timer = setTimeout(() => {
+    //    handleFilterChange();
+    //}, 300);
+    //return () => clearTimeout(timer);
+    //}, [search, statusFilter, dateFilter, perPage]);
 
     const handleSelectAll = (e) => {
         if (e.target.checked) {
