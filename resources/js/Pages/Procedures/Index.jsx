@@ -193,7 +193,7 @@ export default function ProcedureIndex({ procedures, messengers, filters, stats 
             setSelectedIds([...selectedIds, id]);
         }
     };
-
+    //esto 11/04/2026 07:40
     const handleBulkAction = () => {
         if (selectedIds.length === 0) return;
         if (!pendingActions.status && !pendingActions.messenger_id) {
@@ -207,9 +207,15 @@ export default function ProcedureIndex({ procedures, messengers, filters, stats 
             messenger_id: pendingActions.messenger_id || null
         }, {
             onSuccess: () => {
-                setSelectedIds([]);
+                // COMENTA O ELIMINA ESTAS LÍNEAS:
+                // setSelectedIds([]); 
+                // setPendingActions({ status: '', messenger_id: '' });
+
+                // Opcional: Puedes limpiar solo los selectores de acción 
+                // pero mantener los IDs seleccionados:
                 setPendingActions({ status: '', messenger_id: '' });
-            }
+            },
+            preserveScroll: true, // Recomendado para que la página no salte al inicio
         });
     };
 
@@ -368,7 +374,14 @@ export default function ProcedureIndex({ procedures, messengers, filters, stats 
                                 </button>
 
                                 <button
-                                    onClick={() => { setSelectedIds([]); setPendingActions({ status: '', messenger_id: '' }); }}
+                                    onClick={() => {
+                                        // 1. Cerramos la barra y limpiamos selección 11/04/2026 07:40
+                                        setSelectedIds([]);
+                                        setPendingActions({ status: '', messenger_id: '' });
+
+                                        // 2. Limpiamos el mensaje de éxito de la pantalla 11/04/2026 07:40
+                                        router.reload({ only: ['flash'] });
+                                    }}
                                     className="p-2 hover:bg-rose-500/20 rounded-xl transition-colors group"
                                     title="Cancelar selección"
                                 >
